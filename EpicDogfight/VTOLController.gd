@@ -1,0 +1,142 @@
+extends CombatantController
+
+class_name VTOLController
+
+const dc_scene: PackedScene = preload("dc_scene.tscn")
+
+var distanceCompensator: DistanceCompensator = null
+var lastKnownLocation := Vector3.ZERO
+var currentTargetLocation := Vector3.ZERO
+var distanceToTarget := 0.0
+var detectionVelocity := 1000.0
+var actualDetectionVelocity := 1000.0
+var targetTracked := false
+var sharedTarget := []
+var leading := 1.0
+var evading := false
+
+func _ready():
+	distanceCompensator = dc_scene.instance()
+	get_tree().current_scene.add_child(distanceCompensator)
+	_use_physics_process = true
+	_config = {
+		"radarResolution": 4000,
+		"radarMaxDistance": 10000.0,
+		"detectionMaxVelocity": 1000.0,
+		"minimumDistanceToTarget": 100.0,
+		"evasiveAngle": deg2rad(45),
+		"evasiveDistance": 200.0,
+	}
+	detectionVelocity = _config["detectionMaxVelocity"] / _config["radarResolution"]
+
+func _assign(craft: VTOLFighterBrain):
+	_assigned_combatant = craft
+	craft.controller = self
+
+func _setTarget(t: Combatant, type = null, stance = null):
+	if t:
+		_target = t
+		distanceCompensator.set_target(_target)
+	if not type:
+		_target_profile["type"] = TARGET_TYPE.UNKNOWN
+	if not stance:
+		_target_profile["stance"] = TARGET_STANCE.UNKNOWN
+	else:
+		_target_profile["type"] = type
+		_target_profile["stance"] = stance
+
+func _removeTarget():
+	_target = null
+	distanceCompensator.set_target(null)
+	_target_profile["type"] = TARGET_TYPE.UNKNOWN
+	_target_profile["stance"] = TARGET_STANCE.UNKNOWN
+
+func _setTracking(t: bool):
+	_tracking = t
+
+func _process(delta):
+	if _target:
+		pass
+	if not _use_physics_process:
+		_compute(delta)
+
+func _physics_process(delta):
+	if _use_physics_process:
+		_compute(delta)
+
+func _compute(delta: float):
+	if evading:
+		if _assigned_combatant.distance < _assigned_combatant._vehicle_config["deadzone"]:
+			evading = false
+	if _tracking and _target and not evading:
+		_assigned_combatant.overdriveThrottle = 1.0
+		if _assigned_combatant.tracking_target != distanceCompensator:
+			_assigned_combatant.tracking_target = distanceCompensator
+			if not _is_stealthy:
+				_target.trackedBy = _assigned_combatant
+#		_target_transform_precompute(delta)
+#		_target_assess(delta)
+		if _assigned_combatant.distance < _config["minimumDistanceToTarget"]:
+			_evasive_manuver()
+	else:
+		_assigned_combatant.tracking_target = null
+		distanceCompensator.set_target(null)
+		_assigned_combatant.overdriveThrottle = -1.0
+	if _target:
+		lastKnownLocation = _target.global_transform.origin
+
+func _evasive_manuver():
+	# EVASIVE MANUVER
+	evading = true
+	var direction: Vector3
+	var normal := _assigned_combatant.global_transform.basis.x
+	var target_transform := _target.global_transform
+	# Find target plane equation, with x-axis as normal
+	var target_yz_eq := GeometryMf.pe_create_2vn(target_transform.origin,\
+		target_transform.basis.y, -target_transform.basis.z,\
+		target_transform.basis.x)
+	if target_yz_eq.solve(_assigned_combatant.global_transform.origin) >= 0:
+		# Assigned combatant is at target's starboard 
+		# (or directly in front of or behind target)
+		direction = -normal
+		direction.rotated(Vector3.UP, _config["evasiveAngle"])
+	else:
+		# Assigned combatant is at target's port
+		direction = normal
+		direction.rotated(Vector3.UP, -_config["evasiveAngle"])
+	_assigned_combatant._setCourse(_assigned_combatant.trackingTarget\
+		.global_transform.origin + (direction * _config["evasiveDistance"]))
+
+func _target_transform_precompute(delta: float):
+	detectionVelocity = _config["detectionMaxVelocity"] / _config["radarResolution"]
+	currentTargetLocation = _target.global_transform.origin
+	distanceToTarget = currentTargetLocation.distance_to(global_transform.origin)
+	if lastKnownLocation != Vector3.ZERO:
+#		var velocity = (currentTargetLocation - lastKnownLocation).length() / delta
+		actualDetectionVelocity = (distanceToTarget / _config["radarMaxDistance"])\
+			* detectionVelocity
+
+func _target_assess(delta: float, reassess = false):
+	if distanceToTarget > _config["radarMaxDistance"]:
+		return
+	if reassess:
+		_target_profile["type"] 	= TARGET_TYPE.UNKNOWN
+		_target_profile["stance"] 	= TARGET_STANCE.UNKNOWN
+	if _target_profile["type"] == TARGET_TYPE.UNKNOWN:
+		if _target.is_on_floor():
+			_target_profile["type"] = TARGET_TYPE.GROUND
+		elif not _target._trackable:
+			_target_profile["type"] = TARGET_TYPE.ONPHASE
+		else:
+			_target_profile["type"] = TARGET_TYPE.AIRBORNE
+	if _target_profile["stance"] == TARGET_STANCE.UNKNOWN:
+		if lastKnownLocation != Vector3.ZERO:
+			var velocity_squared = (currentTargetLocation - lastKnownLocation).length_squared() / delta
+			if velocity_squared >= actualDetectionVelocity:
+				_target_profile["stance"] = TARGET_STANCE.MOVABLE
+			else:
+				_target_profile["stance"] = TARGET_STANCE.STATIC
+
+func _calculate_weapon_trajectory():
+	
+	pass

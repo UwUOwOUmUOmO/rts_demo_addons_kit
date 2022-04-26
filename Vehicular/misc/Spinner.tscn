@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://addons/Vehicular/misc/Spinner.gd" type="Script" id=1]
+[ext_resource path="res://plane_icon/enemy_hud_icon.tscn" type="PackedScene" id=2]
+
+[node name="Spinner" type="Spatial"]
+script = ExtResource( 1 )
+speed = 2.0
+
+[node name="Target" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 100 )
+
+[node name="HUD" parent="Target" instance=ExtResource( 2 )]
+scaling = 10.0
+ringBlinking = true
+iconBlinking = true
