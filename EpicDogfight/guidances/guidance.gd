@@ -44,6 +44,8 @@ func _finalize():
 	_green_light = false
 
 func _clean():
-	remove_child(_projectile)
+	var p_parent := _projectile.get_parent()
+	if p_parent:
+		p_parent.remove_child(_projectile)
 	_projectile.free()
 	queue_free()

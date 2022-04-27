@@ -3,7 +3,7 @@ extends Combatant
 class_name VTOLFighterBrain
 
 const VTOL_DEFAULT_CONFIG = {
-	"acceleration":			2.0,
+	"acceleration":			1.0,
 	"deccelaration": 		-2.0,
 	"speedSnapping":		1.0,
 	"climbRate":			1.2,
@@ -20,10 +20,6 @@ const VTOL_DEFAULT_CONFIG = {
 	"orbitError":			0.01,
 	"deadzone":				1.0,
 	"slowingRange":			60.0,
-	"devStart":				200.0,
-	"devRange":				800.0,
-	"devTime":				8.0,
-	"devCooldown":			3.0,
 }
 
 var isReady := false
@@ -31,6 +27,7 @@ var destination := Vector3() setget _setCourse
 var trackingTarget: Spatial = null setget _setTracker
 var isMoving := false setget _setMoving, _getMoving
 var overdriveThrottle := -1.0
+var inheritedSpeed := 0.0
 
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
@@ -47,7 +44,7 @@ var allowedTurn: float = 0.05
 var timer1 := 0.0
 
 func _init():
-	_vehicle_config = VTOL_DEFAULT_CONFIG
+	_vehicle_config = VTOL_DEFAULT_CONFIG.duplicate()
 
 func _ready():
 	previousYaw = global_transform.basis.get_euler().y
@@ -71,7 +68,7 @@ func _compute(delta):
 			isReady = true
 	elif isMoving:
 		var loaded = _prepare()
-		var allowedSpeed = loaded["allowedSpeed"]
+		var allowedSpeed = loaded["allowedSpeed"] + inheritedSpeed
 		var currentYaw = loaded["currentYaw"]
 		# Calculate and enforce roll
 		_enforceRoll(currentYaw)
@@ -79,11 +76,12 @@ func _compute(delta):
 		_calculateSpeed(allowedSpeed)
 		# Calculate elevation
 		var forward = -global_transform.basis.z
-		var velocity = -global_transform.basis.z * currentSpeed
-		velocity += global_transform.basis.y\
+		var moveDistance = -global_transform.basis.z * (currentSpeed + inheritedSpeed)
+		moveDistance += global_transform.basis.y\
 			* (destination.y - global_transform.origin.y)\
 			* _vehicle_config["climbRate"]
-		move_and_slide(velocity, Vector3.UP)
+		move_and_slide(moveDistance, Vector3.UP)
+#		global_translate(moveDistance * delta)
 		previousYaw = currentYaw
 	if isReady:
 		_rollProcess()

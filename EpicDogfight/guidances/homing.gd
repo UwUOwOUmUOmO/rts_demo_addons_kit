@@ -14,6 +14,8 @@ var self_destruct_time := 5.0
 var self_destruct_clock := 0.0
 var guided := false
 
+var manual_control := false
+
 func set_profile(p: Dictionary):
 	vtol_profile = p
 	_velocity = p["maxSpeed"]
@@ -37,10 +39,13 @@ func get_ddistance():
 
 func _guide(delta: float):
 	if guided:
+		manual_control = false
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 		self_destruct_clock = 0.0
 		return
+	else:
+		dumb_control(delta)
 	var distance_squared := vtol.global_transform.origin\
 		.distance_squared_to(target.global_transform.origin)
 	if distance_squared < detonation_distance_squared:
@@ -48,35 +53,44 @@ func _guide(delta: float):
 		_clean()
 		return
 	elif distance_squared <= active_range_squared:
+		manual_control = false
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 		self_destruct_clock = 0.0
 	else:
-		vtol._setCourse(vtol.global_transform.origin + (vtol.lookAtVec * _velocity * 1.5))
-		if self_destruct_clock + delta > self_destruct_time:
-			_finalize()
-			_clean()
-			return
-		else:
-			self_destruct_clock += delta
+		dumb_control(delta)
+
+func dumb_control(delta: float):
+	if not manual_control:
+		manual_control = true
+		var dis: float = (_velocity * self_destruct_time)\
+			+ (0.5 * vtol_profile["acceleration"] * self_destruct_time)
+		vtol._setCourse((vtol.global_transform.origin - vtol.global_transform.basis.z)\
+			* dis)
+	if self_destruct_clock + delta > self_destruct_time:
+		_finalize()
+		_clean()
+		return
+	else:
+		self_destruct_clock += delta
 
 func _clean():
 	vtol.remove_child(_projectile)
-	var vp := vtol.get_parent()
-	if vp:
-		vp.remove_child(vtol)
-	vtol.free()
 	_projectile.free()
+	var v_parent := vtol.get_parent()
+	if v_parent:
+		v_parent.remove_child(vtol)
+	vtol.free()
 	queue_free()
 
-func _start(move := false):
+func _start(move := true):
 	_velocity = vtol_profile["maxSpeed"]
 	_green_light = true
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
 	var scene := get_tree().get_current_scene()
 	if scene:
-		scene.add_child(vtol)
+		scene.call_deferred("add_child", vtol)
 	else:
 		printerr("Error: scene not ready")
 		printerr(get_stack())

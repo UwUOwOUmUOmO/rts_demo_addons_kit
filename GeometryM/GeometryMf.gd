@@ -1,5 +1,4 @@
-tool
-extends EditorPlugin
+extends Reference
 
 class_name GeometryMf
 

@@ -6,7 +6,7 @@ const dumb_guidance 	:= preload("guidances/dumb.tscn")
 const homing_guidance 	:= preload("guidances/homing.tscn")
 const heat_huidance 	:= preload("guidances/heat.tscn")
 
-var use_physics_process := false
+var use_physics_process := true
 var compensation := 0.0
 
 var weapon_name := ""
@@ -52,7 +52,7 @@ func set_hardpoints(num: int, h_list := []):
 
 func compensate():
 	if not profile or not compensator or not carrier:
-		return null
+		return 0.0
 	var projectile_vel: float = profile.weaponConfig["travelSpeed"]
 	compensation = compensator.calculate_leading(projectile_vel,\
 		carrier.global_transform.origin)
@@ -72,23 +72,35 @@ func clear_for_fire() -> bool:
 		else:
 			return false
 
+func guidance_instancing(g: WeaponGuidance):
+	var scene := get_tree().get_current_scene()
+	if not scene:
+		printerr("Error: scene not ready")
+		printerr(get_stack())
+		return
+	if g.get_parent():
+		g.get_parent().remove_child(g)
+	scene.call_deferred("add_child", g)
+	while not g.get_parent():
+		yield(get_tree(), "idle_frame")
+
 func spawn_projectile(no: int):
 	var guidance: WeaponGuidance
 	if profile.weaponGuidance == WeaponProfile.GUIDANCE.SEMI\
 			or profile.weaponGuidance == WeaponProfile.GUIDANCE.ACTIVE:
 		guidance = homing_guidance.instance()
-		get_tree().get_current_scene().add_child(guidance)
+		guidance_instancing(guidance)
 		guidance.set_range(profile.weaponConfig["homingRange"])
 		guidance.set_profile(profile.weaponConfig["vtolProfile"])
-		guidance.detonation_distance.set_ddistance(profile.weaponConfig["detonateDistance"])
+		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
 		guidance.target = target
 	elif profile.weaponGuidance == WeaponProfile.GUIDANCE.HEAT:
 		guidance = heat_huidance.instance()
-		get_tree().get_current_scene().add_child(guidance)
+		guidance_instancing(guidance)
 		guidance.set_range(profile.weaponConfig["homingRange"])
 		guidance.set_profile(profile.weaponConfig["vtolProfile"])
-		guidance.detonation_distance.set_ddistance(profile.weaponConfig["detonateDistance"])
+		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
 		guidance.target = target
 		guidance.heat_threshold = profile.weaponConfig["heatThreshold"]
@@ -96,13 +108,15 @@ func spawn_projectile(no: int):
 			guidance.seeking_angle  = profile.weaponConfig["seekingAngle"]
 	else:
 		guidance = dumb_guidance.instance()
-		get_tree().get_current_scene().add_child(guidance)
+		guidance_instancing(guidance)
 		var max_travel_time: float = profile.weaponConfig["travelTime"]
 		guidance.detonation_time = clamp(compensation, 0.0, max_travel_time)
 	guidance._velocity = profile.weaponConfig["travelSpeed"]
 	guidance._barrel = hardpoints[no].global_transform.origin
 	guidance._direction = -hardpoints[no].global_transform.basis.z
 	guidance._projectile_scene = projectile
+	while not guidance.get_parent():
+		yield(get_tree(), "idle_frame")
 	guidance._start()
 
 # THE USE OF UNIX TIME COULD LEAD TO SOME WACKY EXPLOITS

@@ -11,7 +11,5 @@ func _guide(delta: float):
 		_clean()
 		return
 	var distance := _velocity * delta
-	var a := global_transform.origin
 	global_translate((_direction * distance))
-	var b := global_transform.origin
 	time_elapsed += delta

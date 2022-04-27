@@ -22,11 +22,6 @@ func _guide(delta: float):
 		elif vtol.trackingTarget != target:
 			vtol._setTracker(target)
 		self_destruct_clock = 0.0
+		manual_control = false
 	else:
-		vtol._setCourse(vtol.global_transform.origin + (vtol.lookAtVec * _velocity))
-		if self_destruct_clock + delta > self_destruct_time:
-			_finalize()
-			_clean()
-			return
-		else:
-			self_destruct_clock += delta
+		dumb_control(delta)
