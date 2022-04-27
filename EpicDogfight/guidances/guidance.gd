@@ -4,6 +4,8 @@ class_name WeaponGuidance
 
 var _init_func: FuncRef = null
 var _init_func_package := []
+var _fin_func: FuncRef = null
+var _fin_func_package := []
 var _velocity := 0.0
 var _barrel := Vector3.ZERO
 var _direction := Vector3.ZERO
@@ -42,6 +44,11 @@ func _initialize():
 
 func _finalize():
 	_green_light = false
+	if _fin_func:
+		if _fin_func_package.empty():
+			_fin_func.call_func()
+		else:
+			_fin_func.call_funcv(_fin_func_package)
 
 func _clean():
 	var p_parent := _projectile.get_parent()

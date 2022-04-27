@@ -68,7 +68,7 @@ func _compute(delta):
 			isReady = true
 	elif isMoving:
 		var loaded = _prepare()
-		var allowedSpeed = loaded["allowedSpeed"] + inheritedSpeed
+		var allowedSpeed = loaded["allowedSpeed"]
 		var currentYaw = loaded["currentYaw"]
 		# Calculate and enforce roll
 		_enforceRoll(currentYaw)
@@ -76,7 +76,7 @@ func _compute(delta):
 		_calculateSpeed(allowedSpeed)
 		# Calculate elevation
 		var forward = -global_transform.basis.z
-		var moveDistance = -global_transform.basis.z * (currentSpeed + inheritedSpeed)
+		var moveDistance = -global_transform.basis.z * (currentSpeed)
 		moveDistance += global_transform.basis.y\
 			* (destination.y - global_transform.origin.y)\
 			* _vehicle_config["climbRate"]
@@ -166,6 +166,8 @@ func _bakeDestination(d: Vector3):
 #	slowingRange = inv_per * startingPoint.distance_to(destination)
 	slowingRange = _vehicle_config["slowingRange"]
 	lookAtVec = startingPoint.direction_to(destination)
+	if currentSpeed == 0.0:
+		currentSpeed = inheritedSpeed
 
 func _setTracker(target: Spatial):
 	if target == null:

@@ -3,13 +3,14 @@ extends WeaponGuidance
 class_name HomingGuidance
 
 var vtol: VTOLFighterBrain = null
-var target: Combatant = null
+var target: Spatial = null
 
 var vtol_profile := VTOLFighterBrain.VTOL_DEFAULT_CONFIG
 var active_range := 100.0 setget set_range, get_range
 var active_range_squared := 10000.0
 var detonation_distance := 1.0 setget set_ddistance, get_ddistance
 var detonation_distance_squared := 1.0
+var inherited_speed := 0.0
 var self_destruct_time := 5.0
 var self_destruct_clock := 0.0
 var guided := false
@@ -38,17 +39,15 @@ func get_ddistance():
 	return detonation_distance
 
 func _guide(delta: float):
+	var distance_squared := vtol.global_transform.origin\
+		.distance_squared_to(target.global_transform.origin)
 	if guided:
 		manual_control = false
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 		self_destruct_clock = 0.0
 		return
-	else:
-		dumb_control(delta)
-	var distance_squared := vtol.global_transform.origin\
-		.distance_squared_to(target.global_transform.origin)
-	if distance_squared < detonation_distance_squared:
+	elif distance_squared < detonation_distance_squared:
 		_finalize()
 		_clean()
 		return
@@ -63,10 +62,9 @@ func _guide(delta: float):
 func dumb_control(delta: float):
 	if not manual_control:
 		manual_control = true
-		var dis: float = (_velocity * self_destruct_time)\
+		var d: float = (_velocity * self_destruct_time)\
 			+ (0.5 * vtol_profile["acceleration"] * self_destruct_time)
-		vtol._setCourse((vtol.global_transform.origin - vtol.global_transform.basis.z)\
-			* dis)
+		vtol._setCourse((vtol.global_transform.origin - vtol.global_transform.basis.z) * d)
 	if self_destruct_clock + delta > self_destruct_time:
 		_finalize()
 		_clean()
@@ -85,7 +83,6 @@ func _clean():
 
 func _start(move := true):
 	_velocity = vtol_profile["maxSpeed"]
-	_green_light = true
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
 	var scene := get_tree().get_current_scene()
@@ -99,6 +96,8 @@ func _start(move := true):
 		yield(get_tree(), "idle_frame")
 	vtol.global_translate(_barrel - vtol.global_transform.origin)
 	vtol.look_at(_direction, Vector3.UP)
+	vtol.inheritedSpeed = inherited_speed
 	_projectile = _projectile_scene.instance()
 	vtol.add_child(_projectile)
 	_projectile.translation = Vector3.ZERO
+	_green_light = true

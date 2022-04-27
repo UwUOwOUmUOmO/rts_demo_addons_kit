@@ -13,7 +13,7 @@ var weapon_name := ""
 var profile: WeaponProfile = null setget set_profile, get_profile
 var compensator: DistanceCompensator = null
 var carrier: Spatial = null
-var target: Combatant = null
+var target: Spatial = null
 var projectile: PackedScene = null
 var hardpoints := []
 var hardpoints_last_fire: PoolIntArray = []
@@ -26,6 +26,7 @@ var reserve := 0
 var loading_time := 1.0
 var charge_rate := 0.0
 var last_hardpoint := -1
+var inherited_speed := 0.0
 
 var green_light := false
 
@@ -94,6 +95,7 @@ func spawn_projectile(no: int):
 		guidance.set_profile(profile.weaponConfig["vtolProfile"])
 		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
+		guidance.inherited_speed = inherited_speed
 		guidance.target = target
 	elif profile.weaponGuidance == WeaponProfile.GUIDANCE.HEAT:
 		guidance = heat_huidance.instance()
@@ -102,6 +104,7 @@ func spawn_projectile(no: int):
 		guidance.set_profile(profile.weaponConfig["vtolProfile"])
 		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
+		guidance.inherited_speed = inherited_speed
 		guidance.target = target
 		guidance.heat_threshold = profile.weaponConfig["heatThreshold"]
 		if profile.weaponConfig["seekingAngle"] != 0.0:
