@@ -17,6 +17,7 @@ var target: Spatial = null
 var projectile: PackedScene = null
 var hardpoints := []
 var hardpoints_last_fire: PoolIntArray = []
+var angle_limit := deg2rad(1.0)
 
 # METHODS:
 # 0: Cycle
@@ -27,6 +28,7 @@ var loading_time := 1.0
 var charge_rate := 0.0
 var last_hardpoint := -1
 var inherited_speed := 0.0
+
 
 var green_light := false
 
@@ -51,6 +53,12 @@ func set_hardpoints(num: int, h_list := []):
 			hardpoints[c] = h_list[c]
 		hardpoints_last_fire[c] = last_fire
 
+func hardpoint_location(loc: int):
+	return hardpoints[clamp(loc, 0, hardpoints.size() - 1)]
+
+func last_hardpoint_location():
+	return hardpoint_location(last_hardpoint)
+
 func compensate():
 	if not profile or not compensator or not carrier:
 		return 0.0
@@ -59,17 +67,34 @@ func compensate():
 		carrier.global_transform.origin)
 	return compensation
 
+func angle_check():
+	var no := 0
+	if last_hardpoint >= hardpoints.size() or last_hardpoint <= 0:
+		no = 0
+	var current_hardpoint: Spatial = hardpoints[no]
+	var direction := -current_hardpoint.global_transform.basis.z
+	var target_dir: Vector3 = current_hardpoint.direction_to(target)
+	if target_dir.angle_to(direction) <= angle_limit:
+		return true
+	return false
+
 func clear_for_fire() -> bool:
 	if profile.weaponGuidance == WeaponProfile.GUIDANCE.NA:
 		if compensation <= profile.weaponConfig["travelTime"]:
-			return true
+			if angle_check():
+				return true
+			else:
+				return false
 		else:
 			return false
 	else:
 		var distance: float = hardpoints[last_hardpoint].global_transform.origin\
 			.distance_to(target.global_transform.origin)
 		if distance <= profile.weaponProfile["homingRange"]:
-			return true
+			if angle_check():
+				return true
+			else:
+				return false
 		else:
 			return false
 

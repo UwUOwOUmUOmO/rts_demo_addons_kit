@@ -2,6 +2,7 @@ extends Combatant
 
 class_name VTOLFighterBrain
 
+const RAD180 = deg2rad(180.0)
 const VTOL_DEFAULT_CONFIG = {
 	"acceleration":			1.0,
 	"deccelaration": 		-2.0,
@@ -19,7 +20,8 @@ const VTOL_DEFAULT_CONFIG = {
 	"slowingAt":			0.3,
 	"orbitError":			0.01,
 	"deadzone":				1.0,
-	"slowingRange":			60.0,
+	"slowingTime":			0.08,
+	"aerodynamic":			0.8,
 }
 
 var isReady := false
@@ -32,16 +34,21 @@ var inheritedSpeed := 0.0
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
 var slowingRange := 0.0
+var slowingRange_squared := 0.0
 var throttle := 0.0
 var speedPercentage := 0.0
-var distance := 0.0
+var distance := 0.0 setget , get_distance
+var distance_squared := 0.0
 var currentSpeed := 0.0
 var previousYaw := 0.0
 var currentRoll := 0.0
 var targetRoll := 0.0
-var allowedTurn: float = 0.05
+var allowedTurn := 0.05
+var speedLoss := 0.0
+var realSpeedLoss := 0.0
 
-var timer1 := 0.0
+func get_distance():
+	return sqrt(distance_squared)
 
 func _init():
 	_vehicle_config = VTOL_DEFAULT_CONFIG.duplicate()
@@ -50,7 +57,6 @@ func _ready():
 	previousYaw = global_transform.basis.get_euler().y
 
 func _process(delta):
-	timer1 += delta
 	if not _use_physics_process:
 		_compute(delta)
 
@@ -89,7 +95,12 @@ func _compute(delta):
 
 func _prepare():
 	var currentYaw = global_transform.basis.get_euler().y
-	distance = global_transform.origin.distance_to(destination)
+	distance_squared = global_transform.origin.distance_squared_to(destination)
+	var accel: float = _vehicle_config["deccelaration"]
+#	var slowingTime: float = abs(currentSpeed / accel)
+	var slowingTime: float = _vehicle_config["slowingTime"]
+	slowingRange = (currentSpeed * slowingTime) + (0.5 * accel * slowingTime)
+	slowingRange_squared = slowingRange * slowingRange
 	var allowedSpeed: float = _vehicle_config["maxSpeed"] * throttle
 	if allowedSpeed != 0.0:
 		speedPercentage = clamp(currentSpeed / allowedSpeed, 0.0, 1.0)
@@ -106,17 +117,31 @@ func _enforceRoll(currentYaw):
 		-_vehicle_config["maxRollAngle"], _vehicle_config["maxRollAngle"]))
 
 func _calculateSpeed(allowedSpeed):
+	var speedMod := 0.0
+	var clampMin := 0.0
 	if currentSpeed < allowedSpeed:
-		currentSpeed = clamp(currentSpeed + _vehicle_config["acceleration"],\
-				0.0, allowedSpeed)
+		speedMod = _vehicle_config["acceleration"]
+		clampMin = 0.0
 	elif currentSpeed > allowedSpeed:
-		currentSpeed = clamp(currentSpeed + _vehicle_config["deccelaration"],\
-				allowedSpeed, _vehicle_config["maxSpeed"])
+		speedMod = _vehicle_config["deccelaration"]
+		clampMin = allowedSpeed
+	realSpeedLoss = abs(_vehicle_config["deccelaration"] * speedLoss)
+	currentSpeed = clamp(currentSpeed + speedMod,\
+		clampMin, _vehicle_config["maxSpeed"]) - realSpeedLoss
 
 func _calculateTurnRate():
 	var minTurnRate = _vehicle_config["turnRate"]
 	var maxTurnrate = _vehicle_config["maxTurnRate"]
 	allowedTurn = lerp(maxTurnrate, minTurnRate, clamp(speedPercentage, 0.0, 1.0))
+	#---------------------------------------------------------------------
+	var fwd_vec := -global_transform.basis.z
+	var target_vec := global_transform.origin.direction_to(destination)
+	var angle := abs(fwd_vec.angle_to(target_vec))
+	var percentage: float = angle / RAD180
+	var aero: float = _vehicle_config["aerodynamic"]
+	var loss_rate := 1.0 - aero
+	var real_loss := loss_rate * percentage
+	speedLoss = real_loss
 
 # TODO: clean up
 func _turn(player: Vector3):
@@ -130,21 +155,25 @@ func _turn(player: Vector3):
 	global_transform = Transform(Basis(wrotation), global_transform.origin)
 
 func _setMovement():
+	var d_s: float = _vehicle_config["deadzone"]
+	d_s *= d_s
+	var o_s: float = _vehicle_config["orbitError"]
+	o_s *= o_s
 	if overdriveThrottle != -1.0:
 		throttle = overdriveThrottle
 		return
-	if global_transform.origin.distance_to(destination) <= _vehicle_config["deadzone"]:
+	if distance_squared <= d_s:
 		throttle = 0.0
 		_setMoving(false)
 		if currentSpeed < _vehicle_config["speedSnapping"]\
 				and throttle <= _vehicle_config["minThrottle"]:
 			_setMoving(false)
 			return
-		if global_transform.origin.distance_to(destination) <= _vehicle_config["orbitError"]:
+		if distance_squared <= o_s:
 			_setMoving(false)
 			global_translate(destination - global_transform.origin)
-	elif slowingRange >= distance:
-		throttle = clamp(distance / slowingRange, _vehicle_config["minThrottle"], 1.0)
+	elif slowingRange_squared >= distance_squared:
+		throttle = 0.0
 	else:
 		if throttle != 1.0:
 			throttle = 1.0
@@ -163,11 +192,9 @@ func _bakeDestination(d: Vector3):
 	startingPoint = global_transform.origin
 	var inv_per: float = 1.0 - _vehicle_config["slowingAt"]
 	destination = d
-#	slowingRange = inv_per * startingPoint.distance_to(destination)
-	slowingRange = _vehicle_config["slowingRange"]
 	lookAtVec = startingPoint.direction_to(destination)
 	if currentSpeed == 0.0:
-		currentSpeed = inheritedSpeed
+		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config["maxSpeed"])
 
 func _setTracker(target: Spatial):
 	if target == null:
@@ -181,12 +208,12 @@ func _setTracker(target: Spatial):
 	_bakeDestination(trackingTarget.global_transform.origin)
 
 func _setCourse(des: Vector3):
-	if not isMoving:
-		_setMoving(true)
-#	_setMoving(true)
 	if trackingTarget != null:
 		trackingTarget = null
 	_bakeDestination(des)
+	if not isMoving:
+		_setMoving(true)
+#	_setMoving(true)
 
 func _setMoving(m: bool):
 	isMoving = m
@@ -196,6 +223,7 @@ func _setMoving(m: bool):
 	throttle = 0.0
 	speedPercentage = 0.0
 	distance = 0.0
+	distance_squared = 0.0
 	currentSpeed = 0.0
 	previousYaw = 0.0
 	targetRoll = 0.0

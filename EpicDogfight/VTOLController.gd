@@ -2,8 +2,18 @@ extends CombatantController
 
 class_name VTOLController
 
-const dc_scene: PackedScene = preload("dc_scene.tscn")
+const DC_SCENE: PackedScene = preload("dc_scene.tscn")
+const DEFAULT_CONFIG = {
+	"radarResolution": 4000,
+	"radarMaxDistance": 10000.0,
+	"detectionMaxVelocity": 1000.0,
+	"minimumDistanceToTarget": 100.0,
+	"evasiveAngle": deg2rad(45),
+	"evasiveDistance": 200.0,
+}
 
+var clearForFire := true
+var activeWeapon := "main"
 var distanceCompensator: DistanceCompensator = null
 var lastKnownLocation := Vector3.ZERO
 var currentTargetLocation := Vector3.ZERO
@@ -16,17 +26,10 @@ var leading := 1.0
 var evading := false
 
 func _ready():
-	distanceCompensator = dc_scene.instance()
+	distanceCompensator = DC_SCENE.instance()
 	get_tree().current_scene.add_child(distanceCompensator)
 	_use_physics_process = true
-	_config = {
-		"radarResolution": 4000,
-		"radarMaxDistance": 10000.0,
-		"detectionMaxVelocity": 1000.0,
-		"minimumDistanceToTarget": 100.0,
-		"evasiveAngle": deg2rad(45),
-		"evasiveDistance": 200.0,
-	}
+	_config = DEFAULT_CONFIG.duplicate()
 	detectionVelocity = _config["detectionMaxVelocity"] / _config["radarResolution"]
 
 func _assign(craft: VTOLFighterBrain):
@@ -70,6 +73,10 @@ func _compute(delta: float):
 			evading = false
 	if _tracking and _target and not evading:
 		_assigned_combatant.overdriveThrottle = 1.0
+		var vel: float = _weapons[activeWeapon].profile.weaponConfig["travelSpeed"]
+		var leading := distanceCompensator.calculate_leading(vel, \
+			_weapons[activeWeapon].last_hardpoint_location())
+		distanceCompensator.leading = leading
 		if _assigned_combatant.tracking_target != distanceCompensator:
 			_assigned_combatant.tracking_target = distanceCompensator
 			if not _is_stealthy:
@@ -78,6 +85,9 @@ func _compute(delta: float):
 #		_target_assess(delta)
 		if _assigned_combatant.distance < _config["minimumDistanceToTarget"]:
 			_evasive_manuver()
+		elif not evading and clearForFire:
+			var current_weapon: WeaponHandler = _weapons[activeWeapon]
+			current_weapon.fire_once(delta)
 	else:
 		_assigned_combatant.tracking_target = null
 		distanceCompensator.set_target(null)
@@ -137,6 +147,3 @@ func _target_assess(delta: float, reassess = false):
 			else:
 				_target_profile["stance"] = TARGET_STANCE.STATIC
 
-func _calculate_weapon_trajectory():
-	
-	pass

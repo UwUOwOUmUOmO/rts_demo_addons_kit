@@ -45,7 +45,7 @@ func _guide(delta: float):
 		manual_control = false
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
-		self_destruct_clock = 0.0
+#		self_destruct_clock = 0.0
 		return
 	elif distance_squared < detonation_distance_squared:
 		_finalize()
@@ -55,9 +55,10 @@ func _guide(delta: float):
 		manual_control = false
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
-		self_destruct_clock = 0.0
+#		self_destruct_clock = 0.0
 	else:
 		dumb_control(delta)
+	self_destruct_handler(delta)
 
 func dumb_control(delta: float):
 	if not manual_control:
@@ -65,6 +66,8 @@ func dumb_control(delta: float):
 		var d: float = (_velocity * self_destruct_time)\
 			+ (0.5 * vtol_profile["acceleration"] * self_destruct_time)
 		vtol._setCourse((vtol.global_transform.origin - vtol.global_transform.basis.z) * d)
+
+func self_destruct_handler(delta: float):
 	if self_destruct_clock + delta > self_destruct_time:
 		_finalize()
 		_clean()
