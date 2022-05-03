@@ -100,6 +100,7 @@ func _start(move := true):
 	vtol.global_translate(_barrel - vtol.global_transform.origin)
 	vtol.look_at(_direction, Vector3.UP)
 	vtol.inheritedSpeed = inherited_speed
+	vtol.overdriveThrottle = 1.0
 	_projectile = _projectile_scene.instance()
 	vtol.add_child(_projectile)
 	_projectile.translation = Vector3.ZERO

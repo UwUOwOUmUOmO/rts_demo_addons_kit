@@ -20,7 +20,7 @@ const VTOL_DEFAULT_CONFIG = {
 	"slowingAt":			0.3,
 	"orbitError":			0.01,
 	"deadzone":				1.0,
-	"slowingTime":			0.08,
+	"slowingTime":			0.07,
 	"aerodynamic":			0.8,
 }
 
@@ -108,6 +108,7 @@ func _prepare():
 		speedPercentage = 0.0
 	_calculateTurnRate()
 	_setMovement()
+	_turn(destination)
 	return {"allowedSpeed": allowedSpeed,\
 			"currentYaw": currentYaw}
 
@@ -177,7 +178,6 @@ func _setMovement():
 	else:
 		if throttle != 1.0:
 			throttle = 1.0
-	_turn(destination)
 
 func _setRoll(r: float):
 	targetRoll = r
