@@ -39,7 +39,6 @@ var throttle := 0.0
 var speedPercentage := 0.0
 var distance := 0.0 setget , get_distance
 var distance_squared := 0.0
-var currentSpeed := 0.0
 var previousYaw := 0.0
 var currentRoll := 0.0
 var targetRoll := 0.0
@@ -82,7 +81,7 @@ func _compute(delta):
 		_calculateSpeed(allowedSpeed)
 		# Calculate elevation
 		var forward = -global_transform.basis.z
-		var moveDistance = -global_transform.basis.z * (currentSpeed)
+		var moveDistance = forward * (currentSpeed)
 		moveDistance += global_transform.basis.y\
 			* (destination.y - global_transform.origin.y)\
 			* _vehicle_config["climbRate"]

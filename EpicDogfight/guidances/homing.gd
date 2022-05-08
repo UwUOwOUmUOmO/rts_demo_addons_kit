@@ -49,7 +49,6 @@ func _guide(delta: float):
 		return
 	elif distance_squared < detonation_distance_squared:
 		_finalize()
-		_clean()
 		return
 	elif distance_squared <= active_range_squared:
 		manual_control = false
@@ -70,18 +69,17 @@ func dumb_control(delta: float):
 func self_destruct_handler(delta: float):
 	if self_destruct_clock + delta > self_destruct_time:
 		_finalize()
-		_clean()
 		return
 	else:
 		self_destruct_clock += delta
 
 func _clean():
-	vtol.remove_child(_projectile)
-	_projectile.free()
-	var v_parent := vtol.get_parent()
-	if v_parent:
-		v_parent.remove_child(vtol)
-	vtol.free()
+#	if not vtol:
+#		return
+#	var v_parent := vtol.get_parent()
+#	if v_parent:
+#		v_parent.remove_child(vtol)
+	vtol.queue_free()
 	queue_free()
 
 func _start(move := true):
@@ -98,10 +96,13 @@ func _start(move := true):
 	while vtol.get_parent() == null:
 		yield(get_tree(), "idle_frame")
 	vtol.global_translate(_barrel - vtol.global_transform.origin)
-	vtol.look_at(_direction, Vector3.UP)
+#	vtol.look_at(_direction, Vector3.UP)
 	vtol.inheritedSpeed = inherited_speed
 	vtol.overdriveThrottle = 1.0
+	vtol.look_at(vtol.translation + _direction, Vector3.UP)
 	_projectile = _projectile_scene.instance()
 	vtol.add_child(_projectile)
 	_projectile.translation = Vector3.ZERO
+	_signals_init()
+	_initialize()
 	_green_light = true

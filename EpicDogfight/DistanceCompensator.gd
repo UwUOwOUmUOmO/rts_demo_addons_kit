@@ -2,6 +2,8 @@ extends Spatial
 
 class_name DistanceCompensator
 
+const USE_LEAD_METHOD := 2
+
 var target: Spatial = null setget set_target, get_target
 var use_physics_process := true
 var leading := 1.0
@@ -105,6 +107,13 @@ func _advanced_leading(delta: float) -> void:
 
 func calculate_leading(bullet_velocity: float, initial_location: Vector3,\
 		margin := 0.3, steps := 3, use_steps := true) -> float:
+	if USE_LEAD_METHOD == 2:
+		return lead_method2(bullet_velocity, initial_location, margin, steps, use_steps)
+	else:
+		return lead_method1(bullet_velocity, initial_location, margin, steps, use_steps)
+
+func lead_method1(bullet_velocity: float, initial_location: Vector3,\
+		margin := 0.3, steps := 3, use_steps := true) -> float:
 	var diff := 1000.0
 	var deltaTime := 0.0
 	var last_predicted_location := global_transform.origin
@@ -129,18 +138,11 @@ func calculate_leading(bullet_velocity: float, initial_location: Vector3,\
 		current_step += 1
 	return deltaTime
 
-#static func _distance_compensate(origin: Vector3, direction: Vector3,\
-#	speed: float, dtime: float) -> Vector3:
-#	return origin + (direction * speed * dtime)
-#
-#static func _leading_method_1(target: Vector3, td: Vector3, lead: float) -> Vector3:
-#	return _distance_compensate(target, td, lead, 1.0)
-#
-#static func _leading_method_2(hunter: Vector3, hd: Vector3, target: Vector3,\
-#	td: Vector3, lead: float) -> Vector3:
-#	if hd <= td:
-#		return Vector3.ZERO
-#	var distance1 := target - hunter
-#	var time1 := distance1.length() / hd.length()
-#	var compensation := _distance_compensate(target, td, lead, time1)
-#	return compensation
+func lead_method2(bullet_velocity: float, initial_location: Vector3,\
+		margin := 0.3, steps := 3, use_steps := true) -> float:
+	var target_velocity: Vector3 = last_direction * last_velocity
+	var a: float		= bullet_velocity * bullet_velocity  - target_velocity.dot(target_velocity)
+	var b: float		= -2 * target_velocity.dot(last_location - initial_location)
+	var c: float		= -(last_location - initial_location).dot(last_location - initial_location)
+	var delta_time		:= abs((b + sqrt((b * b) - (4.0 * a * c))) / (2.0 * a))
+	return delta_time

@@ -8,8 +8,8 @@ var heat_threshold := 10.0
 var seeking_angle := DEFAULT_SEEKING_ANGLE
 
 func _guide(delta: float):
-	var fwd_vec: Vector3 = -global_transform.basis.z
-	var target_vec: Vector3 = global_transform.origin\
+	var fwd_vec: Vector3 = -vtol.global_transform.basis.z
+	var target_vec: Vector3 = vtol.global_transform.origin\
 		.direction_to(target.global_transform.origin)
 	var distance_squared := vtol.global_transform.origin\
 		.distance_squared_to(target.global_transform.origin)

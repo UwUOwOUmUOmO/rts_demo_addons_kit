@@ -2,6 +2,10 @@ extends Node
 
 class_name WeaponHandler
 
+signal __out_of_ammo()
+
+const TIMER_LIMIT		:= pow(2, 63)
+
 const dumb_guidance 	:= preload("guidances/dumb.tscn")
 const homing_guidance 	:= preload("guidances/homing.tscn")
 const heat_huidance 	:= preload("guidances/heat.tscn")
@@ -16,7 +20,7 @@ var carrier: Spatial = null
 var target: Spatial = null
 var projectile: PackedScene = null
 var hardpoints := []
-var hardpoints_last_fire: PoolIntArray = []
+var hardpoints_last_fire: PoolRealArray = []
 var angle_limit := deg2rad(1.0)
 
 # METHODS:
@@ -29,7 +33,7 @@ var charge_rate := 0.0
 var last_hardpoint := -1
 var inherited_speed := 0.0
 
-
+var timer := 0.0
 var green_light := false
 
 func set_profile(p: WeaponProfile):
@@ -42,11 +46,11 @@ func get_profile():
 	return profile
 
 func set_hardpoints(num: int, h_list := []):
-	var last_fire := OS.get_unix_time()
+	var last_fire := timer
+	hardpoints.clear()
+	hardpoints_last_fire.resize(num)
+	hardpoints.resize(num)
 	for c in range(0, num):
-		hardpoints.clear()
-		hardpoints_last_fire.resize(num)
-		hardpoints.resize(num)
 		if h_list.empty():
 			hardpoints[c] = null
 		else:
@@ -117,7 +121,7 @@ func spawn_projectile(no: int):
 		guidance = homing_guidance.instance()
 		guidance_instancing(guidance)
 		guidance.set_range(profile.weaponConfig["homingRange"])
-		guidance.set_profile(profile.weaponConfig["vtolProfile"])
+		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
 		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
 		guidance.inherited_speed = inherited_speed
@@ -126,7 +130,7 @@ func spawn_projectile(no: int):
 		guidance = heat_huidance.instance()
 		guidance_instancing(guidance)
 		guidance.set_range(profile.weaponConfig["homingRange"])
-		guidance.set_profile(profile.weaponConfig["vtolProfile"])
+		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
 		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
 		guidance.inherited_speed = inherited_speed
@@ -141,24 +145,26 @@ func spawn_projectile(no: int):
 		guidance.detonation_time = clamp(compensation, 0.0, max_travel_time)
 	guidance._velocity = profile.weaponConfig["travelSpeed"]
 	guidance._barrel = hardpoints[no].global_transform.origin
-	guidance._direction = -hardpoints[no].global_transform.basis.z
+	var h: Spatial = hardpoints[no]
+	var fwd_vec := -h.global_transform.basis.z
+	var euler := h.global_transform.basis.get_euler()
+	guidance._transform = hardpoints[no].global_transform
+	guidance._direction = fwd_vec
 	guidance._projectile_scene = projectile
 	while not guidance.get_parent():
 		yield(get_tree(), "idle_frame")
 	guidance._start()
 
-# THE USE OF UNIX TIME COULD LEAD TO SOME WACKY EXPLOITS
-# I TOLD YOU
-# UNIX TIME ONLY RECORD IN SECOND
 func fire_once(delta: float):
 	if reserve <= 0:
+		emit_signal("__out_of_ammo")
 		return
-	var last_fire := OS.get_unix_time()
+	var last_fire := timer
 	if launch_method == 1:
 		# Barrage
 		var hardpoints_count = hardpoints.size()
 		for c in range(0, hardpoints_count):
-			var time_elapsed := last_fire - hardpoints_last_fire[c]
+			var time_elapsed := abs(last_fire - hardpoints_last_fire[c])
 			if time_elapsed > loading_time:
 				spawn_projectile(c)
 				hardpoints_last_fire[c] = last_fire
@@ -166,9 +172,9 @@ func fire_once(delta: float):
 	else:
 		# Cycle
 		var current_hardpoint: int = last_hardpoint + 1
-		if current_hardpoint <= hardpoints.size():
+		if current_hardpoint >= hardpoints.size():
 			current_hardpoint = 0
-		var time_elapsed := last_fire - hardpoints_last_fire[current_hardpoint]
+		var time_elapsed := abs(last_fire - hardpoints_last_fire[current_hardpoint])
 		if time_elapsed > loading_time:
 			spawn_projectile(current_hardpoint)
 			hardpoints_last_fire[current_hardpoint] = last_fire
@@ -183,6 +189,9 @@ func fire():
 func _process(delta):
 	if not use_physics_process and green_light:
 		fire_once(delta)
+	timer += delta
+	if timer > TIMER_LIMIT:
+		timer = 0.0
 
 func _physics_process(delta):
 	if use_physics_process and green_light:

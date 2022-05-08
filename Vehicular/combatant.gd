@@ -10,5 +10,7 @@ var _use_physics_process := true
 
 var _heat_signature := 10.0
 
+var currentSpeed := 0.0
+
 func _exit_tree():
 	queue_free()
