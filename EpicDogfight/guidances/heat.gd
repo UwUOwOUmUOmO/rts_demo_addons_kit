@@ -24,5 +24,5 @@ func _guide(delta: float):
 #		self_destruct_clock = 0.0
 		manual_control = false
 	else:
-		dumb_control(delta)
+		dumb_control() 
 	self_destruct_handler(delta)

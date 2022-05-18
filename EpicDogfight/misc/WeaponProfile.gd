@@ -6,6 +6,8 @@ enum WEAPON_TYPE {KINETIC, ENERGY, UNKNOWN}
 enum LAUNCHER_TYPE {SEMI, BURST, AUTO, UNKNOWN}
 enum GUIDANCE {SEMI, HEAT, ACTIVE, NA}
 
+var computer: FlightComputer = null
+
 var name := ""
 var rounds := 0
 var description := ""
@@ -34,7 +36,7 @@ var weaponConfig := {
 	"vtolProfile":		{},
 }
 
-func weaponTypeParsing(s, reversed = false):
+static func weaponTypeParsing(s, reversed = false):
 	if not reversed:
 		if s == "KINETIC":
 			return WEAPON_TYPE.KINETIC
@@ -50,7 +52,7 @@ func weaponTypeParsing(s, reversed = false):
 		else:
 			return "UNKNOWN"
 
-func weaponLaunchingTypeParsing(s, reversed = false):
+static func weaponLaunchingTypeParsing(s, reversed = false):
 	if not reversed:
 		if s == "SEMI":
 			return LAUNCHER_TYPE.SEMI
@@ -70,7 +72,7 @@ func weaponLaunchingTypeParsing(s, reversed = false):
 		else:
 			return "UNKNOWN"
 
-func guidanceParsing(s, reversed = false):
+static func guidanceParsing(s, reversed = false):
 	if not reversed:
 		if s == "SEMI":
 			return GUIDANCE.SEMI
@@ -103,18 +105,18 @@ func _import(info: Dictionary):
 	damageModifier = info["damageModifier"]
 	weaponConfig = info["weaponConfig"]
 
-func _export():
+static func _export(profile: WeaponProfile):
 	var re := {
-		"name": name,
-		"rounds": rounds,
-		"description": description,
-		"firable": firable,
-		"priority": priority,
-		"weaponType": weaponTypeParsing(weaponType, true),
-		"weaponLauncherType": weaponLaunchingTypeParsing(weaponLauncherType, true),
-		"weaponGuidance": guidanceParsing(weaponGuidance, true),
-		"loadingTime": loadingTime,
-		"damageModifier": damageModifier,
-		"weaponConfig": weaponConfig,
+		"name": profile.name,
+		"rounds": profile.rounds,
+		"description": profile.description,
+		"firable": int(profile.firable),
+		"priority": profile.priority,
+		"weaponType": weaponTypeParsing(profile.weaponType, true),
+		"weaponLauncherType": weaponLaunchingTypeParsing(profile.weaponLauncherType, true),
+		"weaponGuidance": guidanceParsing(profile.weaponGuidance, true),
+		"loadingTime": profile.loadingTime,
+		"damageModifier": profile.damageModifier,
+		"weaponConfig": profile.weaponConfig,
 	}
 	return re

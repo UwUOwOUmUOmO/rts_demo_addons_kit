@@ -22,7 +22,9 @@ const VTOL_DEFAULT_CONFIG = {
 	"deadzone":				1.0,
 	"slowingTime":			0.07,
 	"aerodynamic":			0.8,
+	"crossSection":			1.0,
 }
+
 
 var isReady := false
 var destination := Vector3() setget _setCourse
@@ -194,6 +196,7 @@ func _bakeDestination(d: Vector3):
 	lookAtVec = startingPoint.direction_to(destination)
 	if currentSpeed == 0.0:
 		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config["maxSpeed"])
+		inheritedSpeed = 0.0
 
 func _setTracker(target: Spatial):
 	if target == null:

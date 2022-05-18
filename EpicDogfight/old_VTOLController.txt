@@ -1,6 +1,3 @@
-extends CombatantController
-
-class_name VTOLController
 
 const DC_SCENE: PackedScene = preload("dc_scene.tscn")
 const DEFAULT_CONFIG = {

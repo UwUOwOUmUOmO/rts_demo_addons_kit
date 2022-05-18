@@ -8,7 +8,6 @@ var trackingTarget: Spatial = null setget _set_tracker
 var isMoving := false
 var overdriveThrottle := -1.0
 var distanceCalculated := false
-var currentSpeed := 0.0
 
 # Temporal variables
 var startingPoint := Vector3()

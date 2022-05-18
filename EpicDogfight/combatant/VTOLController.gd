@@ -1,0 +1,3 @@
+extends CombatantController
+
+class_name VTOLController

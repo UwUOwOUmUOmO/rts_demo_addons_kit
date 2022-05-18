@@ -6,23 +6,32 @@ signal __armament_fired(guidance)
 signal __armament_detonated(guidance)
 
 var _velocity := 0.0
-var _transform := Transform()
 var _barrel := Vector3.ZERO
 var _direction := Vector3.ZERO
 var _use_physics_process := true
 var _projectile_scene: PackedScene = null
 var _projectile: Spatial = null
+var _computer: FlightComputer = null
 var _green_light := false
 var _arm_time := 0.3
 var _armed := false
 
 func _process(delta):
+	_computer_handler(delta)
 	if not _use_physics_process and _green_light:
 		_guide(delta)
 
 func _physics_process(delta):
+	_computer_handler(delta, true)
 	if _use_physics_process and _green_light:
 		_guide(delta)
+
+func _computer_handler(delta: float, pp := false):
+	if is_instance_valid(_computer):
+		if pp:
+			_computer._physics_process(delta)
+		else:
+			_computer._process(delta)
 
 func _guide(delta: float):
 	pass
@@ -38,12 +47,20 @@ func _start(move := true):
 	_signals_init()
 	_initialize()
 	_green_light = true
+	_boot_subsys()
 
 func _signals_init():
 	if _projectile.has_method("arm_launched"):
 		connect("__armament_fired", _projectile, "arm_launched")
 	if _projectile.has_method("arm_arrived"):
 		connect("__armament_detonated", _projectile, "arm_arrived")
+
+func _boot_subsys():
+	if is_instance_valid(_computer):
+		_computer.host = self
+		if not _computer.coprocess:
+			_green_light = false
+		_computer._boot()
 
 func _initialize():
 	emit_signal("__armament_fired", self)
@@ -54,7 +71,7 @@ func _finalize():
 	_clean()
 
 func _clean():
-#	if not _projectile:
+#	if not is_instance_valid(_projectile):
 #		return
 #	var p_parent := _projectile.get_parent()
 #	if p_parent:

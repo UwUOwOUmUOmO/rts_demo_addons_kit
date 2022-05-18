@@ -6,21 +6,24 @@ signal __out_of_ammo()
 
 const TIMER_LIMIT		:= pow(2, 63)
 
-const dumb_guidance 	:= preload("guidances/dumb.tscn")
-const homing_guidance 	:= preload("guidances/homing.tscn")
-const heat_huidance 	:= preload("guidances/heat.tscn")
+const dumb_guidance 	:= preload("../guidances/dumb.tscn")
+const homing_guidance 	:= preload("../guidances/homing.tscn")
+const heat_guidance 	:= preload("../guidances/heat.tscn")
 
 var use_physics_process := true
+var override_compensation := false
+var compensator_autosetup := false
 var compensation := 0.0
 
 var weapon_name := ""
 var profile: WeaponProfile = null setget set_profile, get_profile
-var compensator: DistanceCompensator = null
+var compensator: DistanceCompensatorV2 = null
 var carrier: Spatial = null
 var target: Spatial = null
 var projectile: PackedScene = null
 var hardpoints := []
 var hardpoints_last_fire: PoolRealArray = []
+var hardpoints_activation: PoolIntArray = [] # 1 is activated, other is not
 var angle_limit := deg2rad(1.0)
 
 # METHODS:
@@ -49,6 +52,7 @@ func set_hardpoints(num: int, h_list := []):
 	var last_fire := timer
 	hardpoints.clear()
 	hardpoints_last_fire.resize(num)
+	hardpoints_activation.resize(num)
 	hardpoints.resize(num)
 	for c in range(0, num):
 		if h_list.empty():
@@ -56,20 +60,13 @@ func set_hardpoints(num: int, h_list := []):
 		else:
 			hardpoints[c] = h_list[c]
 		hardpoints_last_fire[c] = last_fire
+		hardpoints_activation[c] = 1
 
 func hardpoint_location(loc: int):
 	return hardpoints[clamp(loc, 0, hardpoints.size() - 1)]
 
 func last_hardpoint_location():
 	return hardpoint_location(last_hardpoint)
-
-func compensate():
-	if not profile or not compensator or not carrier:
-		return 0.0
-	var projectile_vel: float = profile.weaponConfig["travelSpeed"]
-	compensation = compensator.calculate_leading(projectile_vel,\
-		carrier.global_transform.origin)
-	return compensation
 
 func angle_check():
 	var no := 0
@@ -116,54 +113,61 @@ func guidance_instancing(g: WeaponGuidance):
 
 func spawn_projectile(no: int):
 	var guidance: WeaponGuidance
-	if profile.weaponGuidance == WeaponProfile.GUIDANCE.SEMI\
-			or profile.weaponGuidance == WeaponProfile.GUIDANCE.ACTIVE:
-		guidance = homing_guidance.instance()
-		guidance_instancing(guidance)
-		guidance.set_range(profile.weaponConfig["homingRange"])
-		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
-		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
-		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
-		guidance.inherited_speed = inherited_speed
-		guidance.target = target
-	elif profile.weaponGuidance == WeaponProfile.GUIDANCE.HEAT:
-		guidance = heat_huidance.instance()
-		guidance_instancing(guidance)
-		guidance.set_range(profile.weaponConfig["homingRange"])
-		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
-		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
-		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
-		guidance.inherited_speed = inherited_speed
-		guidance.target = target
-		guidance.heat_threshold = profile.weaponConfig["heatThreshold"]
-		if profile.weaponConfig["seekingAngle"] != 0.0:
-			guidance.seeking_angle  = profile.weaponConfig["seekingAngle"]
-	else:
+	if profile.weaponGuidance == WeaponProfile.GUIDANCE.NA:
 		guidance = dumb_guidance.instance()
 		guidance_instancing(guidance)
 		var max_travel_time: float = profile.weaponConfig["travelTime"]
-		guidance.detonation_time = clamp(compensation, 0.0, max_travel_time)
+		var actual_comp := 0.0
+		if override_compensation:
+			actual_comp = compensation
+		else:
+			actual_comp = compensator.compensation
+		guidance.detonation_time = clamp(actual_comp, 0.0, max_travel_time)
+	else:
+		if profile.weaponGuidance == WeaponProfile.GUIDANCE.SEMI\
+			or profile.weaponGuidance == WeaponProfile.GUIDANCE.ACTIVE:
+			guidance = homing_guidance.instance()
+		elif profile.weaponGuidance == WeaponProfile.GUIDANCE.HEAT:
+			guidance = heat_guidance.instance()
+			guidance.heat_threshold = profile.weaponConfig["heatThreshold"]
+			if profile.weaponConfig["seekingAngle"] != 0.0:
+				guidance.seeking_angle  = profile.weaponConfig["seekingAngle"]
+		guidance_instancing(guidance)
+		guidance.set_range(profile.weaponConfig["homingRange"])
+		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
+		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
+		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
+		guidance.inherited_speed = inherited_speed
+		guidance.target = target
 	guidance._velocity = profile.weaponConfig["travelSpeed"]
 	guidance._barrel = hardpoints[no].global_transform.origin
 	var h: Spatial = hardpoints[no]
 	var fwd_vec := -h.global_transform.basis.z
 	var euler := h.global_transform.basis.get_euler()
-	guidance._transform = hardpoints[no].global_transform
+#	guidance._transform = hardpoints[no].global_transform
 	guidance._direction = fwd_vec
 	guidance._projectile_scene = projectile
 	while not guidance.get_parent():
 		yield(get_tree(), "idle_frame")
 	guidance._start()
 
-func fire_once(delta: float):
+func is_out_of_ammo() -> bool:
 	if reserve <= 0:
 		emit_signal("__out_of_ammo")
-		return
+		return true
+	else:
+		return false
+
+func fire_once(delta: float):
 	var last_fire := timer
 	if launch_method == 1:
 		# Barrage
 		var hardpoints_count = hardpoints.size()
 		for c in range(0, hardpoints_count):
+			if hardpoints_activation[c] != 1:
+				continue
+			elif is_out_of_ammo():
+				return
 			var time_elapsed := abs(last_fire - hardpoints_last_fire[c])
 			if time_elapsed > loading_time:
 				spawn_projectile(c)
@@ -171,9 +175,13 @@ func fire_once(delta: float):
 				reserve -= 1
 	else:
 		# Cycle
+		if is_out_of_ammo():
+			return
 		var current_hardpoint: int = last_hardpoint + 1
 		if current_hardpoint >= hardpoints.size():
 			current_hardpoint = 0
+		if hardpoints_activation[current_hardpoint] != 1:
+			return
 		var time_elapsed := abs(last_fire - hardpoints_last_fire[current_hardpoint])
 		if time_elapsed > loading_time:
 			spawn_projectile(current_hardpoint)
@@ -185,6 +193,17 @@ func fire_once(delta: float):
 
 func fire():
 	green_light = not green_light
+
+func setup():
+	compensator = DistanceCompensatorV2.new()
+	compensator.target = target
+	compensator.barrel = carrier
+	compensator.projectile_speed = profile.weaponConfig["travelSpeed"]
+	get_tree().current_scene.add_child(compensator)
+
+func _ready():
+	if compensator_autosetup:
+		setup()
 
 func _process(delta):
 	if not use_physics_process and green_light:

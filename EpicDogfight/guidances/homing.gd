@@ -5,7 +5,7 @@ class_name HomingGuidance
 var vtol: VTOLFighterBrain = null
 var target: Spatial = null
 
-var vtol_profile := VTOLFighterBrain.VTOL_DEFAULT_CONFIG
+var vtol_profile := VTOLFighterBrain.VTOL_DEFAULT_CONFIG setget set_profile, get_profile
 var active_range := 100.0 setget set_range, get_range
 var active_range_squared := 10000.0
 var detonation_distance := 1.0 setget set_ddistance, get_ddistance
@@ -13,15 +13,21 @@ var detonation_distance_squared := 1.0
 var inherited_speed := 0.0
 var self_destruct_time := 5.0
 var self_destruct_clock := 0.0
-var guided := false
+var guided := false setget _set_guided, _get_guided
 
 var manual_control := false
+
+func _set_guided(g: bool):
+	guided = g
+
+func _get_guided():
+	return guided
 
 func set_profile(p: Dictionary):
 	vtol_profile = p
 	_velocity = p["maxSpeed"]
 
-func get_profile(p: Dictionary):
+func get_profile():
 	return vtol_profile
 
 func set_range(r: float):
@@ -56,10 +62,10 @@ func _guide(delta: float):
 			vtol._setTracker(target)
 #		self_destruct_clock = 0.0
 	else:
-		dumb_control(delta)
+		dumb_control()
 	self_destruct_handler(delta)
 
-func dumb_control(delta: float):
+func dumb_control():
 	if not manual_control:
 		manual_control = true
 		var d: float = (_velocity * self_destruct_time)\
@@ -106,3 +112,4 @@ func _start(move := true):
 	_signals_init()
 	_initialize()
 	_green_light = true
+	_boot_subsys()

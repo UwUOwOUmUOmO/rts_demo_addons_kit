@@ -31,10 +31,6 @@ func sort():
 		else:
 			continue
 
-func hide_all(h := false):
-	for c in sorted_children:
-		c.visible = h
-
 func _ready():
 	bake()
 
@@ -49,15 +45,12 @@ func _process(delta):
 	var level := 0
 	for d in distances_squared:
 		if distance_squared < d:
-			if level != 0:
+			if level > 0:
 				level -= 1
 			break
 		else:
 			level += 1
-	var active_lod: Spatial
 	if level + 1 > sorted_children.size():
-		active_lod = sorted_children[sorted_children.size() - 1]
-	else:
-		active_lod = sorted_children[level]
-	hide_all()
-	active_lod.visible = true
+		level = sorted_children.size() - 1
+	for c in range(0, sorted_children.size()):
+		sorted_children[c].visible = (level == c)
