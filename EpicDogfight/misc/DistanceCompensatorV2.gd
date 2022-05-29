@@ -14,7 +14,7 @@ var compensation := 0.0
 func set_target(t: Spatial):
 	target = t
 	if not target is Combatant:
-		printerr("Warning: using non-Combatant node for Distance Compensator")
+		push_error("Warning: using non-Combatant node for Distance Compensator")
 		print_stack()
 
 func get_target():

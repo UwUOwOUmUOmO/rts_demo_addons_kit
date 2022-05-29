@@ -31,12 +31,12 @@ func change_level(path: String, current_level: Level):
 	main_package = {}
 	var err :=  get_tree().change_scene(path)
 	if err != OK:
-		printerr("Error: Can't instance level: " + path)
+		push_error("Error: Can't instance level: " + path)
 		print_stack()
 		return
 	var lv: Level = get_tree().current_scene
 	if lv == null or not lv is Level:
-		printerr("Warning: current scene is not a level: " + path)
+		push_error("Warning: current scene is not a level: " + path)
 		print_stack()
 		main_package = temp_package
 		temp_package = {}

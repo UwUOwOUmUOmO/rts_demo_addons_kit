@@ -2,34 +2,37 @@ extends CombatComputer
 
 class_name FlightComputer
 
-enum COMPUTER_TYPE {AAF, AAM, AGM}
+enum DEVICE_TYPE {AAF, AAM, AGM}
 
-var type = COMPUTER_TYPE.AAF
-var coprocess := true
+const DEFAULT_DEVICE = DEVICE_TYPE.AAF
+const DEFAULT_DEVICE_STR = "AAF"
+
+# Persistent
+var type = DEFAULT_DEVICE
 
 static func type_parsing(t, reversed := false):
 	if not reversed:
 		if t == "AAM":
-			return COMPUTER_TYPE.AAM
+			return DEVICE_TYPE.AAM
 		elif t == "AGM":
-			return COMPUTER_TYPE.AGM
+			return DEVICE_TYPE.AGM
 		else:
-			return COMPUTER_TYPE.AAF
+			return DEFAULT_DEVICE
 	else:
-		if t == COMPUTER_TYPE.AAM:
+		if t == DEVICE_TYPE.AAM:
 			return "AAM"
-		elif t == COMPUTER_TYPE.AGM:
+		elif t == DEVICE_TYPE.AGM:
 			return "AGM"
 		else:
-			return "AAF"
+			return DEFAULT_DEVICE_STR
 
 func _import(config: Dictionary):
+	._import(config)
 	type = type_parsing(config["type"])
-	coprocess = bool(config["coprocess"])
 
-static func _export(computer: FlightComputer):
-	var data := {
-		"type": type_parsing(computer.type, true),
-		"coprocess": int(computer.coprocess),
+func _export() -> Dictionary:
+	var original := ._export()
+	var re := {
+		"type": type_parsing(type, true),
 	}
-	return data
+	return dictionary_append(original, re)

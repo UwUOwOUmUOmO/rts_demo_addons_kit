@@ -16,7 +16,7 @@ func worker(list: PoolStringArray):
 	for item in list:
 		var res = load(item)
 		if res == null:
-			printerr("Error: failed to load resource at: {loc}".format({"loc": item}))
+			push_error("Error: failed to load resource at: {loc}".format({"loc": item}))
 			print_stack()
 		assets[loaded] = res
 		loaded += 1
@@ -28,7 +28,7 @@ func load_assets(target_list: PoolStringArray):
 	worker_thread = Thread.new()
 	var err := worker_thread.start(self, "worker", target_list)
 	if err == ERR_CANT_CREATE:
-		printerr("Error: Can't create worker thread")
+		push_error("Error: Can't create worker thread")
 		print_stack()
 #	worker(target_list)
 

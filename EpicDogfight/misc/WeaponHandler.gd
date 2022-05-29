@@ -6,10 +6,6 @@ signal __out_of_ammo()
 
 const TIMER_LIMIT		:= pow(2, 63)
 
-const dumb_guidance 	:= preload("../guidances/dumb.tscn")
-const homing_guidance 	:= preload("../guidances/homing.tscn")
-const heat_guidance 	:= preload("../guidances/heat.tscn")
-
 var use_physics_process := true
 var override_compensation := false
 var compensator_autosetup := false
@@ -102,20 +98,22 @@ func clear_for_fire() -> bool:
 func guidance_instancing(g: WeaponGuidance):
 	var scene := get_tree().get_current_scene()
 	if not scene:
-		printerr("Error: scene not ready")
-		printerr(get_stack())
-		return
+		push_error("Error: scene not ready")
+		print_stack()
+		return false
 	if g.get_parent():
 		g.get_parent().remove_child(g)
 	scene.call_deferred("add_child", g)
 	while not g.get_parent():
 		yield(get_tree(), "idle_frame")
+	return true
 
 func spawn_projectile(no: int):
 	var guidance: WeaponGuidance
+	var instancing_result
 	if profile.weaponGuidance == WeaponProfile.GUIDANCE.NA:
-		guidance = dumb_guidance.instance()
-		guidance_instancing(guidance)
+		guidance = DumbGuidance.new()
+		instancing_result = guidance_instancing(guidance)
 		var max_travel_time: float = profile.weaponConfig["travelTime"]
 		var actual_comp := 0.0
 		if override_compensation:
@@ -126,19 +124,24 @@ func spawn_projectile(no: int):
 	else:
 		if profile.weaponGuidance == WeaponProfile.GUIDANCE.SEMI\
 			or profile.weaponGuidance == WeaponProfile.GUIDANCE.ACTIVE:
-			guidance = homing_guidance.instance()
+			guidance = HomingGuidance.new()
 		elif profile.weaponGuidance == WeaponProfile.GUIDANCE.HEAT:
-			guidance = heat_guidance.instance()
+			guidance = ForwardLookingGuidance.new()
 			guidance.heat_threshold = profile.weaponConfig["heatThreshold"]
 			if profile.weaponConfig["seekingAngle"] != 0.0:
 				guidance.seeking_angle  = profile.weaponConfig["seekingAngle"]
-		guidance_instancing(guidance)
+		instancing_result = guidance_instancing(guidance)
 		guidance.set_range(profile.weaponConfig["homingRange"])
 		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
 		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
 		guidance.inherited_speed = inherited_speed
 		guidance.target = target
+	if instancing_result is bool:
+		if not instancing_result:
+			push_error("Failed to instance guidance")
+			print_stack()
+			return
 	guidance._velocity = profile.weaponConfig["travelSpeed"]
 	guidance._barrel = hardpoints[no].global_transform.origin
 	var h: Spatial = hardpoints[no]

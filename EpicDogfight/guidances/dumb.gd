@@ -7,6 +7,7 @@ var time_elapsed := 0.0
 
 func _boot_subsys():
 	_computer = null
+	_instrument = null
 
 func _guide(delta: float):
 	if time_elapsed + delta >= detonation_time:

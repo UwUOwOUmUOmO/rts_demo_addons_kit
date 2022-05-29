@@ -29,14 +29,14 @@ func setup():
 	if level_res == null:
 		level_res = load(level_resource_path)
 		if level_res == null or not level_res is LevelResource:
-			printerr("Error: Failed to load level resource")
+			push_error("Error: Failed to load level resource")
 			print_stack()
 			return
 	spawn_loading_scene()
 	start_loading()
 	while not stage2:
 		if stop_loading:
-			printerr("Error: Failed to load main scene: " + level_res.scene)
+			push_error("Error: Failed to load main scene: " + level_res.scene)
 			print_stack()
 			return
 		yield(get_tree(), "idle_frame")

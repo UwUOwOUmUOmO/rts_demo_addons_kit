@@ -12,6 +12,7 @@ var _use_physics_process := true
 var _projectile_scene: PackedScene = null
 var _projectile: Spatial = null
 var _computer: FlightComputer = null
+var _instrument: AirInstrument = null
 var _green_light := false
 var _arm_time := 0.3
 var _armed := false
@@ -32,6 +33,11 @@ func _computer_handler(delta: float, pp := false):
 			_computer._physics_process(delta)
 		else:
 			_computer._process(delta)
+	if is_instance_valid(_instrument):
+		if pp:
+			_instrument._physics_process(delta)
+		else:
+			_instrument._process(delta)
 
 func _guide(delta: float):
 	pass
@@ -56,11 +62,22 @@ func _signals_init():
 		connect("__armament_detonated", _projectile, "arm_arrived")
 
 func _boot_subsys():
-	if is_instance_valid(_computer):
+	if is_instance_valid(_computer) and not _computer.enforcer_assigned:
+		_computer.enforcer_assigned = true
 		_computer.host = self
 		if not _computer.coprocess:
 			_green_light = false
 		_computer._boot()
+	else:
+		_computer = null
+	if is_instance_valid(_instrument) and not _instrument.enforcer_assigned:
+		_instrument.enforcer_assigned = true
+		_instrument.host = self
+		if not _instrument.coprocess:
+			_green_light = false
+		_instrument._boot()
+	else:
+		_instrument = null
 
 func _initialize():
 	emit_signal("__armament_fired", self)
@@ -71,10 +88,10 @@ func _finalize():
 	_clean()
 
 func _clean():
-#	if not is_instance_valid(_projectile):
-#		return
-#	var p_parent := _projectile.get_parent()
-#	if p_parent:
-#		p_parent.remove_child(_projectile)
-#	_projectile.free()
 	queue_free()
+
+func _exit_tree():
+	if is_instance_valid(_computer):
+		_computer.enforcer_assigned = false
+	if is_instance_valid(_instrument):
+		_instrument.enforcer_assigned = false

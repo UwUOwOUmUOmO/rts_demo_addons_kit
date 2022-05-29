@@ -1,8 +1,8 @@
-extends CombatSensor
+extends CombatInstrument
 
-class_name AirSensor
+class_name AirInstrument
 
-const PROJECTILE_CROSS_SECTION = 1.7
+const PROJECTILE_SIGNATURE = 1.0
 
 signal __vehicle_detected(vehicle)
 signal __lock_on_detected(direction)
