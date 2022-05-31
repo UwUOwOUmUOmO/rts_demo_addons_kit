@@ -25,7 +25,7 @@ func cleanse_property_list(list: Array) -> PoolStringArray:
 func _import(config: Dictionary) -> void:
 	for variable in property_list:
 		if not config.has(variable):
-			push_warning("Error: failed to import property: " + variable)
+			push_warning("Warning: failed to import property: " + variable)
 			print_stack()
 			continue
 		set(variable, config[variable])

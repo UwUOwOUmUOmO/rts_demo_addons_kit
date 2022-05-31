@@ -1,0 +1,166 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://addons/BehaviorTree/ui/tree_editor.gd" type="Script" id=1]
+[ext_resource path="res://addons/BehaviorTree/ui/graphics/editor_theme_no_font.theme" type="Theme" id=2]
+[ext_resource path="res://addons/BehaviorTree/ui/editor_handler.gd" type="Script" id=3]
+
+[node name="BTEditor" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 29.0
+theme = ExtResource( 2 )
+script = ExtResource( 1 )
+is_debugging = true
+
+[node name="EditorHandler" type="Node" parent="."]
+script = ExtResource( 3 )
+
+[node name="MainContainer" type="Control" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 2 )
+
+[node name="Splitter" type="HSplitContainer" parent="MainContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 59.0
+
+[node name="NodeBrowser" type="ItemList" parent="MainContainer/Splitter"]
+margin_right = 150.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 150, 0 )
+items = [ "Behavior Tree", null, false ]
+
+[node name="Workspace" type="GraphEdit" parent="MainContainer/Splitter"]
+margin_left = 158.0
+margin_right = 1024.0
+margin_bottom = 512.0
+theme = ExtResource( 2 )
+scroll_offset = Vector2( -150, 0 )
+
+[node name="FileIndicator" type="HBoxContainer" parent="MainContainer"]
+anchor_right = 1.0
+margin_top = 22.0
+margin_bottom = 52.0
+theme = ExtResource( 2 )
+
+[node name="Label" type="Label" parent="MainContainer/FileIndicator"]
+margin_top = 4.0
+margin_right = 87.0
+margin_bottom = 26.0
+theme = ExtResource( 2 )
+text = "Current file: "
+
+[node name="FilePath" type="LineEdit" parent="MainContainer/FileIndicator"]
+margin_left = 91.0
+margin_right = 391.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 300, 0 )
+theme = ExtResource( 2 )
+editable = false
+
+[node name="SaveFileBtn" type="Button" parent="MainContainer/FileIndicator"]
+margin_left = 395.0
+margin_right = 495.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 100, 0 )
+theme = ExtResource( 2 )
+text = "Save File"
+
+[node name="ChooseFileBtn" type="Button" parent="MainContainer/FileIndicator"]
+margin_left = 499.0
+margin_right = 599.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 100, 0 )
+theme = ExtResource( 2 )
+text = "Choose File"
+
+[node name="NewFileBtn" type="Button" parent="MainContainer/FileIndicator"]
+margin_left = 603.0
+margin_right = 703.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 100, 0 )
+theme = ExtResource( 2 )
+text = "New File"
+
+[node name="AutosaveChk" type="CheckButton" parent="MainContainer/FileIndicator"]
+margin_left = 707.0
+margin_right = 820.0
+margin_bottom = 30.0
+theme = ExtResource( 2 )
+text = "Autosave"
+
+[node name="NoFileContainer" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 2 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="NoFileContainer"]
+margin_left = 262.0
+margin_top = 185.0
+margin_right = 762.0
+margin_bottom = 385.0
+rect_min_size = Vector2( 500, 200 )
+theme = ExtResource( 2 )
+
+[node name="Label" type="Label" parent="NoFileContainer/VBoxContainer"]
+margin_right = 500.0
+margin_bottom = 39.0
+theme = ExtResource( 2 )
+text = "No file was provided
+"
+align = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="NoFileContainer/VBoxContainer"]
+margin_top = 43.0
+margin_right = 500.0
+margin_bottom = 73.0
+theme = ExtResource( 2 )
+
+[node name="ButtonGroup" type="HBoxContainer" parent="NoFileContainer/VBoxContainer/CenterContainer"]
+margin_left = 122.0
+margin_right = 378.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 0, 30 )
+theme = ExtResource( 2 )
+
+[node name="LoadFIleBtn" type="Button" parent="NoFileContainer/VBoxContainer/CenterContainer/ButtonGroup"]
+margin_right = 100.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 100, 0 )
+theme = ExtResource( 2 )
+text = "Load file"
+
+[node name="Spacer" type="Label" parent="NoFileContainer/VBoxContainer/CenterContainer/ButtonGroup"]
+margin_left = 104.0
+margin_top = 4.0
+margin_right = 152.0
+margin_bottom = 26.0
+theme = ExtResource( 2 )
+text = "          "
+
+[node name="NewFileBtn" type="Button" parent="NoFileContainer/VBoxContainer/CenterContainer/ButtonGroup"]
+margin_left = 156.0
+margin_right = 256.0
+margin_bottom = 30.0
+rect_min_size = Vector2( 100, 0 )
+theme = ExtResource( 2 )
+text = "New file"
+
+[node name="FileSaver" type="FileDialog" parent="."]
+margin_left = 45.0
+margin_top = 83.0
+margin_right = 360.0
+margin_bottom = 213.0
+theme = ExtResource( 2 )
+window_title = "Open/Save file"
+filters = PoolStringArray( "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res", "*.res" )
+
+[connection signal="item_activated" from="MainContainer/Splitter/NodeBrowser" to="EditorHandler" method="_on_NodeBrowser_item_activated"]
+[connection signal="pressed" from="MainContainer/FileIndicator/SaveFileBtn" to="." method="_on_SaveFileBtn_pressed"]
+[connection signal="pressed" from="MainContainer/FileIndicator/ChooseFileBtn" to="." method="_on_LoadFIleBtn_pressed"]
+[connection signal="pressed" from="MainContainer/FileIndicator/NewFileBtn" to="." method="_on_NewFileBtn_pressed"]
+[connection signal="pressed" from="NoFileContainer/VBoxContainer/CenterContainer/ButtonGroup/LoadFIleBtn" to="." method="_on_LoadFIleBtn_pressed"]
+[connection signal="pressed" from="NoFileContainer/VBoxContainer/CenterContainer/ButtonGroup/NewFileBtn" to="." method="_on_NewFileBtn_pressed"]
+[connection signal="file_selected" from="FileSaver" to="." method="_on_FileSaver_file_selected"]

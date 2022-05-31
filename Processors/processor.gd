@@ -9,7 +9,7 @@ var terminated := false
 var enforcer_assigned := false
 
 # Persistance
-var use_physics_process := true
+export(bool) var use_physics_process := true
 
 
 func _process(delta: float):
