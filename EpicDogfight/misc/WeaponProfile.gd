@@ -33,7 +33,7 @@ var weaponConfig := {
 	"detonateDistance": 3.0,
 	"seekingAngle":		0.0,
 	"homingRange":		0.0,
-	"vtolProfile":		{},
+	"vtolProfile":		VTOLConfiguration.new(),
 }
 
 static func weaponTypeParsing(s, reversed = false):

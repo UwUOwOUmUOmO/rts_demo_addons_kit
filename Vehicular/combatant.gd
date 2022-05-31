@@ -13,7 +13,7 @@ const HARD_STARBOARD		= -HARD_PORT
 var _trackable := true
 var _controller = null
 var _trackedBy = null
-var _vehicle_config: Dictionary = {}
+var _vehicle_config: Configuration = null
 var _use_physics_process := true
 
 var _heat_signature := 10.0

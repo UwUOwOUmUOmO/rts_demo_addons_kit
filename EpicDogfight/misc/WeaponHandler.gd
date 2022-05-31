@@ -4,7 +4,7 @@ class_name WeaponHandler
 
 signal __out_of_ammo()
 
-const TIMER_LIMIT		:= pow(2, 63)
+const TIMER_ROLLBACK	:= 3600.0
 
 var use_physics_process := true
 var override_compensation := false
@@ -132,7 +132,7 @@ func spawn_projectile(no: int):
 				guidance.seeking_angle  = profile.weaponConfig["seekingAngle"]
 		instancing_result = guidance_instancing(guidance)
 		guidance.set_range(profile.weaponConfig["homingRange"])
-		guidance.set_profile(profile.weaponConfig["vtolProfile"].duplicate())
+		guidance.set_profile(profile.weaponConfig["vtolProfile"])
 		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
 		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
 		guidance.inherited_speed = inherited_speed
@@ -185,7 +185,8 @@ func fire_once(delta: float):
 			current_hardpoint = 0
 		if hardpoints_activation[current_hardpoint] != 1:
 			return
-		var time_elapsed := abs(last_fire - hardpoints_last_fire[current_hardpoint])
+		var time_elapsed := abs(last_fire -\
+			hardpoints_last_fire[current_hardpoint])
 		if time_elapsed > loading_time:
 			spawn_projectile(current_hardpoint)
 			hardpoints_last_fire[current_hardpoint] = last_fire
@@ -212,7 +213,7 @@ func _process(delta):
 	if not use_physics_process and green_light:
 		fire_once(delta)
 	timer += delta
-	if timer > TIMER_LIMIT:
+	if timer > TIMER_ROLLBACK:
 		timer = 0.0
 
 func _physics_process(delta):

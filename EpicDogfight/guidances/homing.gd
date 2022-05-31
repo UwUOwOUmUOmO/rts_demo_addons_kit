@@ -6,7 +6,7 @@ var vtol: VTOLFighterBrain = null
 var target: Spatial = null
 var rudder_control: Spatial = null
 
-var vtol_profile := VTOLFighterBrain.VTOL_DEFAULT_CONFIG\
+var vtol_profile: VTOLConfiguration = null\
 	setget set_profile, get_profile
 var active_range := 100.0 setget set_range, get_range
 var active_range_squared := 10000.0
@@ -25,8 +25,10 @@ func _set_guided(g: bool):
 func _get_guided():
 	return guided
 
-func set_profile(p: Dictionary):
-	vtol_profile = p
+func set_profile(p: VTOLConfiguration):
+	var new_profile := VTOLConfiguration.new()
+	new_profile.copy(p)
+	vtol_profile = new_profile
 
 func get_profile():
 	return vtol_profile
@@ -57,7 +59,7 @@ func _guide(delta: float):
 			vtol._setTracker(target)
 			manual_control = false
 		return
-	elif distance_squared < detonation_distance_squared:
+	elif distance_squared < detonation_distance_squared and _armed:
 		_finalize()
 		return
 	else:

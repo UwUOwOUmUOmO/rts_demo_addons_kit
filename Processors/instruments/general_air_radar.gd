@@ -76,7 +76,7 @@ func is_aircraft_detected(boogie: VTOLFighterBrain) -> bool:
 		return false
 	var reversed_scale := radar_detection_curve.interpolate(percentage)
 	var v_threshold: float = max_detection_velocity * (1.0 - reversed_scale)\
-		* (1.0 / boogie._vehicle_config["radarSignature"])
+		* (1.0 / boogie._vehicle_config.radarSignature)
 	if boogie.currentSpeed >= v_threshold:
 		return true
 	else:
@@ -88,7 +88,7 @@ func detect_aircraft(clist: Array) -> void:
 		if not is_instance_valid(combatant):
 			continue
 		if is_aircraft_detected(combatant):
-			if combatant._vehicle_config["radarSignature"] < PROJECTILE_SIGNATURE:
+			if combatant._vehicle_config.radarSignature < PROJECTILE_SIGNATURE:
 				emit_signal("__inbound_projectile", combatant)
 			else:
 				emit_signal("__vehicle_detected", combatant)

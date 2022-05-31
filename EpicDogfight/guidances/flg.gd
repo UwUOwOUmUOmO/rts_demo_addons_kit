@@ -18,14 +18,14 @@ func _guide(delta: float):
 	var distance_squared := vtol.global_transform.origin\
 		.distance_squared_to(target.global_transform.origin)
 	var angle := fwd_vec.angle_to(target_vec)
-	if distance_squared < detonation_distance_squared:
-			_finalize()
-			return
-	elif angle <= seeking_angle\
+	if angle <= seeking_angle\
 			and distance_squared <= active_range_squared:
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 			manual_control = false
+	elif distance_squared < detonation_distance_squared and _armed:
+		_finalize()
+		return
 	else:
 		dumb_control() 
 	self_destruct_handler(delta)

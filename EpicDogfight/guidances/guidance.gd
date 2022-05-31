@@ -52,6 +52,7 @@ func _start(move := true):
 	_projectile.look_at(global_transform.origin + _direction, Vector3.UP)
 	_signals_init()
 	_initialize()
+	_armed = true
 	_green_light = true
 	_boot_subsys()
 

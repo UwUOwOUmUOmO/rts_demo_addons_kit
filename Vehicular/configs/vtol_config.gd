@@ -8,7 +8,7 @@ var speedSnapping	:= 1.0
 var climbRate		:= 1.2
 var minThrottle		:= 0.2
 var maxThrottle		:= 1.0
-var maxSpeed		:= 100
+var maxSpeed		:= 100.0
 var rollAmplifier	:= 10.0
 var pitchAmplifier	:= 0.07
 var maxRollAngle	:= PI / 4.0
@@ -25,3 +25,4 @@ var radarSignature	:= 1.5
 func _init():
 	._init()
 	name = "VTOLConfiguration"
+	return self
