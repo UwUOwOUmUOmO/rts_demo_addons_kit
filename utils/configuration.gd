@@ -4,7 +4,9 @@ class_name Configuration
 
 var name := "Configuration"
 var property_list: PoolStringArray = []
-var exclusion_list: PoolStringArray = ["property_list", "exclusion_list"]
+var exclusion_list: PoolStringArray =\
+	["name", "property_list", "exclusion_list", "custom_class_list"]
+var custom_class_list := []
 
 func _init():
 	property_list = cleanse_property_list(get_property_list())
@@ -14,6 +16,7 @@ func cleanse_property_list(list: Array) -> PoolStringArray:
 	var clear := false
 	for content in list:
 		var prop: Dictionary = content
+		
 		if prop["name"] in exclusion_list:
 			continue
 		if clear:
@@ -22,6 +25,31 @@ func cleanse_property_list(list: Array) -> PoolStringArray:
 		if prop["name"] == "Script Variables":
 			clear = true
 	return new_list
+
+func try_instance_config(name: String):
+	if custom_class_list.empty():
+		custom_class_list = ProjectSettings\
+			.get_setting("_global_script_classes")
+	for item in custom_class_list:
+		if item["class"] == name:
+			var script: Script = load(item["path"])
+			var instance := Resource.new()
+			instance.set_script(script)
+			return instance
+	return null
+
+func dictionary_handler(dict: Dictionary):
+	if dict.has("__config_class_name"):
+		var subres_class_name: String = dict["__config_class_name"]
+		var new_subres = try_instance_config(subres_class_name)
+		if new_subres != null:
+			new_subres._import(dict)
+			return new_subres
+		else:
+			push_error("Can't instance class with name: " + subres_class_name)
+			return null
+	else:
+		return dict
 
 func copy(from: Configuration) -> bool:
 	var full_completion := true
@@ -42,7 +70,11 @@ func _import(config: Dictionary) -> bool:
 			print_stack()
 			full_completion = false
 			continue
-		set(variable, config[variable])
+		var value = config[variable]
+		var cured = value
+		if value is Dictionary:
+			cured = dictionary_handler(value)
+		set(variable, cured)
 	return full_completion
 
 func import_from_cfg(cfg: ConfigFile) -> bool:
@@ -57,15 +89,29 @@ func import_from_cfg(cfg: ConfigFile) -> bool:
 		set(component, raw)
 	return full_completion
 
-func _export() -> Dictionary:
+func _export(for_cfg := false) -> Dictionary:
 	var re := {}
 	for variable in property_list:
-		re[variable] = get(variable)
+		var component = get(variable)
+		if for_cfg:
+			re[variable] = component
+		else:
+			if variable == "dvConfig":
+				pass
+			if not component is Reference:
+				re[variable] = component
+			elif component.has_method("cleanse_property_list"):
+				var subres: Dictionary = component._export()
+				var subres_name: String = component.name
+				subres["__config_class_name"] = subres_name
+				re[variable] = subres
+			else:
+				re[variable] = component
 	return re
 
 func export_as_cfg(path := "", pwd := "") -> ConfigFile:
 	var cfg := ConfigFile.new()
-	var export_dict := _export()
+	var export_dict := _export(true)
 	for val in export_dict:
 		cfg.set_value(name, val, export_dict[val])
 	if not path.empty():

@@ -34,6 +34,14 @@ var damageModifier: Dictionary	= {
 	"building": 	1.0,
 }
 
+# func _get_property_list() -> Array:
+# 	var modified := [
+# 		{"name": "dvConfig", "class_name": "Resource",\
+# 		"type": 17, "hint": 0, "hint_string": "", "usage": 1 }
+# 	]
+# 	return modified
+
 func _init():
+	._init()
 	name = "WeaponConfiguration"
 	return self
