@@ -2,7 +2,7 @@ extends Combatant
 
 class_name VTOLFighterBrain
 
-const VTOL_DEFAULT_CONFIG	= {
+const OLD_VTOL_DEFAULT_CONFIG	= {
 	"acceleration":			1.0,
 	"deccelaration": 		-2.0,
 	"speedSnapping":		1.0,

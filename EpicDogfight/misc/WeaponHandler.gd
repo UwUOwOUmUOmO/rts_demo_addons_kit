@@ -12,7 +12,7 @@ var compensator_autosetup := false
 var compensation := 0.0
 
 var weapon_name := ""
-var profile: WeaponProfile = null setget set_profile, get_profile
+var profile: WeaponConfiguration = null setget set_profile, get_profile
 var compensator: DistanceCompensatorV2 = null
 var carrier: Spatial = null
 var target: Spatial = null
@@ -35,9 +35,9 @@ var inherited_speed := 0.0
 var timer := 0.0
 var green_light := false
 
-func set_profile(p: WeaponProfile):
+func set_profile(p: WeaponConfiguration):
 	profile = p
-	weapon_name = p.name
+	weapon_name = p.weapon_name
 	reserve = p.rounds
 	loading_time = p.loadingTime
 
@@ -76,8 +76,8 @@ func angle_check():
 	return false
 
 func clear_for_fire() -> bool:
-	if profile.weaponGuidance == WeaponProfile.GUIDANCE.NA:
-		if compensation <= profile.weaponConfig["travelTime"]:
+	if profile.weaponGuidance == WeaponConfiguration.GUIDANCE.NA:
+		if compensation <= profile.travelTime:
 			if angle_check():
 				return true
 			else:
@@ -87,7 +87,7 @@ func clear_for_fire() -> bool:
 	else:
 		var distance: float = hardpoints[last_hardpoint].global_transform.origin\
 			.distance_to(target.global_transform.origin)
-		if distance <= profile.weaponProfile["homingRange"]:
+		if distance <= profile.homingRange:
 			if angle_check():
 				return true
 			else:
@@ -111,10 +111,10 @@ func guidance_instancing(g: WeaponGuidance):
 func spawn_projectile(no: int):
 	var guidance: WeaponGuidance
 	var instancing_result
-	if profile.weaponGuidance == WeaponProfile.GUIDANCE.NA:
+	if profile.weaponGuidance == WeaponConfiguration.GUIDANCE.NA:
 		guidance = DumbGuidance.new()
 		instancing_result = guidance_instancing(guidance)
-		var max_travel_time: float = profile.weaponConfig["travelTime"]
+		var max_travel_time: float = profile.travelTime
 		var actual_comp := 0.0
 		if override_compensation:
 			actual_comp = compensation
@@ -122,19 +122,19 @@ func spawn_projectile(no: int):
 			actual_comp = compensator.compensation
 		guidance.detonation_time = clamp(actual_comp, 0.0, max_travel_time)
 	else:
-		if profile.weaponGuidance == WeaponProfile.GUIDANCE.SEMI\
-			or profile.weaponGuidance == WeaponProfile.GUIDANCE.ACTIVE:
+		if profile.weaponGuidance == WeaponConfiguration.GUIDANCE.SEMI\
+			or profile.weaponGuidance == WeaponConfiguration.GUIDANCE.ACTIVE:
 			guidance = HomingGuidance.new()
-		elif profile.weaponGuidance == WeaponProfile.GUIDANCE.HEAT:
+		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.HEAT:
 			guidance = ForwardLookingGuidance.new()
-			guidance.heat_threshold = profile.weaponConfig["heatThreshold"]
-			if profile.weaponConfig["seekingAngle"] != 0.0:
-				guidance.seeking_angle  = profile.weaponConfig["seekingAngle"]
+			guidance.heat_threshold = profile.heatThreshold
+			if profile.seekingAngle != 0.0:
+				guidance.seeking_angle  = profile.seekingAngle
 		instancing_result = guidance_instancing(guidance)
-		guidance.set_range(profile.weaponConfig["homingRange"])
-		guidance.set_profile(profile.weaponConfig["vtolProfile"])
-		guidance.set_ddistance(profile.weaponConfig["detonateDistance"])
-		guidance.self_destruct_time = profile.weaponConfig["travelTime"]
+		guidance.set_range(profile.homingRange)
+		guidance.set_profile(profile.dvConfig)
+		guidance.set_ddistance(profile.detonateDistance)
+		guidance.self_destruct_time = profile.travelTime
 		guidance.inherited_speed = inherited_speed
 		guidance.target = target
 	if instancing_result is bool:
@@ -142,7 +142,7 @@ func spawn_projectile(no: int):
 			push_error("Failed to instance guidance")
 			print_stack()
 			return
-	guidance._velocity = profile.weaponConfig["travelSpeed"]
+	guidance._velocity = profile.travelSpeed
 	guidance._barrel = hardpoints[no].global_transform.origin
 	var h: Spatial = hardpoints[no]
 	var fwd_vec := -h.global_transform.basis.z
@@ -202,7 +202,7 @@ func setup():
 	compensator = DistanceCompensatorV2.new()
 	compensator.target = target
 	compensator.barrel = carrier
-	compensator.projectile_speed = profile.weaponConfig["travelSpeed"]
+	compensator.projectile_speed = profile.travelSpeed
 	get_tree().current_scene.add_child(compensator)
 
 func _ready():
