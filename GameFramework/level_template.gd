@@ -6,6 +6,8 @@ signal __c_assets_finished(lv)
 signal __o_assets_finished(lv)
 signal __loading_percentage(percent)
 
+onready var LevelSingleton: Node = SingletonManager.get_node("LevelSingleton")
+
 export(String) var level_resource_path := ""
 
 var level_res: LevelResource = null
@@ -19,6 +21,7 @@ var stage1 := false
 var stage2 := false
 var stop_loading := false
 
+
 func _ready():
 	if LevelSingleton.level_res_override != null:
 		level_res = LevelSingleton.level_res_override
@@ -30,14 +33,12 @@ func setup():
 		level_res = load(level_resource_path)
 		if level_res == null or not level_res is LevelResource:
 			push_error("Error: Failed to load level resource")
-			print_stack()
 			return
 	spawn_loading_scene()
 	start_loading()
 	while not stage2:
 		if stop_loading:
 			push_error("Error: Failed to load main scene: " + level_res.scene)
-			print_stack()
 			return
 		yield(get_tree(), "idle_frame")
 	LevelSingleton.main_package["critical"] = critical_assets

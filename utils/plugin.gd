@@ -14,7 +14,12 @@ func _enter_tree():
 		preload("lod.gd"),
 		null
 	)
-
+	add_autoload_singleton(
+		"SingletonManager",
+		"res://addons/utils/singleton_manager.gd"
+	)
 
 func _exit_tree():
-	pass
+	remove_custom_type("LineDrawer")
+	remove_custom_type("SimpleSpatialLOD")
+	remove_autoload_singleton("SingletonManager")

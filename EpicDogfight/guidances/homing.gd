@@ -90,7 +90,6 @@ func _start(move := true):
 		scene.call_deferred("add_child", vtol)
 	else:
 		push_error("Error: scene not ready")
-		print_stack()
 		return
 	while vtol.get_parent() == null:
 		yield(get_tree(), "idle_frame")

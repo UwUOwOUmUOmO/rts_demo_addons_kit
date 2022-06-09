@@ -17,7 +17,6 @@ func worker(list: PoolStringArray):
 		var res = load(item)
 		if res == null:
 			push_error("Error: failed to load resource at: {loc}".format({"loc": item}))
-			print_stack()
 		assets[loaded] = res
 		loaded += 1
 	loaded = total_assets
@@ -29,7 +28,6 @@ func load_assets(target_list: PoolStringArray):
 	var err := worker_thread.start(self, "worker", target_list)
 	if err == ERR_CANT_CREATE:
 		push_error("Error: Can't create worker thread")
-		print_stack()
 #	worker(target_list)
 
 func get_percentage() -> float:

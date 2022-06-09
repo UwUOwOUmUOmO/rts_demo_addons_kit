@@ -5,11 +5,16 @@ class_name Configuration
 var name := "Configuration"
 var property_list: PoolStringArray = []
 var exclusion_list: PoolStringArray =\
-	["name", "property_list", "exclusion_list", "custom_class_list"]
-var custom_class_list := []
+	["name", "property_list", "exclusion_list"]
 
 func _init():
 	property_list = cleanse_property_list(get_property_list())
+
+func _integrity_check() -> bool:
+	return true
+
+func __is_config():
+	return true
 
 func cleanse_property_list(list: Array) -> PoolStringArray:
 	var new_list: PoolStringArray= []
@@ -26,27 +31,23 @@ func cleanse_property_list(list: Array) -> PoolStringArray:
 			clear = true
 	return new_list
 
-func try_instance_config(name: String):
-	if custom_class_list.empty():
-		custom_class_list = ProjectSettings\
-			.get_setting("_global_script_classes")
-	for item in custom_class_list:
-		if item["class"] == name:
-			var script: Script = load(item["path"])
-			var instance := Resource.new()
-			instance.set_script(script)
-			return instance
-	return null
+func try_instance_config(path: String):
+	if not ResourceLoader.exists(path):
+		return null
+	var script: Script = load(path)
+	var instance := Resource.new()
+	instance.set_script(script)
+	return instance
 
 func dictionary_handler(dict: Dictionary):
-	if dict.has("__config_class_name"):
-		var subres_class_name: String = dict["__config_class_name"]
-		var new_subres = try_instance_config(subres_class_name)
+	if dict.has("__config_class_path"):
+		var subres_script_path: String = dict["__config_class_path"]
+		var new_subres = try_instance_config(subres_script_path)
 		if new_subres != null:
 			new_subres._import(dict)
 			return new_subres
 		else:
-			push_error("Can't instance class with name: " + subres_class_name)
+			push_error("Can't instance script with path: " + subres_script_path)
 			return null
 	else:
 		return dict
@@ -56,18 +57,16 @@ func copy(from: Configuration) -> bool:
 	for component in property_list:
 		if not component in from:
 			push_warning("Warning: failed to copy property: " + component)
-			print_stack()
 			full_completion = false
 			continue
 		set(component, from.get(component))
-	return full_completion
+	return full_completion and _integrity_check()
 
 func _import(config: Dictionary) -> bool:
 	var full_completion := true
 	for variable in property_list:
 		if not config.has(variable):
 			push_warning("Warning: failed to import property: " + variable)
-			print_stack()
 			full_completion = false
 			continue
 		var value = config[variable]
@@ -75,48 +74,54 @@ func _import(config: Dictionary) -> bool:
 		if value is Dictionary:
 			cured = dictionary_handler(value)
 		set(variable, cured)
-	return full_completion
+	return full_completion and _integrity_check()
 
-func import_from_cfg(cfg: ConfigFile) -> bool:
-	var full_completion := true
-	for component in property_list:
-		var raw = cfg.get_value(name, component)
-		if not is_instance_valid(raw):
-			push_warning("Warning: failed to import property: " + component)
-			print_stack()
-			full_completion = false
-			continue
-		set(component, raw)
-	return full_completion
-
-func _export(for_cfg := false) -> Dictionary:
+func _export(replace_subres := true) -> Dictionary:
 	var re := {}
 	for variable in property_list:
 		var component = get(variable)
-		if for_cfg:
+		if not replace_subres or not component is Reference:
 			re[variable] = component
 		else:
-			if variable == "dvConfig":
-				pass
-			if not component is Reference:
-				re[variable] = component
-			elif component.has_method("cleanse_property_list"):
+			if component is Node:
+				continue
+			elif component.has_method("__is_config"):
 				var subres: Dictionary = component._export()
-				var subres_name: String = component.name
-				subres["__config_class_name"] = subres_name
+				var script_path: String = component.get_script().resource_path
+				subres["__config_class_path"] = script_path
 				re[variable] = subres
 			else:
 				re[variable] = component
 	return re
 
-func export_as_cfg(path := "", pwd := "") -> ConfigFile:
-	var cfg := ConfigFile.new()
-	var export_dict := _export(true)
-	for val in export_dict:
-		cfg.set_value(name, val, export_dict[val])
-	if not path.empty():
-		if not pwd.empty():
-			cfg.save_encrypted_pass(path, pwd)
-		else:
-			cfg.save(path)
-	return cfg
+func read_from(path: String, encryption_key := "") -> int:
+	var file := File.new()
+	var err: int
+	if encryption_key.empty():
+		err = file.open(path, File.READ)
+	else:
+		err = file.open_encrypted_with_pass(path, File.READ, encryption_key)
+	if err != OK:
+		push_error("Error ({ecode}): Can't open file at: {path}"\
+			.format({"ecode": err, "path": path}))
+	else:
+		var dict: Dictionary = file.get_var()
+		file.close()
+		_import(dict)
+	return err
+
+func save_as(path: String, encryption_key := "") -> int:
+	var file := File.new()
+	var err: int
+	if encryption_key.empty():
+		err = file.open(path, File.WRITE)
+	else:
+		err = file.open_encrypted_with_pass(path, File.WRITE, encryption_key)
+	if err != OK:
+		push_error("Error ({ecode}): Can't open file at: {path}"\
+			.format({"ecode": err, "path": path}))
+	else:
+		var exported := _export()
+		file.store_var(exported)
+		file.close()
+	return err
