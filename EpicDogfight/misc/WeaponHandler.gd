@@ -24,13 +24,13 @@ var angle_limit := deg2rad(1.0)
 
 # METHODS:
 # 0: Cycle
-# 1: Barrage
-var launch_method := 0
+# 1: SALVO
+var current_fire_mode: int = WeaponConfiguration.FIRE_MODE.BARRAGE
 var reserve := 0
 var loading_time := 1.0
 var charge_rate := 0.0
 var last_hardpoint := -1
-var inherited_speed := 0.0
+var inherite_carrier_speed := true
 
 var timer := 0.0
 var green_light := false
@@ -40,6 +40,7 @@ func set_profile(p: WeaponConfiguration):
 	weapon_name = p.weapon_name
 	reserve = p.rounds
 	loading_time = p.loadingTime
+	current_fire_mode = profile.weaponFireMode
 
 func get_profile():
 	return profile
@@ -134,7 +135,8 @@ func spawn_projectile(no: int):
 		guidance.set_profile(profile.dvConfig)
 		guidance.set_ddistance(profile.detonateDistance)
 		guidance.self_destruct_time = profile.travelTime
-		guidance.inherited_speed = inherited_speed
+		if inherite_carrier_speed and "currentSpeed" in carrier:
+			guidance.inherited_speed = carrier.currentSpeed
 		guidance.target = target
 	if instancing_result is bool:
 		if not instancing_result:
@@ -159,10 +161,9 @@ func is_out_of_ammo() -> bool:
 	else:
 		return false
 
-func fire_once(delta: float):
+func fire_once(delta := 0.0):
 	var last_fire := timer
-	if launch_method == 1:
-		# Barrage
+	if current_fire_mode == WeaponConfiguration.FIRE_MODE.SALVO:
 		var hardpoints_count = hardpoints.size()
 		for c in range(0, hardpoints_count):
 			if hardpoints_activation[c] != 1:
@@ -174,8 +175,7 @@ func fire_once(delta: float):
 				spawn_projectile(c)
 				hardpoints_last_fire[c] = last_fire
 				reserve -= 1
-	else:
-		# Cycle
+	elif current_fire_mode == WeaponConfiguration.FIRE_MODE.BARRAGE:
 		if is_out_of_ammo():
 			return
 		var current_hardpoint: int = last_hardpoint + 1

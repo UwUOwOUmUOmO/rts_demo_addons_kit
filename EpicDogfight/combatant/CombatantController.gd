@@ -2,9 +2,6 @@ extends Node
 
 class_name CombatantController
 
-#enum TARGET_TYPE 	{AIRBORNE, GROUND, ONPHASE, UNKNOWN}
-#enum TARGET_STANCE 	{STATIC, MOVABLE, UNKNOWN}
-
 signal __target_defeated()
 signal __target_changed(new_target)
 signal __combatant_changed(new_combatant)

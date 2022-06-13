@@ -5,10 +5,15 @@ class_name Configuration
 var name := "Configuration"
 var property_list: PoolStringArray = []
 var exclusion_list: PoolStringArray =\
-	["name", "property_list", "exclusion_list"]
+	["name", "property_list", "exclusion_list", "config_resources"]
+var config_resources: PoolStringArray = []
 
 func _init():
 	property_list = cleanse_property_list(get_property_list())
+	_reset_volatile()
+
+func _reset_volatile():
+	pass
 
 func _integrity_check() -> bool:
 	return true
@@ -125,3 +130,37 @@ func save_as(path: String, encryption_key := "") -> int:
 		file.store_var(exported)
 		file.close()
 	return err
+
+func save_res(dir_path: String, res_name := name):
+	var path_util = SingletonManager.get_node_or_null("PathUtils")
+	if not is_instance_valid(path_util):
+		OutputManager.print_error("Error: no PathUtils", get_stack())
+		return
+	var this_res_path: String = path_util.append_path(dir_path, res_name)
+	if config_resources.empty():
+		path_util.res_save(this_res_path, self)
+		return
+	for res in config_resources:
+		get(res).save_res(dir_path, res, true)
+	path_util.res_save(this_res_path, self)
+
+static func load_res(dir_path: String, instance: Resource, res_name := ""):
+	var path_util = SingletonManager.get_node_or_null("PathUtils")
+	if not is_instance_valid(path_util):
+		OutputManager.print_error("Error: no PathUtils", get_stack())
+		return
+	if res_name.empty():
+		res_name = instance.name
+	var this_res_path: String = path_util.append_path(dir_path, res_name)
+	var new_instance = null
+	var prequisites: PoolStringArray = [res_name]
+	prequisites.append_array(instance.config_resources)
+	var package: Dictionary = path_util.get_prequisites(dir_path, prequisites)
+	new_instance = package[res_name]
+	package.erase(res_name)
+	for key in package:
+		var subres = package[key]
+		subres = load_res(dir_path, subres, key)
+		new_instance.set(key, null)
+		new_instance.set(key, subres)
+	return new_instance

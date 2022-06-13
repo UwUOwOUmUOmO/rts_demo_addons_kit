@@ -6,12 +6,12 @@ const MINIMUM_EFFICIENCY := 0.001
 const DEFAULT_EFFICIENCY := 1.0
 const MAXIMUM_EFFICIENCY := 60.0
 
-enum ARMOR_TYPE { LIGHT, SOLID, COMPOSITE, BUILDING, FORT, NA }
+enum ARMOR_TYPE { NA, LIGHT, SOLID, COMPOSITE, STRUCTURE, FORT }
 
 var light       := 1.0
 var solid       := 1.0
 var composite   := 1.0
-var buidling    := 1.0
+var structure    := 1.0
 var fort        := 1.0
 var none        := 1.0
 
@@ -33,8 +33,8 @@ func get_damage_coefficiency(enum_val: int):
 			dmg_mod = solid
 		ARMOR_TYPE.COMPOSITE:
 			dmg_mod = composite
-		ARMOR_TYPE.BUILDING:
-			dmg_mod = buidling
+		ARMOR_TYPE.STRUCTURE:
+			dmg_mod = structure
 		ARMOR_TYPE.FORT:
 			dmg_mod = fort
 		_:
@@ -51,17 +51,17 @@ func calculate_damage(base_damage: float, armor_type: int, armor_coef: float,\
 
 func special_dmg_calculation(armor_coef: float, param: String) -> float:
 	if not special_behavior.has(param):
-		push_error("Error: special behavior \"{sb}\" not registered"\
-			.format({"sb": param}))
+		OutputManager.print_error("Error: special behavior \"{sb}\" not registered"\
+			.format({"sb": param}), get_stack())
 		return DEFAULT_EFFICIENCY
 	var fref = special_behavior[param]
 	if not fref is FuncRef:
-		push_error("Error: special behavior \"{sb}\" is not a FuncRef"\
-			.format({"sb": param}))
+		OutputManager.print_error("Error: special behavior \"{sb}\" is not a FuncRef"\
+			.format({"sb": param}), get_stack())
 		return DEFAULT_EFFICIENCY
 	var re = fref.call_func(armor_coef)
 	if not re is float:
-		push_error("Error: special behavior \"{sb}\" return non-float value"\
-			.format({"sb": param}))
+		OutputManager.print_error("Error: special behavior \"{sb}\" return non-float value"\
+			.format({"sb": param}), get_stack())
 		return DEFAULT_EFFICIENCY
 	return re

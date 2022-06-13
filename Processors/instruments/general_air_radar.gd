@@ -18,6 +18,19 @@ var max_detection_velocity := 2000.0
 var lock_on_detection_accuracy := 0.6
 var radar_detection_curve: Curve = preload("general_detection_curve.res")
 
+func _init():
+	exclusion_list.append_array(["radar_activated", "rng", "rmd_squared",\
+		"radar_cycle"])
+	._init()
+	name = "GeneralAirInstrument"
+	return self
+
+func _reset_volatile():
+	._reset_volatile()
+	radar_activated = true
+	rng = RandomNumberGenerator.new()
+	rng.randomize()
+
 func set_rf(rf: float):
 	radar_frequency = rf
 	radar_cycle = 1.0 / rf
@@ -33,8 +46,6 @@ func get_rmd():
 	return radar_max_distance
 
 func _boot():
-	rng = RandomNumberGenerator.new()
-	rng.randomize()
 	green_light = true
 	_activate_radar()
 
@@ -101,30 +112,3 @@ func _get_all_combatants() -> Array:
 		if c is Combatant:
 				list.append(c)
 	return list
-
-func _import(config: Dictionary) -> void:
-	._import(config)
-	set_rf(config["radar_frequency"])
-	set_rmd(config["radar_max_distance"])
-	max_detection_velocity = config["max_detection_velocity"]
-	lock_on_detection_accuracy = config["lock_on_detection_accuracy"]
-	var curve := load(config["radar_detection_curve"])
-	if curve is Curve:
-		radar_detection_curve = curve
-
-func _export() -> Dictionary:
-	var original := ._export()
-	var re := {
-		"radar_frequency": get_rf(),
-		"radar_max_distance": get_rmd(),
-		"max_detection_velocity": max_detection_velocity,
-		"lock_on_detection_accuracy": lock_on_detection_accuracy,
-		"radar_detection_curve": radar_detection_curve.resource_path,
-	}
-	return dictionary_append(original, re)
-
-func _reset_volatile():
-	._reset_volatile()
-	radar_activated = true
-	rng  = null
-	rmd_squared = 0.0

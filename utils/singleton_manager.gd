@@ -2,11 +2,13 @@ extends Node
 
 const DEFAULT_AUTOLOAD := PoolStringArray([
 	"res://addons/GameFramework/level_singleton.gd",
-	"res://addons/Processors/processors_swarm.gd"
+	"res://addons/Processors/processors_swarm.gd",
+	"res://addons/utils/path_utils.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
 	"LevelSingleton",
-	"ProcessorsSwarm"
+	"ProcessorsSwarm",
+	"PathUtils",
 ])
 
 func _ready():
