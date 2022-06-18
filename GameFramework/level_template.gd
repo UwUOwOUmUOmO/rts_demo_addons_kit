@@ -6,7 +6,7 @@ signal __c_assets_finished(lv)
 signal __o_assets_finished(lv)
 signal __loading_percentage(percent)
 
-onready var LevelSingleton: Node = SingletonManager.get_node("LevelSingleton")
+onready var LevelSingleton: Node = SingletonManager.fetch("LevelSingleton")
 
 export(String) var level_resource_path := ""
 

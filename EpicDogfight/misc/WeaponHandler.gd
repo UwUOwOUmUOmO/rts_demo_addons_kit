@@ -21,16 +21,15 @@ var hardpoints := []
 var hardpoints_last_fire: PoolRealArray = []
 var hardpoints_activation: PoolIntArray = [] # 1 is activated, other is not
 var angle_limit := deg2rad(1.0)
+var pgm_target := Vector3.ZERO
 
-# METHODS:
-# 0: Cycle
-# 1: SALVO
 var current_fire_mode: int = WeaponConfiguration.FIRE_MODE.BARRAGE
 var reserve := 0
 var loading_time := 1.0
 var charge_rate := 0.0
 var last_hardpoint := -1
 var inherite_carrier_speed := true
+var guided := true
 
 var timer := 0.0
 var green_light := false
@@ -111,6 +110,7 @@ func guidance_instancing(g: WeaponGuidance):
 func spawn_projectile(no: int):
 	var guidance: WeaponGuidance
 	var instancing_result
+	# For dumb munitions
 	if profile.weaponGuidance == WeaponConfiguration.GUIDANCE.NA:
 		guidance = DumbGuidance.new()
 		instancing_result = guidance_instancing(guidance)
@@ -121,15 +121,20 @@ func spawn_projectile(no: int):
 		else:
 			actual_comp = compensator.compensation
 		guidance.detonation_time = clamp(actual_comp, 0.0, max_travel_time)
+	# For HomingGuidance and all of its inheritances
 	else:
 		if profile.weaponGuidance == WeaponConfiguration.GUIDANCE.SEMI\
 			or profile.weaponGuidance == WeaponConfiguration.GUIDANCE.ACTIVE:
 			guidance = HomingGuidance.new()
-		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.HEAT:
+		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.FLG:
 			guidance = ForwardLookingGuidance.new()
 			guidance.heat_threshold = profile.heatThreshold
 			if profile.seekingAngle != 0.0:
 				guidance.seeking_angle  = profile.seekingAngle
+		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.PRECISION:
+			guidance = PrecisionGuidance.new()
+			guidance.site = pgm_target
+		guidance.handler = self
 		instancing_result = guidance_instancing(guidance)
 		guidance.set_range(profile.homingRange)
 		guidance.set_profile(profile.dvConfig)

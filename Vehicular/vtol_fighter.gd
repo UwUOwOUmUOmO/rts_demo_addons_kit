@@ -2,30 +2,11 @@ extends Combatant
 
 class_name VTOLFighterBrain
 
-const OLD_VTOL_DEFAULT_CONFIG	= {
-	"acceleration":			1.0,
-	"deccelaration": 		-2.0,
-	"speedSnapping":		1.0,
-	"climbRate":			1.2,
-	"minThrottle":			0.2,
-	"maxThrottle":			1.0,
-	"maxSpeed": 			100,
-	"rollAmplifier":		10.0,
-	"pitchAmplifier":		0.07,
-	"maxRollAngle":			PI / 4.0,
-	"maxPitchAngle":		PI / 2.0,
-	"turnRate":				0.05,
-	"maxTurnRate":			0.05,
-	"slowingAt":			0.3,
-	"orbitError":			0.01,
-	"deadzone":				1.0,
-	"slowingTime":			0.07,
-	"aerodynamic":			0.8,
-	"radarSignature":		1.5,
-}
+const GRAVITATIONAL_CONSTANT = 9.8
 
 var isReady := false
 var useRudder := false
+var enableGravity := false
 var rudderAngle := 0.0
 var destination := Vector3() setget _setCourse
 var trackingTarget: Spatial = null setget _setTracker
@@ -66,8 +47,9 @@ func _physics_process(delta):
 		_compute(delta)
 
 func _compute(delta):
+	var moveDistance = Vector3.ZERO
 	if useRudder:
-		_rudderControl()
+		moveDistance = _rudderControl()
 	elif trackingTarget != null:
 		_bakeDestination(trackingTarget.global_transform.origin)
 		if not isMoving:
@@ -85,17 +67,20 @@ func _compute(delta):
 		_calculateSpeed(allowedSpeed)
 		# Calculate elevation
 		var forward = -global_transform.basis.z
-		var moveDistance = forward * (currentSpeed)
+		moveDistance = forward * (currentSpeed)
 		moveDistance += global_transform.basis.y\
 			* (destination.y - global_transform.origin.y)\
 			* _vehicle_config.climbRate
-		move_and_slide(moveDistance, Vector3.UP)
 		previousYaw = currentYaw
 	if isReady:
+		if enableGravity:
+			moveDistance += -global_transform.basis.y\
+				* (0.5 * GRAVITATIONAL_CONSTANT * _vehicle_config.weight)
+		move_and_slide(moveDistance, Vector3.UP)
 		_rollProcess()
 		_setRoll(lerp(currentRoll, 0.0, 0.9995))
 
-func _rudderControl():
+func _rudderControl() -> Vector3:
 	var allowedSpeed: float =_vehicle_config.maxSpeed
 	speedPercentage = clamp(currentSpeed / allowedSpeed, 0.0, 1.0)
 	if rudderAngle != 0.0:
@@ -105,7 +90,7 @@ func _rudderControl():
 	if rudderAngle != 0.0:
 		var rotated: Vector3 = forward.rotated(global_transform.basis.y, rudderAngle)
 		_turn(global_transform.origin + rotated)
-	move_and_slide(forward * currentSpeed, Vector3.UP)
+	return forward * currentSpeed
 
 func _prepare():
 	var currentYaw = global_transform.basis.get_euler().y
@@ -165,7 +150,8 @@ func _turn(to: Vector3, turningSpeed := allowedTurn):
 	var rotation_speed = turningSpeed
 	var wtransform = global_transform.\
 		looking_at(Vector3(target_pos.x,global_pos.y,target_pos.z),Vector3.UP)
-	var wrotation = Quat(global_transform.basis).slerp(Quat(wtransform.basis), rotation_speed)
+	var wrotation = Quat(global_transform.basis).slerp(Quat(wtransform.basis),\
+		rotation_speed)
 
 	global_transform = Transform(Basis(wrotation), global_transform.origin)
 
@@ -208,6 +194,7 @@ func _bakeDestination(d: Vector3):
 	var inv_per: float = 1.0 - _vehicle_config.slowingAt
 	destination = d
 	lookAtVec = startingPoint.direction_to(destination)
+	distance_squared = global_transform.origin.distance_squared_to(destination)
 	if currentSpeed == 0.0:
 		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config.maxSpeed)
 		inheritedSpeed = 0.0
@@ -226,9 +213,9 @@ func _setTracker(target: Spatial):
 func _setCourse(des: Vector3):
 	if trackingTarget != null:
 		trackingTarget = null
-	_bakeDestination(des)
 	if not isMoving:
 		_setMoving(true)
+	_bakeDestination(des)
 #	_setMoving(true)
 
 func _setMoving(m: bool):

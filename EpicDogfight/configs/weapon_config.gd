@@ -4,7 +4,7 @@ class_name WeaponConfiguration
 
 enum WEAPON_TYPE	{ UNKNOWN, KINETIC, ENERGY }
 enum FIRE_MODE		{ UNKNOWN, SALVO, BARRAGE, CONTINUOUS }
-enum GUIDANCE		{ NA, SEMI, HEAT, ACTIVE, PRECISION }
+enum GUIDANCE		{ NA, SEMI, FLG, ACTIVE, PRECISION }
 
 var weapon_name 			:= ""
 var rounds 					:= 0

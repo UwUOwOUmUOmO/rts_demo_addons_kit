@@ -4,6 +4,7 @@ class_name ForwardLookingGuidance
 
 const DEFAULT_SEEKING_ANGLE = deg2rad(30.0)
 
+var heat_tracking = false
 var heat_threshold := 10.0
 var seeking_angle := DEFAULT_SEEKING_ANGLE
 
@@ -20,7 +21,11 @@ func _guide(delta: float):
 	var angle := fwd_vec.angle_to(target_vec)
 	if angle <= seeking_angle\
 			and distance_squared <= active_range_squared:
-		if vtol.trackingTarget != target:
+		if heat_tracking and target is Combatant:
+			if target._heat_signature > heat_threshold:
+				vtol._setTracker(target)
+				manual_control = false
+		elif vtol.trackingTarget != target:
 			vtol._setTracker(target)
 			manual_control = false
 	elif distance_squared < detonation_distance_squared and _armed:

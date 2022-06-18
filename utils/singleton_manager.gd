@@ -11,12 +11,19 @@ const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
 	"PathUtils",
 ])
 
+var services := {}
+
 func _ready():
 	var iter := 0
 	var size = DEFAULT_AUTOLOAD.size()
 	for count in range(0, size):
 		add_singleton_from_script(DEFAULT_AUTOLOAD[count],\
 			DEFAULT_AUTOLOAD_NAME[count])
+
+func fetch(name: String):
+	if services.has(name):
+		return services[name]
+	return null
 
 func add_singleton(singleton: Node):
 	if is_instance_valid(singleton.get_parent()):
@@ -38,3 +45,4 @@ func add_singleton_from_script(script_loc: String, name := ""):
 	if not name.empty():
 		singleton.name = name
 	add_child(singleton)
+	services[name] = singleton

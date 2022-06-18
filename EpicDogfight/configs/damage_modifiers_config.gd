@@ -45,7 +45,7 @@ func calculate_damage(base_damage: float, armor_type: int, armor_coef: float,\
 		special_type := ""):
 	if not special_type.empty():
 		return special_dmg_calculation(armor_coef, special_type)
-	var dmg: float = base_damage * armor_coef\
+	var dmg: float = base_damage * (1.0 / armor_coef) \
 		* get_damage_coefficiency(armor_type)
 	return dmg
 

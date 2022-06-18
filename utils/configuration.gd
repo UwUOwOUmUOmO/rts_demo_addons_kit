@@ -132,7 +132,7 @@ func save_as(path: String, encryption_key := "") -> int:
 	return err
 
 func save_res(dir_path: String, res_name := name):
-	var path_util = SingletonManager.get_node_or_null("PathUtils")
+	var path_util = SingletonManager.fetch("PathUtils")
 	if not is_instance_valid(path_util):
 		OutputManager.print_error("Error: no PathUtils", get_stack())
 		return
@@ -145,7 +145,7 @@ func save_res(dir_path: String, res_name := name):
 	path_util.res_save(this_res_path, self)
 
 static func load_res(dir_path: String, instance: Resource, res_name := ""):
-	var path_util = SingletonManager.get_node_or_null("PathUtils")
+	var path_util = SingletonManager.fetch("PathUtils")
 	if not is_instance_valid(path_util):
 		OutputManager.print_error("Error: no PathUtils", get_stack())
 		return

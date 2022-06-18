@@ -2,6 +2,7 @@ extends WeaponGuidance
 
 class_name HomingGuidance
 
+var handler = null
 var vtol: VTOLFighterBrain = null
 var target: Spatial = null
 var rudder_control: Spatial = null
@@ -54,7 +55,7 @@ func _guide(delta: float):
 		return
 	var distance_squared := vtol.global_transform.origin\
 		.distance_squared_to(target.global_transform.origin)
-	if guided or distance_squared <= active_range_squared:
+	if (guided and handler.guided) or distance_squared <= active_range_squared:
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 			manual_control = false
