@@ -4,6 +4,10 @@ class_name VTOLFighterBrain
 
 const GRAVITATIONAL_CONSTANT = 9.8
 
+signal __tracking_target(brain, target)
+signal __loss_track_of_target(brain)
+signal __destination_arrived(brain)
+
 var isReady := false
 var useRudder := false
 var enableGravity := false
@@ -51,9 +55,13 @@ func _compute(delta):
 	if useRudder:
 		moveDistance = _rudderControl()
 	elif trackingTarget != null:
-		_bakeDestination(trackingTarget.global_transform.origin)
-		if not isMoving:
-			_setMoving(true)
+		if not is_instance_valid(trackingTarget):
+			emit_signal("__loss_track_of_target", self)
+			trackingTarget = null
+		else:
+			_bakeDestination(trackingTarget.global_transform.origin)
+			if not isMoving:
+				_setMoving(true)
 	if not isReady:
 		if get_parent():
 			isReady = true
@@ -82,7 +90,10 @@ func _compute(delta):
 
 func _rudderControl() -> Vector3:
 	var allowedSpeed: float =_vehicle_config.maxSpeed
-	speedPercentage = clamp(currentSpeed / allowedSpeed, 0.0, 1.0)
+	if allowedSpeed == 0.0:
+		speedPercentage = 0.0
+	else:
+		speedPercentage = clamp(currentSpeed / allowedSpeed, 0.0, 1.0)
 	if rudderAngle != 0.0:
 		_calculateTurnRate()
 	_calculateSpeed(allowedSpeed)
@@ -209,6 +220,7 @@ func _setTracker(target: Spatial):
 		_setMoving(true)
 	trackingTarget = target
 	_bakeDestination(trackingTarget.global_transform.origin)
+	emit_signal("__tracking_target", self, target)
 
 func _setCourse(des: Vector3):
 	if trackingTarget != null:
@@ -219,6 +231,8 @@ func _setCourse(des: Vector3):
 #	_setMoving(true)
 
 func _setMoving(m: bool):
+	if not m:
+		emit_signal("__destination_arrived", self)
 	isMoving = m
 	# Reset all variable
 	lookAtVec = Vector3()

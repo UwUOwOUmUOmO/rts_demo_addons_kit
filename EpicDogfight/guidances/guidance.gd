@@ -5,6 +5,8 @@ class_name WeaponGuidance
 signal __armament_fired(guidance)
 signal __armament_detonated(guidance)
 
+var _weapon_base_config: WeaponConfiguration = null
+
 var _velocity := 0.0
 var _barrel := Vector3.ZERO
 var _direction := Vector3.ZERO

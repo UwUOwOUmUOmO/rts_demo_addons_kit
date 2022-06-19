@@ -4,9 +4,9 @@ class_name Combatant
 
 signal __combatant_out_of_hp(combatant)
 
-const FORE					= deg2rad(180.0)
+const FORE					= PI
 const AFT					= -FORE
-const HARD_PORT				= deg2rad(90.0)
+const HARD_PORT				= PI / 2.0
 const HARD_STARBOARD		= -HARD_PORT
 
 #var _is_ordanance := false

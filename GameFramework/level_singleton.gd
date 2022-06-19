@@ -13,6 +13,12 @@ func _init():
 	level_res_override.loading_scene_primary =\
 		preload("res://more_test_scenes/FakeLoadingBar.tscn")
 
+func debug_code():
+	pass
+
+func _ready():
+	debug_code()
+
 func c_assets_handler(lv: Level):
 	main_package["critical"] = lv.critical_assets
 	lv.disconnect("__c_assets_finished", self, "c_assets_handler")
@@ -31,11 +37,13 @@ func change_level(path: String, current_level: Level):
 	main_package = {}
 	var err :=  get_tree().change_scene(path)
 	if err != OK:
-		push_error("Error: Can't instance level: " + path)
+		OutputManager.print_error("Can't instance level: " + path,\
+			get_stack())
 		return
 	var lv: Level = get_tree().current_scene
 	if lv == null or not lv is Level:
-		push_error("Warning: current scene is not a level: " + path)
+		OutputManager.print_warning("Current scene is not a level: "\
+			+ path, get_stack())
 		main_package = temp_package
 		temp_package = {}
 		return

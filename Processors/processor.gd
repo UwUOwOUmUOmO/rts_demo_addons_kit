@@ -3,13 +3,19 @@ extends Configuration
 class_name Processor
 
 # Volatile
-var host = null
-var tree: SceneTree = null
+var host = null setget _set_host
+var tree: SceneTree = null setget _set_tree
 var terminated := false
 var enforcer_assigned := false
 
 # Persistance
 export(bool) var use_physics_process := true
+
+func _set_host(h):
+	host = h
+
+func _set_tree(t):
+	tree = t
 
 func _init():
 	exclusion_list.append_array(["host", "tree", "terminated",\

@@ -27,11 +27,6 @@ var homingRange				:=	0.0
 var dvConfig				:=	VTOLConfiguration.new()
 var damageModifier			:= DamageModifiersConfiguration.new()
 
-#func _get_property_list():
-#	return [{"name": "dvConfig", "type": 0, "usage": PROPERTY_USAGE_STORAGE},
-#			{"name": "damageModifier", "type": 0, "usage":\
-#				PROPERTY_USAGE_STORAGE}]
-
 func _init():
 	._init()
 	config_resources.append_array(["dvConfig", "damageModifier"])

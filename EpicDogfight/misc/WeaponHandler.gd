@@ -98,7 +98,7 @@ func clear_for_fire() -> bool:
 func guidance_instancing(g: WeaponGuidance):
 	var scene := get_tree().get_current_scene()
 	if not scene:
-		push_error("Error: scene not ready")
+		OutputManager.print_error("Scene not ready", get_stack())
 		return false
 	if g.get_parent():
 		g.get_parent().remove_child(g)
@@ -145,14 +145,14 @@ func spawn_projectile(no: int):
 		guidance.target = target
 	if instancing_result is bool:
 		if not instancing_result:
-			push_error("Error: Failed to instance guidance")
+			OutputManager.print_error("Failed to instance guidance", get_stack())
 			return
 	guidance._velocity = profile.travelSpeed
 	guidance._barrel = hardpoints[no].global_transform.origin
+	guidance._weapon_base_config = profile
 	var h: Spatial = hardpoints[no]
 	var fwd_vec := -h.global_transform.basis.z
 	var euler := h.global_transform.basis.get_euler()
-#	guidance._transform = hardpoints[no].global_transform
 	guidance._direction = fwd_vec
 	guidance._projectile_scene = projectile
 	while not guidance.get_parent():

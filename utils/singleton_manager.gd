@@ -33,12 +33,12 @@ func add_singleton(singleton: Node):
 func add_singleton_from_script(script_loc: String, name := ""):
 	var s = load(script_loc)
 	if not s is Script:
-		push_error("Error: resource at {path} is not a script"\
-			.format({"path": script_loc}))
+		OutputManager.print_error("Resource at {path} is not a script"\
+			.format({"path": script_loc}), get_stack())
 		return
 	elif s.get_instance_base_type() != "Node":
-		push_error("Error: Singleton at {path} must extend on type Node"\
-			.format({"path": script_loc}))
+		OutputManager.print_error("Singleton at {path} must extend on type Node"\
+			.format({"path": script_loc}), get_stack())
 		return
 	var singleton := Node.new()
 	singleton.set_script(s)

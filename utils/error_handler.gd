@@ -20,10 +20,19 @@ func error_check(ecode: int, stack := []):
 
 func print_error(err: String, stack := []):
 	if allow_output:
+		if not err.begins_with("Error: "):
+			err = "Error: " + err
 		printerr(err)
 	push_stack(stack)
 
 func print_warning(warning: String, stack := []):
 	if allow_output:
+		if not warning.begins_with("Warnings: "):
+			warning = "Warning: " + warning
 		print(warning)
 	push_stack(stack)
+
+func err_fail_condition(cond: bool, errstr: String, stack := []) -> bool:
+	if allow_output and cond:
+		OutputManager.print_error(errstr, stack)
+	return cond

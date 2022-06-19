@@ -1,10 +1,7 @@
 extends Node
 
 static func append_path(origin: String, derived: String) -> String:
-	if origin[origin.length() - 1] in ['/', '\\']:
-		return origin + derived
-	else:
-		return origin + '/' + derived
+	return origin.plus_file(derived)
 
 static func get_prequisites(dir_path: String, preq: PoolStringArray,\
 		extension := ".res") -> Dictionary:
@@ -63,7 +60,7 @@ static func res_save(path: String, res: Resource, flag := 0, extension := ".res"
 
 static func res_load(path: String):
 	if not ResourceLoader.exists(path):
-		OutputManager.print_error("Error: resource not exists: {path}"\
+		OutputManager.print_error("Resource not exists: {path}"\
 			.format({"path": path}), get_stack())
 		return null
 	else:

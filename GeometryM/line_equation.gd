@@ -21,8 +21,8 @@ func find_parameter(pe: PlaneEquation):
 	var rnum: float = -(sec1 + sec2 + sec3 + pe.d)
 	
 	if pnum == 0.0:
-		push_error("ERROR: divided by zero, equation: {eq}"\
-			.format({"eq": construct()}))
+		OutputManager.print_error("Divided by zero, equation: {eq}"\
+			.format({"eq": construct()}), get_stack())
 		return null
 	
 	param = rnum / pnum

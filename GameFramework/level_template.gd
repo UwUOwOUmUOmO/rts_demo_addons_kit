@@ -32,13 +32,15 @@ func setup():
 	if level_res == null:
 		level_res = load(level_resource_path)
 		if level_res == null or not level_res is LevelResource:
-			push_error("Error: Failed to load level resource")
+			OutputManager.print_error("Failed to load level resource",\
+				get_stack())
 			return
 	spawn_loading_scene()
 	start_loading()
 	while not stage2:
 		if stop_loading:
-			push_error("Error: Failed to load main scene: " + level_res.scene)
+			OutputManager.print_error("Failed to load main scene: " + level_res.scene,\
+				get_stack())
 			return
 		yield(get_tree(), "idle_frame")
 	LevelSingleton.main_package["critical"] = critical_assets

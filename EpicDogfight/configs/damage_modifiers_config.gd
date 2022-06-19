@@ -51,17 +51,17 @@ func calculate_damage(base_damage: float, armor_type: int, armor_coef: float,\
 
 func special_dmg_calculation(armor_coef: float, param: String) -> float:
 	if not special_behavior.has(param):
-		OutputManager.print_error("Error: special behavior \"{sb}\" not registered"\
+		OutputManager.print_error("Special behavior \"{sb}\" not registered"\
 			.format({"sb": param}), get_stack())
 		return DEFAULT_EFFICIENCY
 	var fref = special_behavior[param]
 	if not fref is FuncRef:
-		OutputManager.print_error("Error: special behavior \"{sb}\" is not a FuncRef"\
+		OutputManager.print_error("Special behavior \"{sb}\" is not a FuncRef"\
 			.format({"sb": param}), get_stack())
 		return DEFAULT_EFFICIENCY
 	var re = fref.call_func(armor_coef)
 	if not re is float:
-		OutputManager.print_error("Error: special behavior \"{sb}\" return non-float value"\
+		OutputManager.print_error("Special behavior \"{sb}\" return non-float value"\
 			.format({"sb": param}), get_stack())
 		return DEFAULT_EFFICIENCY
 	return re
