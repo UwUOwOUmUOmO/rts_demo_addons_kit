@@ -7,7 +7,7 @@ var vtol: VTOLFighterBrain = null
 var target: Spatial = null
 var rudder_control: Spatial = null
 
-var vtol_profile: VTOLConfiguration = null\
+var vtol_profile: AircraftConfiguration = null\
 	setget set_profile, get_profile
 var active_range := 100.0 setget set_range, get_range
 var active_range_squared := 10000.0
@@ -26,8 +26,8 @@ func _set_guided(g: bool):
 func _get_guided():
 	return guided
 
-func set_profile(p: VTOLConfiguration):
-	var new_profile := VTOLConfiguration.new()
+func set_profile(p: AircraftConfiguration):
+	var new_profile := AircraftConfiguration.new()
 	new_profile.copy(p)
 	vtol_profile = new_profile
 

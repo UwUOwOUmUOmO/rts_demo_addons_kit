@@ -37,7 +37,7 @@ func get_distance():
 	return sqrt(distance_squared)
 
 func _init():
-	_vehicle_config = VTOLConfiguration.new()
+	_vehicle_config = AircraftConfiguration.new()
 
 func _ready():
 	previousYaw = global_transform.basis.get_euler().y

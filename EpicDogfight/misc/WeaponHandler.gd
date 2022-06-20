@@ -2,7 +2,8 @@ extends Node
 
 class_name WeaponHandler
 
-signal __out_of_ammo()
+signal __out_of_ammo(handler)
+signal __fired(handler)
 
 const TIMER_ROLLBACK	:= 3600.0
 
@@ -58,11 +59,11 @@ func set_hardpoints(num: int, h_list := []):
 		hardpoints_last_fire[c] = last_fire
 		hardpoints_activation[c] = 1
 
-func hardpoint_location(loc: int):
+func get_hardpoint(loc: int):
 	return hardpoints[clamp(loc, 0, hardpoints.size() - 1)]
 
-func last_hardpoint_location():
-	return hardpoint_location(last_hardpoint)
+func get_last_hardpoint():
+	return get_hardpoint(last_hardpoint)
 
 func angle_check():
 	var no := 0
@@ -161,13 +162,14 @@ func spawn_projectile(no: int):
 
 func is_out_of_ammo() -> bool:
 	if reserve <= 0:
-		emit_signal("__out_of_ammo")
+		emit_signal("__out_of_ammo", self)
 		return true
 	else:
 		return false
 
 func fire_once(delta := 0.0):
 	var last_fire := timer
+	var is_fired := false
 	if current_fire_mode == WeaponConfiguration.FIRE_MODE.SALVO:
 		var hardpoints_count = hardpoints.size()
 		for c in range(0, hardpoints_count):
@@ -180,6 +182,7 @@ func fire_once(delta := 0.0):
 				spawn_projectile(c)
 				hardpoints_last_fire[c] = last_fire
 				reserve -= 1
+				is_fired = true
 	elif current_fire_mode == WeaponConfiguration.FIRE_MODE.BARRAGE:
 		if is_out_of_ammo():
 			return
@@ -195,8 +198,11 @@ func fire_once(delta := 0.0):
 			hardpoints_last_fire[current_hardpoint] = last_fire
 			last_hardpoint = current_hardpoint
 			reserve -= 1
+			is_fired = true
 		else:
 			current_hardpoint -= 1
+	if is_fired:
+		emit_signal("__fired", self)
 
 func fire():
 	green_light = not green_light

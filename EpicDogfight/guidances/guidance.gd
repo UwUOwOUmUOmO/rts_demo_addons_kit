@@ -3,6 +3,7 @@ extends Spatial
 class_name WeaponGuidance
 
 signal __armament_fired(guidance)
+signal __armmament_armed(guidance)
 signal __armament_detonated(guidance)
 
 var _weapon_base_config: WeaponConfiguration = null

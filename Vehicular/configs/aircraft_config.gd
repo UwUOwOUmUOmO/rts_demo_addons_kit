@@ -1,6 +1,6 @@
 extends Configuration
 
-class_name VTOLConfiguration
+class_name AircraftConfiguration
 
 var acceleration 	:= 1.0
 var deccelaration	:= -2.0
@@ -25,5 +25,5 @@ var weight			:= 10.0
  
 func _init():
 	._init()
-	name = "VTOLConfiguration"
+	name = "AircraftConfiguration"
 	return self

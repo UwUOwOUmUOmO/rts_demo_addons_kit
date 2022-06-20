@@ -24,7 +24,7 @@ var heatThreshold			:=	10.0
 var detonateDistance		:= 	3.0
 var seekingAngle			:=	0.0
 var homingRange				:=	0.0
-var dvConfig				:=	VTOLConfiguration.new()
+var dvConfig				:=	AircraftConfiguration.new()
 var damageModifier			:= DamageModifiersConfiguration.new()
 
 func _init():
