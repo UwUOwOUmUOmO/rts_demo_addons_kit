@@ -5,7 +5,7 @@ class_name DistanceCompensator
 const USE_LEAD_METHOD := 2
 
 var target: Spatial = null setget set_target, get_target
-var use_physics_process := true
+var use_physics_process := false
 var leading := 1.0
 var use_advanced := true
 var dead_stop_threshold := -120.0

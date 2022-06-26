@@ -9,7 +9,7 @@ var terminated := false
 var enforcer_assigned := false
 
 # Persistance
-export(bool) var use_physics_process := true
+export(bool) var use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 
 func _set_host(h):
 	host = h

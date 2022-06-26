@@ -7,7 +7,7 @@ signal __fired(handler)
 
 const TIMER_ROLLBACK	:= 3600.0
 
-var use_physics_process := true
+var use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 var override_compensation := false
 var compensator_autosetup := false
 var compensation := 0.0

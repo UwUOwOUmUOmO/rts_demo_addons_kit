@@ -10,8 +10,8 @@ func push_stack(stack: Array):
 	for count in range(0, size):
 		var curr: Dictionary = stack[count]
 		var c: int = count
-		print("Stack trace: function: {func}, line: {line}," +\
-		  "source: {source}".format({"layer": c, "func": curr["function"],\
+		print(("Stack trace ({layer}): function: {func}, line: {line}, " +\
+		  "source: {source}").format({"layer": c, "func": curr["function"],\
 				"line": curr["line"], "source": curr["source"]}))
 
 func error_check(ecode: int, stack := []):

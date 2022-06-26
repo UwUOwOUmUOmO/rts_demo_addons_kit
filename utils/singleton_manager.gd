@@ -4,11 +4,13 @@ const DEFAULT_AUTOLOAD := PoolStringArray([
 	"res://addons/GameFramework/level_singleton.gd",
 	"res://addons/Processors/processors_swarm.gd",
 	"res://addons/utils/path_utils.gd",
+	"res://addons/utils/core_settings.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
 	"LevelSingleton",
 	"ProcessorsSwarm",
 	"PathUtils",
+	"UtilsSettings"
 ])
 
 var services := {}
@@ -23,6 +25,8 @@ func _ready():
 func fetch(name: String):
 	if services.has(name):
 		return services[name]
+	OutputManager.print_error("Service not exist: " + name,
+		get_stack())
 	return null
 
 func add_singleton(singleton: Node):

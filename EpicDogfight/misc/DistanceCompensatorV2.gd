@@ -3,7 +3,7 @@ extends Spatial
 class_name DistanceCompensatorV2
 
 var target: Spatial = null setget set_target, get_target
-var use_physics_process := true
+var use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 
 var barrel: Spatial = null
 var projectile_speed := 0.0

@@ -11,7 +11,7 @@ var _weapon_base_config: WeaponConfiguration = null
 var _velocity := 0.0
 var _barrel := Vector3.ZERO
 var _direction := Vector3.ZERO
-var _use_physics_process := true
+var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 var _projectile_scene: PackedScene = null
 var _projectile: Spatial = null
 var _computer: FlightComputer = null
@@ -28,7 +28,9 @@ func _process(delta):
 func _physics_process(delta):
 	_computer_handler(delta, true)
 	if _use_physics_process and _green_light:
-		_guide(delta)
+		var fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
+			.fixed_delta
+		_guide(fixed_delta)
 
 func _computer_handler(delta: float, pp := false):
 	if is_instance_valid(_computer):

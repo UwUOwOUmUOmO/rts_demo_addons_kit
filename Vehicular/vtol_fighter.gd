@@ -8,6 +8,7 @@ signal __tracking_target(brain, target)
 signal __loss_track_of_target(brain)
 signal __destination_arrived(brain)
 
+var useBuiltinTranslator := true
 var isReady := false
 var useRudder := false
 var enableGravity := false
@@ -41,6 +42,8 @@ func _init():
 
 func _ready():
 	previousYaw = global_transform.basis.get_euler().y
+	set_physics_process(_use_physics_process)
+	set_process(not _use_physics_process)
 
 func _process(delta):
 	if not _use_physics_process:
@@ -48,7 +51,9 @@ func _process(delta):
 
 func _physics_process(delta):
 	if _use_physics_process:
-		_compute(delta)
+		var fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
+			.fixed_delta
+		_compute(fixed_delta)
 
 func _compute(delta):
 	var moveDistance = Vector3.ZERO
@@ -84,7 +89,10 @@ func _compute(delta):
 		if enableGravity:
 			moveDistance += -global_transform.basis.y\
 				* (0.5 * GRAVITATIONAL_CONSTANT * _vehicle_config.weight)
-		move_and_slide(moveDistance, Vector3.UP)
+		if useBuiltinTranslator:
+			move_and_slide(moveDistance, Vector3.UP)
+		else:
+			global_translate(moveDistance * delta)
 		_rollProcess()
 		_setRoll(lerp(currentRoll, 0.0, 0.9995))
 

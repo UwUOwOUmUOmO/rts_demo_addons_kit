@@ -9,7 +9,7 @@ signal __computer_changed(new_computer, controller)
 signal __instrument_changed(new_instrument, controller)
 
 var auto_ready: bool				= true
-var use_physics_process: bool		= true
+var use_physics_process: bool		= SingletonManager.fetch("UtilsSettings").use_physics_process
 var green_light: bool				= false setget _set_operation
 var assigned_combatant: Combatant	= null  setget _set_combatant
 var target: Combatant				= null  setget _set_target
@@ -92,7 +92,9 @@ func _process(delta):
 
 func _physics_process(delta):
 	if use_physics_process and green_light:
-		_compute(delta)
+		var fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
+			.fixed_delta
+		_compute(fixed_delta)
 
 func _finalize():
 	_clean()

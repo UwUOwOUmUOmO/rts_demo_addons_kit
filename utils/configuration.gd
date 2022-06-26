@@ -2,6 +2,8 @@ extends Resource
 
 class_name Configuration
 
+const CONFIG_VERSION := "1.1.0"
+
 var name := "Configuration"
 var property_list: PoolStringArray = []
 var exclusion_list: PoolStringArray =\
@@ -67,6 +69,18 @@ func dictionary_handler(dict: Dictionary):
 			OutputManager.print_error("Can't instance script with path: " + subres_script_path,\
 				get_stack())
 			return null
+	elif dict.has("__base_resource_loc"):
+		var class_n: String = dict["__base_class_name"]
+		var res_loc: String = dict["__base_resource_loc"]
+		if not ClassDB.can_instance(class_n):
+			OutputManager.print_error("Can't instance class: " + class_n,\
+				get_stack())
+			return null
+		var res = ResourceLoader.load(res_loc, class_n)
+		if res == null:
+			OutputManager.print_error("Can't load resource at: " + res_loc,\
+				get_stack())
+		return res
 	else:
 		return dict
 
@@ -80,8 +94,28 @@ func copy(from: Configuration) -> bool:
 		set(component, from.get(component))
 	return full_completion and _integrity_check()
 
+func version_greater(target: String):
+	var target_sliced := target.rsplit(".", true, 2)
+	var current_sliced := CONFIG_VERSION.rsplit(".", true, 2)
+	if target_sliced.size() != 3:
+		OutputManager.print_error("Failed to check target's CONFIG_VERSION",\
+			get_stack())
+		return false
+	for iter in range(0, 3):
+		# Check for version
+		# Major > Minor > Patch
+		if int(target_sliced[iter]) > int(current_sliced[iter]):
+			return true
+	return false
+
 func deserialize(config: Dictionary) -> bool:
 	var full_completion := true
+	if "__cfgver" in config:
+		var target_ver: String = config["__cfgver"]
+		if version_greater(target_ver):
+			OutputManager.print_warning("Target's CONFIG_VER is greater than"\
+				+ " current CONFIG_VER",\
+				get_stack())
 	for variable in property_list:
 		if not config.has(variable):
 			push_warning("Warning: failed to import property: " + variable)
@@ -96,6 +130,7 @@ func deserialize(config: Dictionary) -> bool:
 
 func serialize(replace_subres := true) -> Dictionary:
 	var re := {}
+	re["___cfgver"] = CONFIG_VERSION
 	for variable in property_list:
 		var component = get(variable)
 		if not replace_subres or not component is Reference:
@@ -108,8 +143,18 @@ func serialize(replace_subres := true) -> Dictionary:
 				var script_path: String = component.get_script().resource_path
 				subres["__config_class_path"] = script_path
 				re[variable] = subres
-			else:
-				re[variable] = component
+				continue
+			elif component is Resource:
+				var loc: String = component.resource_path
+				if not component.resource_path.empty():
+					var err := ResourceSaver.save(loc, component)
+					OutputManager.error_check(err, get_stack())
+					var subres := {}
+					subres["__base_resource_loc"] = loc
+					subres["__base_class_name"] = component.get_class()
+					re[variable] = subres
+					continue
+			re[variable] = component
 	return re
 
 func read_from(path: String, encryption_key := "") -> int:
