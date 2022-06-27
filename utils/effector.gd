@@ -38,7 +38,7 @@ func is_chartable(t: int) -> bool:
 func is_ready() -> bool:
     return not course == null
 
-func chart_data(s, f, w):
+func chart_value(s, f, w):
     var re
     # Normalize the course
     var maxval: float= course.max_value
@@ -68,4 +68,4 @@ func chart(weight, start = 0, fin = 0):
             OutputManager.print_error("Data is not chartable", \
                 get_stack())
             return null
-    return chart_data(start, fin, weight)
+    return chart_value(start, fin, weight)

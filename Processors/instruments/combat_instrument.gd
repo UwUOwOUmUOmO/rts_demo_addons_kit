@@ -6,8 +6,8 @@ class_name CombatInstrument
 var green_light := false
 
 func _init():
-	exclusion_list.append_array(["green_light"])
 	._init()
+	remove_property("green_light")
 	name = "CombatInstrument"
 	return self
 

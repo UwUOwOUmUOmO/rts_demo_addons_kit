@@ -83,8 +83,9 @@ func yield_handler(return_value, bidding):
 	bidding.function_state = return_value
 
 func _init():
-	exclusion_list.push_back("activated")
 	._init()
+	# exclusion_list.push_back("activated")
+	remove_property("activated")
 	name = "ChainOfCommand"
 	return self
 

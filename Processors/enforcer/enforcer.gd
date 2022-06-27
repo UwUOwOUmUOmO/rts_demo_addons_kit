@@ -39,7 +39,9 @@ func run_process_unsafe(delta: float, pp := false):
 				just_pop = true
 				continue
 			else:
-				_enforce_process(proc, delta, pp)
+				if (pp and proc.use_physics_process) or\
+					(not pp and not proc.use_physics_process):
+						proc._compute(delta)
 
 func run_process_safe(delta: float, pp := false):
 	if is_enforced:
@@ -57,18 +59,14 @@ func run_process_safe(delta: float, pp := false):
 					just_pop = true
 					continue
 				else:
-					_enforce_process(proc, delta, pp)
+					if (pp and proc.use_physics_process) or\
+						(not pp and not proc.use_physics_process):
+							proc._compute(delta)
 			else:
 				processor_list.remove(c)
 				r_list.pop_back()
 				just_pop = true
 				continue
-
-func _enforce_process(proc: Processor, delta: float, pp := false):
-	if pp:
-		proc._physics_process(delta)
-	else:
-		proc._process(delta)
 
 func _process(delta):
 	run_process_unsafe(delta)

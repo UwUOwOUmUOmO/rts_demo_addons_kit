@@ -19,9 +19,9 @@ var lock_on_detection_accuracy := 0.6
 var radar_detection_curve: Curve = preload("general_detection_curve.res")
 
 func _init():
-	exclusion_list.append_array(["radar_activated", "rng", "rmd_squared",\
-		"radar_cycle"])
 	._init()
+	remove_properties(["radar_activated", "rng", "rmd_squared",\
+		"radar_cycle"])
 	name = "GeneralAirInstrument"
 	return self
 

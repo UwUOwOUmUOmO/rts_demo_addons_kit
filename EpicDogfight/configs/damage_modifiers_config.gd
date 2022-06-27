@@ -18,8 +18,9 @@ var none        := 1.0
 var special_behavior := {}
 
 func _init():
-	exclusion_list.push_back("special_behavior")
 	._init()
+	# exclusion_list.push_back("special_behavior")
+	remove_property("special_behavior")
 	name = "DamageModifiersConfiguration"
 	return self
 

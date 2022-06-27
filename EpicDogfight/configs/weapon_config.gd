@@ -29,6 +29,5 @@ var damageModifier			:= DamageModifiersConfiguration.new()
 
 func _init():
 	._init()
-	config_resources.append_array(["dvConfig", "damageModifier"])
 	name = "WeaponConfiguration"
 	return self

@@ -12,8 +12,9 @@ var all_check := false
 var coprocess := true
 
 func _init():
-	exclusion_list.append_array(["memory", "target", "vessel", "all_check"])
 	._init()
+	# exclusion_list.append_array(["memory", "target", "vessel", "all_check"])
+	remove_properties(["memory", "target", "vessel", "all_check"])
 	name = "CombatComputer"
 	return self
 
@@ -24,9 +25,12 @@ func _reset_volatile():
 	vessel = null
 	all_check = false
 
-func _controller_computer_changed(new_computer, controller):
+func _controller_computer_changed(controller, new_computer):
 	if new_computer != self:
+		# Stop process
 		all_check = false
+		# Terminate Processor
+		terminated = true
 		controller.disconnect("__computer_changed", self,\
 			"_controller_computer_changed")
 

@@ -2,10 +2,10 @@ extends CombatComputer
 
 class_name FlightComputer
 
-enum DEVICE_TYPE {AAF, AAM, AGM}
+enum DEVICE_TYPE { NA, AIRCRAFT, MISSILE }
 
-const DEFAULT_DEVICE = DEVICE_TYPE.AAF
-const DEFAULT_DEVICE_STR = "AAF"
+const DEFAULT_DEVICE = DEVICE_TYPE.AIRCRAFT
+const DEFAULT_DEVICE_STR = "AIRCRAFT"
 
 # Persistent
 var type = DEFAULT_DEVICE

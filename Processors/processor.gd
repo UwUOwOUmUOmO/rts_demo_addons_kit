@@ -18,19 +18,13 @@ func _set_tree(t):
 	tree = t
 
 func _init():
-	exclusion_list.append_array(["host", "tree", "terminated",\
-		"enforcer_assigned"])
 	._init()
+	# exclusion_list.append_array(["host", "tree", "terminated",\
+	# 	"enforcer_assigned"])
+	remove_properties(["host", "tree", "terminated",\
+		"enforcer_assigned"])
 	name = "Processor"
 	return self
-
-func _process(delta: float):
-	if not use_physics_process:
-		_compute(delta)
-
-func _physics_process(delta: float):
-	if use_physics_process:
-		_compute(delta)
 
 func _boot():
 	pass

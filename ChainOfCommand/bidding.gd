@@ -15,8 +15,9 @@ func __is_bidding():
 	return true
 
 func _init():
-	exclusion_list.append_array(["function_state", "yielded_to"])
 	._init()
+	# exclusion_list.append_array(["function_state", "yielded_to"])
+	remove_properties(["function_state", "yielded_to"])
 	name = "Bidding"
 	return self
 
