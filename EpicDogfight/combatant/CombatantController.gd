@@ -15,7 +15,7 @@ var assigned_combatant: Combatant	= null  setget _set_combatant
 var target							= null  setget _set_target
 var computer: CombatComputer		= null  setget _set_computer
 var instrument: CombatInstrument	= null  setget _set_instrument
-
+ 
 func _set_operation(fl := true):
 	if fl and not green_light:
 		_boostrap()
