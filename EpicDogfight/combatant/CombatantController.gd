@@ -2,7 +2,7 @@ extends Node
 
 class_name CombatantController
 
-signal __target_defeated()
+signal __target_defeated(controller)
 signal __target_changed(new_target)
 signal __combatant_changed(new_combatant)
 signal __computer_changed(controller, new_computer)
@@ -12,7 +12,7 @@ var auto_ready: bool				= true
 var use_physics_process: bool		= SingletonManager.fetch("UtilsSettings").use_physics_process
 var green_light: bool				= false setget _set_operation
 var assigned_combatant: Combatant	= null  setget _set_combatant
-var target: Combatant				= null  setget _set_target
+var target							= null  setget _set_target
 var computer: CombatComputer		= null  setget _set_computer
 var instrument: CombatInstrument	= null  setget _set_instrument
 
@@ -46,7 +46,8 @@ func _set_computer(com):
 		disconnect("__target_defeated", computer, "_target_defeated_handler")
 	if com is CombatComputer:
 		computer = com
-		connect("__computer_changed", computer, "_controller_computer_changed")
+		connect("__computer_changed", computer, "_controller_computer_changed",\
+			[], CONNECT_ONESHOT)
 		connect("__target_changed", computer, "_target_change_handler")
 		connect("__target_defeated", computer, "_target_defeated_handler")
 		emit_signal("__computer_changed", self, com)
@@ -57,7 +58,7 @@ func _set_instrument(sen):
 	if sen is CombatInstrument and not sen == instrument:
 		instrument = sen
 		connect("__instrument_changed", instrument,\
-			"_controller_instrument_changed")
+			"_controller_instrument_changed", [], CONNECT_ONESHOT)
 		emit_signal("__instrument_changed", self, sen)
 		auto_ready_check()
 
@@ -84,7 +85,7 @@ func _target_defeated_check():
 		return
 	elif target.hp > 0.0:
 		return
-	emit_signal("__target_defeated")
+	emit_signal("__target_defeated", self)
 
 func _compute(delta: float):
 	_target_defeated_check()

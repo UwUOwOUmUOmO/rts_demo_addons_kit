@@ -31,8 +31,8 @@ func _controller_computer_changed(controller, new_computer):
 		all_check = false
 		# Terminate Processor
 		terminated = true
-		controller.disconnect("__computer_changed", self,\
-			"_controller_computer_changed")
+		# controller.disconnect("__computer_changed", self,\
+		# 	"_controller_computer_changed")
 
 func _vessel_change_handler(new_vessel):
 	vessel = new_vessel
@@ -40,5 +40,5 @@ func _vessel_change_handler(new_vessel):
 func _target_change_handler(new_target):
 	target = new_target
 
-func _target_defeated_handler():
+func _target_defeated_handler(_con):
 	target = null

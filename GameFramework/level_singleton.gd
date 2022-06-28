@@ -7,10 +7,10 @@ var prioritize_memory_usage := false
 var level_res_override: LevelResource = null # FOR TESTING PURPOSE ONLY
 
 func _init():
-	level_res_override = LevelResource.new()
-	level_res_override.scene = "res://more_test_scenes/test-3.tscn"
-	level_res_override.loading_scene_primary =\
-		preload("res://more_test_scenes/FakeLoadingBar.tscn")
+#	level_res_override = LevelResource.new()
+#	level_res_override.scene = "res://more_test_scenes/test-3.tscn"
+#	level_res_override.loading_scene_primary =\
+#		preload("res://more_test_scenes/FakeLoadingBar.tscn")
 	pass
 
 func debug_code():

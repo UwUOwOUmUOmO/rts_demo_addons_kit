@@ -130,12 +130,12 @@ func _prepare():
 	return {"allowedSpeed": allowedSpeed,\
 			"currentYaw": currentYaw}
 
-func _enforceRoll(currentYaw):
+func _enforceRoll(currentYaw: float):
 	var roll = (currentYaw - previousYaw)
 	_setRoll(clamp(roll * _vehicle_config.rollAmplifier,\
 		-_vehicle_config.maxRollAngle, _vehicle_config.maxRollAngle))
 
-func _calculateSpeed(allowedSpeed):
+func _calculateSpeed(allowedSpeed: float):
 	var speedMod := 0.0
 	var clampMin := 0.0
 	if currentSpeed < allowedSpeed:
