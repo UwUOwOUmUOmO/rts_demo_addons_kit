@@ -76,18 +76,18 @@ static func resource_dererialize(dict: Dictionary) -> Resource:
 	var class_n: String = dict["__base_class_name"]
 	var res_loc: String = dict["__base_resource_loc"]
 	if not ClassDB.can_instance(class_n):
-		OutputManager.print_error("Can't instance class: " + class_n,\
+		Out.print_error("Can't instance class: " + class_n,\
 			get_stack())
 		return null
 	var res = ResourceLoader.load(res_loc, class_n)
 	if res == null:
-		OutputManager.print_error("Can't load resource at: " + res_loc,\
+		Out.print_error("Can't load resource at: " + res_loc,\
 			get_stack())
 	return res
 
 static func config_deserialize(dict: Dictionary) -> Resource:
 	var subres_script_path = dict["__config_class_path"]
-	if OutputManager.err_fail_condition(not subres_script_path is String,\
+	if Out.err_fail_condition(not subres_script_path is String,\
 		"subres_script_path is not String", get_stack()):
 			return null
 	var new_subres = try_instance_config(subres_script_path)
@@ -95,7 +95,7 @@ static func config_deserialize(dict: Dictionary) -> Resource:
 		new_subres.deserialize(dict)
 		return new_subres
 	else:
-		OutputManager.print_error("Can't instance script with path: "\
+		Out.print_error("Can't instance script with path: "\
 			+ subres_script_path,\
 			get_stack())
 		return null
@@ -136,7 +136,7 @@ static func resource_serialize(res: Resource) -> Dictionary:
 	var loc: String = res.resource_path
 	if not res.resource_path.empty():
 		var err := ResourceSaver.save(loc, res)
-		OutputManager.error_check(err, get_stack())
+		Out.error_check(err, get_stack())
 		subres["__base_resource_loc"] = loc
 		subres["__base_class_name"] = res.get_class()
 	return subres
@@ -196,7 +196,7 @@ func version_greater(target: String):
 	var target_sliced := target.rsplit(".", true, 2)
 	var current_sliced := CONFIG_VERSION.rsplit(".", true, 2)
 	if target_sliced.size() != 3:
-		OutputManager.print_error("Failed to check target's CONFIG_VERSION",\
+		Out.print_error("Failed to check target's CONFIG_VERSION",\
 			get_stack())
 		return false
 	for iter in range(0, 3):
@@ -211,7 +211,7 @@ func deserialize(config: Dictionary) -> bool:
 	if "__cfgver" in config:
 		var target_ver: String = config["__cfgver"]
 		if version_greater(target_ver):
-			OutputManager.print_warning("Target's CONFIG_VER is greater than"\
+			Out.print_warning("Target's CONFIG_VER is greater than"\
 				+ " current CONFIG_VER",\
 				get_stack())
 	for variable in property_list:
@@ -274,7 +274,7 @@ func read_from(path: String, encryption_key := "") -> int:
 	else:
 		err = file.open_encrypted_with_pass(path, File.READ, encryption_key)
 	if err != OK:
-		OutputManager.print_error("No.({ecode}): Can't open file at: {path}"\
+		Out.print_error("No.({ecode}): Can't open file at: {path}"\
 			.format({"ecode": err, "path": path}), get_stack())
 	else:
 		var dict: Dictionary = file.get_var()
@@ -290,7 +290,7 @@ func save_as(path: String, encryption_key := "") -> int:
 	else:
 		err = file.open_encrypted_with_pass(path, File.WRITE, encryption_key)
 	if err != OK:
-		OutputManager.print_error("No.({ecode}): Can't open file at: {path}"\
+		Out.print_error("No.({ecode}): Can't open file at: {path}"\
 			.format({"ecode": err, "path": path}), get_stack())
 	else:
 		var exported := serialize()

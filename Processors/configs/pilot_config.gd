@@ -13,27 +13,9 @@ var current_proficience: PoolRealArray = [
 	0.0, 0.0, 0.0,
 	0.0, 0.0, 0.0,
 ]
-var skills_list := {
-	1000: false,
-	1001: false,
-	1002: false,
-	1003: false,
-	1004: false,
-	1005: false,
-	1006: false,
-	1007: false,
-	1008: false,
-	1009: false,
-	1011: false,
-	1012: false,
-	1013: false,
-	1014: false,
-	1015: false,
-	1016: false,
-	1017: false,
-	1018: false,
+var skills_list: PoolStringArray = [
 	
-}
+]
 var current_main: int = AIRCRAFT_TYPE.NA
 var main_bonus := 1.0
 var main_deficiency := 1.0

@@ -25,7 +25,7 @@ func _ready():
 func fetch(name: String):
 	if services.has(name):
 		return services[name]
-	OutputManager.print_error("Service not exist: " + name,
+	Out.print_error("Service not exist: " + name,
 		get_stack())
 	return null
 
@@ -37,11 +37,11 @@ func add_singleton(singleton: Node):
 func add_singleton_from_script(script_loc: String, name := ""):
 	var s = load(script_loc)
 	if not s is Script:
-		OutputManager.print_error("Resource at {path} is not a script"\
+		Out.print_error("Resource at {path} is not a script"\
 			.format({"path": script_loc}), get_stack())
 		return
 	elif s.get_instance_base_type() != "Node":
-		OutputManager.print_error("Singleton at {path} must extend on type Node"\
+		Out.print_error("Singleton at {path} must extend on type Node"\
 			.format({"path": script_loc}), get_stack())
 		return
 	var singleton := Node.new()

@@ -22,6 +22,7 @@ var slowingTime		:= 0.07
 var aerodynamic		:= 0.8
 var radarSignature	:= 1.5
 var weight			:= 10.0
+var speedLossMod	:= 17.0
  
 func _init():
 	._init()

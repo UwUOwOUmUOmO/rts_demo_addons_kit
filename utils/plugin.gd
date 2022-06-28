@@ -19,7 +19,7 @@ func _enter_tree():
 		"res://addons/utils/singleton_manager.gd"
 	)
 	add_autoload_singleton(
-		"OutputManager",
+		"Out",
 		"res://addons/utils/error_handler.gd"
 	)
 
@@ -27,4 +27,4 @@ func _exit_tree():
 	remove_custom_type("LineDrawer")
 	remove_custom_type("SimpleSpatialLOD")
 	remove_autoload_singleton("SingletonManager")
-	remove_autoload_singleton("OutputManager")
+	remove_autoload_singleton("Out")

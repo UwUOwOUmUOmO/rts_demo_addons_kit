@@ -34,5 +34,5 @@ func print_warning(warning: String, stack := []):
 
 func err_fail_condition(cond: bool, errstr: String, stack := []) -> bool:
 	if allow_output and cond:
-		OutputManager.print_error(errstr, stack)
+		Out.print_error(errstr, stack)
 	return cond

@@ -7,10 +7,10 @@ var prioritize_memory_usage := false
 var level_res_override: LevelResource = null # FOR TESTING PURPOSE ONLY
 
 func _init():
-#	level_res_override = LevelResource.new()
-#	level_res_override.scene = "res://more_test_scenes/test-3.tscn"
-#	level_res_override.loading_scene_primary =\
-#		preload("res://more_test_scenes/FakeLoadingBar.tscn")
+	level_res_override = LevelResource.new()
+	level_res_override.scene = "res://more_test_scenes/test-3.tscn"
+	level_res_override.loading_scene_primary =\
+		preload("res://more_test_scenes/FakeLoadingBar.tscn")
 	pass
 
 func debug_code():
@@ -37,12 +37,12 @@ func change_level(path: String, current_level: Level):
 	main_package = {}
 	var err :=  get_tree().change_scene(path)
 	if err != OK:
-		OutputManager.print_error("Can't instance level: " + path,\
+		Out.print_error("Can't instance level: " + path,\
 			get_stack())
 		return
 	var lv: Level = get_tree().current_scene
 	if lv == null or not lv is Level:
-		OutputManager.print_warning("Current scene is not a level: "\
+		Out.print_warning("Current scene is not a level: "\
 			+ path, get_stack())
 		main_package = temp_package
 		temp_package = {}

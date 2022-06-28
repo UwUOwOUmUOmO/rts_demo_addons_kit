@@ -56,7 +56,7 @@ func chart_value(s, f, w):
 
 func chart(weight, start = 0, fin = 0):
     if not is_ready():
-        OutputManager.print_error("Effector missing a course",\
+        Out.print_error("Effector missing a course",\
             get_stack())
         return null
     # DEFAULT
@@ -65,7 +65,7 @@ func chart(weight, start = 0, fin = 0):
     var current_type: int = type_deduce(start)
     if not is_chartable(current_type) or\
         current_type == CHARTABLE_DATA.INVALID:
-            OutputManager.print_error("Data is not chartable", \
+            Out.print_error("Data is not chartable", \
                 get_stack())
             return null
     return chart_value(start, fin, weight)

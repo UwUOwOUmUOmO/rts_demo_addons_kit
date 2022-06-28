@@ -49,7 +49,7 @@ func save_file(path: String):
 	active_file.debug2["Testies"] = t
 	var err := ResourceSaver.save(path, active_file)
 	if not err == OK:
-		OutputManager.print_error("Failed to save resource at path: "\
+		Out.print_error("Failed to save resource at path: "\
 			+ path, get_stack())
 
 func open_file(path: String):
@@ -59,7 +59,7 @@ func open_file(path: String):
 		if err == ERR_FILE_EOF:
 			var res = loader.get_resource()
 			if not res is BehaviorTreeResource:
-				OutputManager.print_error(("Resource at path"+
+				Out.print_error(("Resource at path"+
 					"{p} is not a BehaviorTreeResource").format({"p": path}),\
 					get_stack())
 				return

@@ -159,7 +159,7 @@ func _calculateTurnRate():
 	var percentage: float = angle / FORE
 	var aero: float = _vehicle_config.aerodynamic
 	var loss_rate := 1.0 - aero
-	var real_loss := loss_rate * percentage
+	var real_loss: float = loss_rate * percentage * allowedTurn * _vehicle_config.speedLossMod
 	speedLoss = real_loss
 
 # TODO: clean up

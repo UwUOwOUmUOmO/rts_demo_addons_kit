@@ -8,7 +8,7 @@ static func get_prequisites(dir_path: String, preq: PoolStringArray,\
 	var package := {}
 	var dir := Directory.new()
 	var err = dir.open(dir_path)
-	OutputManager.error_check(err)
+	Out.error_check(err)
 	if err != OK:
 		return package
 	for c in preq:
@@ -22,7 +22,7 @@ static func create_dir(dir_path: String) -> int:
 	if err == OK:
 		return err
 	err = dir.make_dir_recursive(dir_path)
-	OutputManager.error_check(err, get_stack())
+	Out.error_check(err, get_stack())
 	return err
 
 static func slice_path(origin: String) -> PoolStringArray:
@@ -55,12 +55,12 @@ static func res_save(path: String, res: Resource, flag := 0, extension := ".res"
 		if not path.ends_with(extension):
 			path += extension
 		err = ResourceSaver.save(path, res, flag)
-		OutputManager.error_check(err)
+		Out.error_check(err)
 		return err
 
 static func res_load(path: String):
 	if not ResourceLoader.exists(path):
-		OutputManager.print_error("Resource not exists: {path}"\
+		Out.print_error("Resource not exists: {path}"\
 			.format({"path": path}), get_stack())
 		return null
 	else:
