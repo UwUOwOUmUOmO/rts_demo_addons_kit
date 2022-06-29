@@ -11,6 +11,7 @@ var vtol_profile: AircraftConfiguration = null\
 	setget set_profile, get_profile
 var active_range := 100.0 setget set_range, get_range
 var active_range_squared := 10000.0
+var proximity_mode: int = WeaponConfiguration.PROXIMITY_MODE.SPATIAL
 var detonation_distance := 1.0 setget set_ddistance, get_ddistance
 var detonation_distance_squared := 1.0
 var inherited_speed := 0.0
@@ -48,6 +49,13 @@ func set_ddistance(d: float):
 func get_ddistance():
 	return detonation_distance
 
+func proximity_check(distance_squared: float) -> bool:
+	if distance_squared < detonation_distance_squared and _armed:
+		_finalize()
+		return true
+	else:
+		return false
+
 func _guide(delta: float):
 	if not is_instance_valid(target):
 		dumb_control()
@@ -55,16 +63,22 @@ func _guide(delta: float):
 		return
 	var distance_squared := vtol.global_transform.origin\
 		.distance_squared_to(target.global_transform.origin)
+	if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.SPATIAL:
+		if proximity_check(distance_squared):
+			return
 	if (guided and handler.guided) or distance_squared <= active_range_squared:
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 			manual_control = false
-		return
-	elif distance_squared < detonation_distance_squared and _armed:
-		_finalize()
-		return
+		if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.FORWARD:
+			if proximity_check(distance_squared):
+				return
+	elif proximity_mode == WeaponConfiguration.PROXIMITY_MODE.DELAYED:
+		if proximity_check(distance_squared):
+			return
 	else:
 		dumb_control()
+	
 	self_destruct_handler(delta)
 
 func dumb_control():

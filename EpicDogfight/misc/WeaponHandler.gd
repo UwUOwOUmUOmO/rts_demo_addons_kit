@@ -139,7 +139,8 @@ func spawn_projectile(no: int):
 		instancing_result = guidance_instancing(guidance)
 		guidance.set_range(profile.homingRange)
 		guidance.set_profile(profile.dvConfig)
-		guidance.set_ddistance(profile.detonateDistance)
+		guidance.set_ddistance(profile.proximity)
+		guidance.proximity_mode = profile.weaponProximityMode
 		guidance.self_destruct_time = profile.travelTime
 		if inherite_carrier_speed and "currentSpeed" in carrier:
 			guidance.inherited_speed = carrier.currentSpeed
