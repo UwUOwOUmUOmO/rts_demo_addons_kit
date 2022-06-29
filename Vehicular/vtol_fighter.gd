@@ -19,6 +19,8 @@ var isMoving := false setget _setMoving, _getMoving
 var overdriveThrottle := -1.0
 var inheritedSpeed := 0.0
 
+var rudder: Spatial = null
+
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
 var slowingRange := 0.0
@@ -42,6 +44,9 @@ func _init():
 
 func _ready():
 	previousYaw = global_transform.basis.get_euler().y
+	rudder = Spatial.new()
+	add_child(rudder)
+	rudder.translation = Vector3(0.0, 0.0, -50.0)
 	set_physics_process(_use_physics_process)
 	set_process(not _use_physics_process)
 
@@ -57,8 +62,12 @@ func _physics_process(delta):
 
 func _compute(delta):
 	var moveDistance = Vector3.ZERO
+	# if useRudder:
+	# 	moveDistance = _rudderControl()
 	if useRudder:
-		moveDistance = _rudderControl()
+		rudderCheck()
+	if false:
+		return
 	elif trackingTarget != null:
 		if not is_instance_valid(trackingTarget):
 			emit_signal("__loss_track_of_target", self)
@@ -70,7 +79,8 @@ func _compute(delta):
 	if not isReady:
 		if get_parent():
 			isReady = true
-	elif isMoving and not useRudder:
+	# elif isMoving and not useRudder:
+	elif isMoving:
 		var loaded = _prepare()
 		var allowedSpeed = loaded["allowedSpeed"]
 		var currentYaw = loaded["currentYaw"]
@@ -95,6 +105,23 @@ func _compute(delta):
 			global_translate(moveDistance * delta)
 		_rollProcess()
 		_setRoll(lerp(currentRoll, 0.0, 0.9995))
+
+func rudderCheck():
+#	var origin: Vector3 = global_transform.origin
+#	var des := origin
+#	var fwd_vec: Vector3 = -global_transform.basis.z
+#	var rotated := Vector3.ZERO
+#	if rudderAngle != 0.0:
+#		rotated = fwd_vec.rotated(global_transform.basis.y, rudderAngle)
+#	des += rotated
+#	des *= 100.0
+#	destination = des
+#	distance_squared = origin.distance_squared_to(des)
+#	if not isMoving:
+#		_setMoving(true)
+#	 _bakeDestination(des)
+	rudder.rotation = Vector3(0.0, rudderAngle, 0.0)
+	_setTracker(rudder)
 
 func _rudderControl() -> Vector3:
 	var allowedSpeed: float =_vehicle_config.maxSpeed

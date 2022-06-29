@@ -63,10 +63,12 @@ func _guide(delta: float):
 		return
 	var distance_squared := vtol.global_transform.origin\
 		.distance_squared_to(target.global_transform.origin)
+	var target_valid := false
 	if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.SPATIAL:
 		if proximity_check(distance_squared):
 			return
 	if (guided and handler.guided) or distance_squared <= active_range_squared:
+		target_valid = true
 		if vtol.trackingTarget != target:
 			vtol._setTracker(target)
 			manual_control = false
@@ -76,7 +78,7 @@ func _guide(delta: float):
 	elif proximity_mode == WeaponConfiguration.PROXIMITY_MODE.DELAYED:
 		if proximity_check(distance_squared):
 			return
-	else:
+	if target_valid:
 		dumb_control()
 	
 	self_destruct_handler(delta)
