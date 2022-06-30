@@ -6,6 +6,7 @@ class_name CombatComputer
 var memory := {}
 var target: Combatant = null
 var vessel: Combatant = null
+var controller = null
 var all_check := false
 
 # Persistance
@@ -25,13 +26,13 @@ func _reset_volatile():
 	vessel = null
 	all_check = false
 
-func _controller_computer_changed(controller, new_computer):
+func _controller_computer_changed(_con, new_computer):
 	if new_computer != self:
 		# Stop process
 		all_check = false
 		# Terminate Processor
 		terminated = true
-		# controller.disconnect("__computer_changed", self,\
+		# _con.disconnect("__computer_changed", self,\
 		# 	"_controller_computer_changed")
 
 func _vessel_change_handler(new_vessel):

@@ -45,7 +45,7 @@ func remove_properties(what: PoolStringArray):
 func _reset_volatile():
 	pass
 
-func _integrity_check() -> bool:
+func _data_correction() -> bool:
 	# Check for variables correctness
 	return true
 
@@ -197,7 +197,7 @@ func copy(from: Configuration) -> bool:
 			full_completion = false
 			continue
 		set(component, from.get(component))
-	return full_completion and _integrity_check()
+	return full_completion and _data_correction()
 
 func version_greater(target: String):
 	var target_sliced := target.rsplit(".", true, 2)
@@ -234,7 +234,7 @@ func deserialize(config: Dictionary) -> bool:
 			elif value is Array:
 				cured = array_deserialize(value)
 		set(variable, cured)
-	return full_completion and _integrity_check()
+	return full_completion and _data_correction()
 
 func serialize(replace_subres := true) -> Dictionary:
 	var re := {

@@ -14,3 +14,9 @@ func _init():
 	._init()
 	name = "FlightComputer"
 	return self
+
+func _boot():
+	pass
+
+func _compute(delta):
+	pass

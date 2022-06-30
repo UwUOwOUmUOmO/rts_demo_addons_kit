@@ -15,7 +15,11 @@ var assigned_combatant: Combatant	= null  setget _set_combatant
 var target							= null  setget _set_target
 var computer: CombatComputer		= null  setget _set_computer
 var instrument: CombatInstrument	= null  setget _set_instrument
- 
+var weapons := {
+	"PRIMARY": null
+ }
+
+
 func _set_operation(fl := true):
 	if fl and not green_light:
 		_boostrap()
@@ -27,8 +31,6 @@ func _set_operation(fl := true):
 func _set_combatant(com):
 	if com is Combatant and not com == assigned_combatant:
 		assigned_combatant = com
-		if is_instance_valid(computer):
-			connect("__combatant_changed", computer, "_vessel_change_handler")
 		emit_signal("__combatant_changed", com)
 		auto_ready_check()
 
@@ -45,13 +47,19 @@ func _set_computer(com):
 	if is_instance_valid(computer):
 		disconnect("__target_changed", computer, "_target_change_handler")
 		disconnect("__target_defeated", computer, "_target_defeated_handler")
+		disconnect("__combatant_changed", computer, "_vessel_change_handler")
 	if com is CombatComputer:
 		computer = com
-		connect("__computer_changed", computer, "_controller_computer_changed",\
-			[], CONNECT_ONESHOT)
+		computer.controller = self
 		connect("__target_changed", computer, "_target_change_handler")
 		connect("__target_defeated", computer, "_target_defeated_handler")
+		connect("__combatant_changed", computer, "_vessel_change_handler")
+		# Emit the signal before connecting it to the new computer
+		# so the old computer could clean itself up
+		# while not affecting the new computer
 		emit_signal("__computer_changed", self, com)
+		connect("__computer_changed", computer, "_controller_computer_changed",\
+			[], CONNECT_ONESHOT)
 		auto_ready_check()
 	
 

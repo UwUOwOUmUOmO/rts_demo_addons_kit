@@ -34,15 +34,14 @@ func _physics_process(delta):
 
 func _computer_handler(delta: float, pp := false):
 	if is_instance_valid(_computer):
-		if pp:
-			_computer._physics_process(delta)
-		else:
-			_computer._process(delta)
+		if (pp and _computer.use_physics_process) or \
+		   (not pp and not _computer.use_physics_process):
+				_computer._compute(delta)
+
 	if is_instance_valid(_instrument):
-		if pp:
-			_instrument._physics_process(delta)
-		else:
-			_instrument._process(delta)
+		if (pp and _instrument.use_physics_process) or \
+		   (not pp and not _instrument.use_physics_process):
+				_instrument._compute(delta)
 
 func _guide(delta: float):
 	pass

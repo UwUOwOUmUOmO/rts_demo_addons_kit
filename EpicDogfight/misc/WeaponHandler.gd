@@ -130,7 +130,7 @@ func spawn_projectile(no: int):
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.FLG:
 			guidance = ForwardLookingGuidance.new()
 			guidance.heat_threshold = profile.heatThreshold
-			if profile.seekingAngle != 0.0:
+			if profile.seekingAngle > 0.0:
 				guidance.seeking_angle  = profile.seekingAngle
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.PRECISION:
 			guidance = PrecisionGuidance.new()

@@ -1,6 +1,7 @@
 extends Node
 
 var allow_output := true
+var allow_debug  := true
 var trace_stack  := true
 
 func push_stack(stack: Array):
@@ -30,6 +31,13 @@ func print_warning(warning: String, stack := []):
 		if not warning.begins_with("Warnings: "):
 			warning = "Warning: " + warning
 		print(warning)
+	push_stack(stack)
+
+func print_debug(msg: String, stack := []):
+	if allow_debug and allow_output:
+		if not msg.begins_with("DEBUG: "):
+			msg = "DEBUG: " + msg
+		print(msg)
 	push_stack(stack)
 
 func err_fail_condition(cond: bool, errstr: String, stack := []) -> bool:

@@ -13,6 +13,8 @@ var enemy_squadron = null setget set_senemy
 var enemy_vehicles := {}
 var assignment_board := {}
 
+var detected_bogeys := []
+
 var vehicles := {}
 
 func _init():
@@ -84,7 +86,7 @@ func simple_reassign_all_targets():
     var enemy_iter := 0
     var invalid_enemy := false
     while true:
-        if (vehicle_iter >= v_count) and \
+        if (vehicle_iter >= v_count) or \
            (enemy_iter >= ev_count):
                 break
         # Separate allies and enemies iterators cause
@@ -108,3 +110,8 @@ func target_defeat_handler(controller):
         var new_enemy = get_least_attended_enemy()
         if new_enemy != null:
             controller.target = new_enemy
+
+func bogey_handler(bogey):
+	if not bogey in enemy_vehicles.values():
+		detected_bogeys.append(bogey)
+		Out.print_debug("New hostile detected")
