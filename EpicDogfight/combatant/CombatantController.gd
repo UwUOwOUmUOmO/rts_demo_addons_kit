@@ -35,6 +35,7 @@ func _set_combatant(com):
 func _set_target(tar):
 	if tar is Combatant and not tar == target:
 		target = tar
+		target._controller = self
 		emit_signal("__target_changed", tar)
 		auto_ready_check()
 

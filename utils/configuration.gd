@@ -24,16 +24,23 @@ func _init():
 
 func remove_property(what: String):
 	prop_mutex.lock()
-	var size := property_list.size()
-	for i in range(0, size):
-		if property_list[i] == what:
-			property_list.remove(i)
-			break
+	# var size := property_list.size()
+	# for i in range(0, size):
+	# 	if property_list[i] == what:
+	# 		property_list.remove(i)
+	# 		break
+	var arr_tmp := Array(property_list)
+	arr_tmp.erase(what)
+	property_list = arr_tmp
 	prop_mutex.unlock()
 
 func remove_properties(what: PoolStringArray):
+	prop_mutex.lock()
+	var arr_tmp := Array(property_list)
 	for c in what:
-		remove_property(c)
+		arr_tmp.erase(c)
+	property_list = arr_tmp
+	prop_mutex.unlock()
 
 func _reset_volatile():
 	pass
