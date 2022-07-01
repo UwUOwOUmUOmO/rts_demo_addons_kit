@@ -1,12 +1,14 @@
 extends Node
 
 const DEFAULT_AUTOLOAD := PoolStringArray([
+	"res://addons/GameFramework/level_manager.gd",
 	"res://addons/GameFramework/level_singleton.gd",
 	"res://addons/Processors/processors_swarm.gd",
 	"res://addons/utils/path_utils.gd",
 	"res://addons/utils/core_settings.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
+	"LevelManager",
 	"LevelSingleton",
 	"ProcessorsSwarm",
 	"PathUtils",
