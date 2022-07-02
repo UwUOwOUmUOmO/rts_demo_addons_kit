@@ -84,7 +84,7 @@ func _advanced_leading(delta: float) -> void:
 		last_location = current_location
 		global_translate(last_location - global_transform.origin)
 		return
-	var direction	    := last_location.direction_to(current_location)
+	var direction		:= last_location.direction_to(current_location)
 	var distance:  float = last_location.distance_to(current_location)
 	var velocity:  float = distance / delta
 	if last_velocity != 0.0:

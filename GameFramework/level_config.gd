@@ -9,5 +9,5 @@ export(String) var loading_scene_path := ""
 
 
 func _init():
-    ._init()
-    name = "LevelConfiguration"
+	._init()
+	name = "LevelConfiguration"

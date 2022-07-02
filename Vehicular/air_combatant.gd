@@ -43,7 +43,7 @@ func _setMoving(m: bool) -> void:
 	pass
 
 func set_distance(_d) -> void:
-    pass
+	pass
 
 func get_distance() -> float:
-    return sqrt(distance_squared)
+	return sqrt(distance_squared)
