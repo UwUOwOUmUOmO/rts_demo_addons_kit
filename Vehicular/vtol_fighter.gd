@@ -48,7 +48,7 @@ func _compute(delta):
 		else:
 			_bakeDestination(trackingTarget.global_transform.origin)
 			if not isMoving:
-				_setMoving(true)
+				set_moving(true)
 	if not isReady:
 		if get_parent():
 			isReady = true
@@ -91,10 +91,10 @@ func rudderCheck():
 #	destination = des
 #	distance_squared = origin.distance_squared_to(des)
 #	if not isMoving:
-#		_setMoving(true)
+#		set_moving(true)
 #	 _bakeDestination(des)
 	rudder.rotation = Vector3(0.0, rudderAngle, 0.0)
-	_setTracker(rudder)
+	set_tracking_target(rudder)
 
 func _rudderControl() -> Vector3:
 	var allowedSpeed: float =_vehicle_config.maxSpeed
@@ -184,13 +184,13 @@ func _setMovement():
 		return
 	if distance_squared <= d_s:
 		throttle = 0.0
-		_setMoving(false)
+		set_moving(false)
 		if currentSpeed < _vehicle_config.speedSnapping\
 				and throttle <= _vehicle_config.minThrottle:
-			_setMoving(false)
+			set_moving(false)
 			return
 		if distance_squared <= o_s:
-			_setMoving(false)
+			set_moving(false)
 			global_translate(destination - global_transform.origin)
 	elif slowingRange_squared >= distance_squared:
 		throttle = 0.0
@@ -218,27 +218,27 @@ func _bakeDestination(d: Vector3):
 		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config.maxSpeed)
 		inheritedSpeed = 0.0
 
-func _setTracker(target: Spatial):
+func set_tracking_target(target: Spatial):
 	if target == null:
-		_setMoving(false)
+		set_moving(false)
 		trackingTarget = target
 		return
 	trackingTarget = target
 	if not isMoving:
-		_setMoving(true)
+		set_moving(true)
 	trackingTarget = target
 	_bakeDestination(trackingTarget.global_transform.origin)
 	emit_signal("__tracking_target", self, target)
 
-func _setCourse(des: Vector3):
+func set_course(des: Vector3):
 	if trackingTarget != null:
 		trackingTarget = null
 	if not isMoving:
-		_setMoving(true)
+		set_moving(true)
 	_bakeDestination(des)
-#	_setMoving(true)
+#	set_moving(true)
 
-func _setMoving(m: bool):
+func set_moving(m: bool):
 	if not m:
 		emit_signal("__destination_arrived", self)
 	isMoving = m

@@ -1,5 +1,7 @@
 extends Node
 
+signal __changing_to_scene(to)
+
 var preloaded := []
 var curr_lmac: LM_AssistClass = null
 
@@ -7,6 +9,7 @@ class LM_AssistClass extends Reference:
 	signal __finished_all()
 	signal __loading_percentage(percent)
 	signal __lmac_finished()
+	signal __change_next_frame(to)
 
 	var lspc: AssetsPreloader = null
 	var mpc: AssetsPreloader = null
@@ -25,8 +28,8 @@ class LM_AssistClass extends Reference:
 		tree = t
 		connect("__finished_all", self, "load_main_finished_handler")
 
-	static func defer_loading_scene(path: String) -> AssetsPreloader:
-		var preload_com := AssetsPreloader.new()
+	func defer_loading_scene(path: String) -> AssetsPreloader:
+		var preload_com := AssetsPreloader.new(tree)
 		preload_com.load_assets([path])
 		return preload_com
 
@@ -40,7 +43,6 @@ class LM_AssistClass extends Reference:
 		lspc.connect("__finished_loading", self, "loading_scene_finished_loading")
 
 	func loading_scene_finished_loading(preloader):
-		ThreadFinishHandler.new().end_thread(preloader.worker_thread, tree)
 		loading_scene = preloader.assets[0].instance()
 		tree.current_scene.add_child(loading_scene)
 		if loading_scene.has_method("change_percentage"):
@@ -55,8 +57,7 @@ class LM_AssistClass extends Reference:
 			return
 		while not ls_status:
 			yield(tree, "idle_frame")
-		mpc = AssetsPreloader.new()
-		mpc.connect("__finished_loading", self, "mpc_finished_handler")
+		mpc = AssetsPreloader.new(tree)
 		var load_inter := ResourceLoader.load_interactive(scene_path, "PackedScene")
 		total_stages += load_inter.get_stage_count()
 		total_stages += p_list.size()
@@ -64,9 +65,6 @@ class LM_AssistClass extends Reference:
 		main_handler(load_inter)
 		preload_handler(mpc)
 		percentage_handler()
-
-	func mpc_finished_handler(preloader):
-		ThreadFinishHandler.new().end_thread(preloader.worker_thread, tree)
 
 	func percentage_handler():
 		while not main_status:
@@ -78,6 +76,10 @@ class LM_AssistClass extends Reference:
 					if is_instance_valid(l_parent):
 						l_parent.remove_child(loading_scene)
 					loading_scene.queue_free()
+				emit_signal("__change_next_frame", main_scene_packed)
+				# yield(tree, "idle_frame")
+				var curr_scene := tree.current_scene
+				curr_scene.queue_free()
 				tree.change_scene_to(main_scene_packed)
 				emit_signal("__finished_all")
 				break
@@ -115,9 +117,10 @@ func load_level(cfg: LevelConfiguration, wait := false) -> bool:
 				get_stack())
 			return false
 	curr_lmac = LM_AssistClass.new(get_tree())
+	curr_lmac.connect("__lmac_finished", self, "lmac_finish_handler")
+	curr_lmac.connect("__change_next_frame", self, "lmac_change_next_frame_handler")
 	curr_lmac.spawn_loading_scene(cfg.loading_scene_path)
 	curr_lmac.load_main(cfg.scene_path, cfg.preload_list)
-	curr_lmac.connect("__lmac_finished", self, "lmac_finish_handler")
 	return true
 
 func manual_change_scene(to: PackedScene):
@@ -125,4 +128,8 @@ func manual_change_scene(to: PackedScene):
 
 func lmac_finish_handler():
 	curr_lmac.disconnect("__lmac_finished", self, "lmac_finish_handler")
+	curr_lmac.disconnect("__change_next_frame", self, "lmac_change_next_frame_handler")
 	curr_lmac = null
+
+func lmac_change_next_frame_handler(to):
+	emit_signal("__changing_to_scene", to)

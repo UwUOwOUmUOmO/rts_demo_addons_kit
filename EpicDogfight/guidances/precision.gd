@@ -6,7 +6,7 @@ var site := Vector3.ZERO
 
 func _set_guided(g: bool):
 	if g:
-		vtol._setCourse(site)
+		vtol.set_course(site)
 	else:
 		dumb_control()
 

@@ -70,7 +70,7 @@ func _guide(delta: float):
 	if (guided and handler.guided) or distance_squared <= active_range_squared:
 		target_valid = true
 		if vtol.trackingTarget != target:
-			vtol._setTracker(target)
+			vtol.set_tracking_target(target)
 			manual_control = false
 		if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.FORWARD:
 			if proximity_check(distance_squared):

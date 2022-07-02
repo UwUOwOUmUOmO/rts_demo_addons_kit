@@ -111,7 +111,7 @@ func _evasive_manuver():
 		# Assigned combatant is at target's port
 		direction = normal
 		direction.rotated(Vector3.UP, -_config["evasiveAngle"])
-	_assigned_combatant._setCourse(_assigned_combatant.trackingTarget\
+	_assigned_combatant.set_course(_assigned_combatant.trackingTarget\
 		.global_transform.origin + (direction * _config["evasiveDistance"]))
 
 func _target_transform_precompute(delta: float):

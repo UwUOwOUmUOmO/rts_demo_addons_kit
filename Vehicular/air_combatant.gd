@@ -15,9 +15,9 @@ var isReady := false
 var useRudder := false
 var enableGravity := false
 var rudderAngle := 0.0
-var destination := Vector3() setget _setCourse
-var trackingTarget: Spatial = null setget _setTracker
-var isMoving := false setget _setMoving
+var destination := Vector3() setget set_course
+var trackingTarget: Spatial = null setget set_tracking_target
+var isMoving := false setget set_moving
 var overdriveThrottle := -1.0
 var inheritedSpeed := 0.0
 
@@ -33,13 +33,13 @@ func _ready():
 	add_child(rudder)
 	rudder.translation = Vector3(0.0, 0.0, -50.0)
 
-func _setCourse(des: Vector3) -> void:
+func set_course(des: Vector3) -> void:
 	pass
 
-func _setTracker(target: Spatial) -> void:
+func set_tracking_target(target: Spatial) -> void:
 	pass
 
-func _setMoving(m: bool) -> void:
+func set_moving(m: bool) -> void:
 	pass
 
 func set_distance(_d) -> void:

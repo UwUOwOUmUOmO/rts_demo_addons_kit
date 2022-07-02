@@ -29,10 +29,10 @@ func _guide(delta: float):
 			and distance_squared <= active_range_squared:
 		if heat_tracking and target is Combatant:
 			if target._heat_signature > heat_threshold:
-				vtol._setTracker(target)
+				vtol.set_tracking_target(target)
 				manual_control = false
 		elif vtol.trackingTarget != target:
-			vtol._setTracker(target)
+			vtol.set_tracking_target(target)
 			manual_control = false
 		if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.FORWARD:
 			pc_check = proximity_check(distance_squared)
