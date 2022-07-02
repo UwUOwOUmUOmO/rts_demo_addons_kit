@@ -1,6 +1,6 @@
 extends Configuration
 
-class_name LevelConfiguration
+class_name LevelConfiguration, "icons/level_res_icon.png"
 
 # Persistent
 export(String) var scene_path := ""

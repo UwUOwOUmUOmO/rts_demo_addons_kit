@@ -1,34 +1,12 @@
-extends Combatant
+extends AirCombatant
 
 class_name VTOLFighterBrain
 
-const GRAVITATIONAL_CONSTANT = 9.8
-
-signal __tracking_target(brain, target)
-signal __loss_track_of_target(brain)
-signal __destination_arrived(brain)
-
-var useBuiltinTranslator := true
-var isReady := false
-var useRudder := false
-var enableGravity := false
-var rudderAngle := 0.0
-var destination := Vector3() setget _setCourse
-var trackingTarget: Spatial = null setget _setTracker
-var isMoving := false setget _setMoving, _getMoving
-var overdriveThrottle := -1.0
-var inheritedSpeed := 0.0
-
-var rudder: Spatial = null
-
+# Volatile
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
 var slowingRange := 0.0
 var slowingRange_squared := 0.0
-var throttle := 0.0
-var speedPercentage := 0.0
-var distance := 0.0 setget , get_distance
-var distance_squared := 0.0
 var previousYaw := 0.0
 var currentRoll := 0.0
 var targetRoll := 0.0
@@ -36,17 +14,12 @@ var allowedTurn := 0.05
 var speedLoss := 0.0
 var realSpeedLoss := 0.0
 
-func get_distance():
-	return sqrt(distance_squared)
-
 func _init():
 	_vehicle_config = AircraftConfiguration.new()
 
 func _ready():
+	._ready()
 	previousYaw = global_transform.basis.get_euler().y
-	rudder = Spatial.new()
-	add_child(rudder)
-	rudder.translation = Vector3(0.0, 0.0, -50.0)
 	set_physics_process(_use_physics_process)
 	set_process(not _use_physics_process)
 
@@ -280,6 +253,3 @@ func _setMoving(m: bool):
 	previousYaw = 0.0
 	targetRoll = 0.0
 	allowedTurn = _vehicle_config.turnRate
-
-func _getMoving():
-	return isMoving

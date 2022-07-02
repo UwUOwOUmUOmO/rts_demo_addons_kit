@@ -27,6 +27,7 @@ func worker(list: PoolStringArray):
 	emit_signal("__finished_loading", self)
 
 func load_assets(target_list: PoolStringArray):
+	finished_loading = false
 	total_assets = target_list.size()
 	worker_thread = Thread.new()
 	var err := worker_thread.start(self, "worker", target_list)
@@ -43,5 +44,4 @@ func get_percentage() -> float:
 		return perc
 
 func finished_handler(_preloader):
-	worker_thread.wait_to_finish()
 	finished_loading = true

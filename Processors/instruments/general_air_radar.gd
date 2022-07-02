@@ -71,7 +71,7 @@ func _radar_ping():
 
 func lock_on_handler(target):
 	if target is Combatant:
-		var actual_craft: VTOLFighterBrain = host.assigned_combatant
+		var actual_craft: AirCombatant = host.assigned_combatant
 		var actual_dir: Vector3 = actual_craft.global_transform.origin\
 			.direction_to(target.global_transform.origin)
 		var jitter := clamp(LOCK_ON_MAX_JITTER * (1.0 - lock_on_detection_accuracy),\
@@ -82,8 +82,8 @@ func lock_on_handler(target):
 		emit_signal("__lock_on_detected", jittered_dir)
 
 # COMPROMISE: get distance
-func is_aircraft_detected(bogey: VTOLFighterBrain) -> bool:
-	var actual_craft: VTOLFighterBrain = host.assigned_combatant
+func is_aircraft_detected(bogey: AirCombatant) -> bool:
+	var actual_craft: AirCombatant = host.assigned_combatant
 	if not is_instance_valid(actual_craft):
 		return false
 	var distance: float = actual_craft\
@@ -102,7 +102,7 @@ func is_aircraft_detected(bogey: VTOLFighterBrain) -> bool:
 
 func detect_aircraft(clist: Array) -> void:
 	for c in clist:
-		var combatant: VTOLFighterBrain = c
+		var combatant: AirCombatant = c
 		if not is_instance_valid(combatant) or \
 			combatant in detected:
 				continue
