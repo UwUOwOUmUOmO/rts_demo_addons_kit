@@ -103,6 +103,9 @@ func _start(move := true):
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
 	var scene := get_tree().get_current_scene()
+	vtol.device = AirCombatant.PROJECTILE_TYPE.MISSILE \
+				+ AirCombatant.PROJECTILE_TYPE.AAM
+	vtol._controller = self
 	if scene:
 		scene.call_deferred("add_child", vtol)
 	else:

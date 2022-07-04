@@ -6,4 +6,4 @@ const PROJECTILE_SIGNATURE = 1.0
 
 signal __bogey_detected(bogey)
 signal __lock_on_detected(direction)
-signal __inbound_projectile(projectile)
+signal __projectile_detected(projectile)

@@ -11,11 +11,13 @@ var _weapon_base_config: WeaponConfiguration = null
 var _velocity := 0.0
 var _barrel := Vector3.ZERO
 var _direction := Vector3.ZERO
-var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
+var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings") \
+	.use_physics_process
 var _projectile_scene: PackedScene = null
 var _projectile: Spatial = null
 var _computer: FlightComputer = null
 var _instrument: AirInstrument = null
+var _damage_zone: Area = null
 var _green_light := false
 var _arm_time := 0.3
 var _armed := false
@@ -90,7 +92,49 @@ func _initialize():
 func _finalize():
 	_green_light = false
 	emit_signal("__armament_detonated", self)
+	_damage_call()
 	_clean()
+
+func dmg_zone_area_max_distance() -> float:
+	var collision_shape: CollisionShape = _damage_zone.get_child(0)
+	var shape := collision_shape.shape
+	if shape is SphereShape:
+		return shape.radius
+	elif shape is CapsuleShape:
+		return max(shape.radius, shape.height)
+	return 0.0
+
+func dmg_cal_linear(distance: float, percent := 0.0) -> float:
+	var max_dis := dmg_zone_area_max_distance()
+	return (_weapon_base_config.baseDamage * percent)
+
+func _damage_calculate(distance: float, dmg_curve: Curve = null) \
+	-> float:
+		var max_dis := dmg_zone_area_max_distance()
+		var percent: float
+		if max_dis == 0.0:
+			percent = 0.0
+		else:
+			percent = distance / max_dis
+		if dmg_curve == null:
+			return dmg_cal_linear(distance, percent)
+		var interp := dmg_curve.interpolate(percent)
+		if dmg_curve.max_value == 1.0:
+			return (_weapon_base_config.baseDamage * interp)
+		return interp
+
+func _damage_call():
+	if not is_instance_valid(_damage_zone):
+		return
+	var overlapped := _damage_zone.get_overlapping_areas()
+	var area_origin := _damage_zone.global_transform.origin
+	for body in overlapped:
+		var parent: Node = body.get_parent()
+		if parent.has_method("_damage"):
+			var combatant_origin: Vector3 = parent.global_transform.origin
+			var dis := area_origin.distance_to(combatant_origin)
+			var dmg := _damage_calculate(dis, _weapon_base_config.damageCurve)
+			parent._damage(dmg)
 
 func _clean():
 	queue_free()

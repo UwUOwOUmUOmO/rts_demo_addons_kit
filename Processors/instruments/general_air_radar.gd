@@ -1,5 +1,6 @@
 extends AirInstrument
 
+# Air Detection and RWR
 class_name GeneralAirInstrument
 
 const LOCK_ON_MAX_JITTER = deg2rad(6.0)
@@ -50,6 +51,7 @@ func get_rmd():
 func _boot():
 	green_light = true
 	_activate_radar()
+	_boot_rwr()
 
 func _compute(_delta: float):
 	detected_list_cleanup()
@@ -66,8 +68,28 @@ func _activate_radar():
 		yield(tree.create_timer(radar_cycle), "timeout")
 
 func _radar_ping():
-	var clist := _get_all_combatants()
-	detect_aircraft(clist)
+	detect_aircraft()
+
+func _boot_rwr():
+	while not terminated:
+		if green_light:
+			rwr_proc()
+		yield(tree, "idle_frame")
+
+func rwr_proc():
+	var assigned_craft: AirCombatant = host.assigned_combatant
+	var missiles_list := tree.get_nodes_in_group("missiles")
+	for missile in missiles_list:
+		if missile._controller.target == assigned_craft \
+			and missile.device & AirCombatant.PROJECTILE_TYPE.AAM:
+				lock_on_handler(missile)
+
+func detect_missiles():
+	var assigned_craft: AirCombatant = host.assigned_combatant
+	var missiles_list := tree.get_nodes_in_group("missiles")
+	for missile in missiles_list:
+		if is_aircraft_detected(missile):
+			emit_signal("__projectile_detected", missile)
 
 func lock_on_handler(target):
 	if target is Combatant:
@@ -84,8 +106,6 @@ func lock_on_handler(target):
 # COMPROMISE: get distance
 func is_aircraft_detected(bogey: AirCombatant) -> bool:
 	var actual_craft: AirCombatant = host.assigned_combatant
-	if not is_instance_valid(actual_craft):
-		return false
 	var distance: float = actual_craft\
 		.global_transform.origin.distance_to(bogey\
 		.global_transform.origin)
@@ -100,24 +120,10 @@ func is_aircraft_detected(bogey: AirCombatant) -> bool:
 	else:
 		return false
 
-func detect_aircraft(clist: Array) -> void:
+func detect_aircraft() -> void:
+	var clist := tree.get_nodes_in_group("air_combatants")
 	for c in clist:
 		var combatant: AirCombatant = c
-		if not is_instance_valid(combatant) or \
-			combatant in detected:
-				continue
 		if is_aircraft_detected(combatant):
-			if combatant._vehicle_config.radarSignature < PROJECTILE_SIGNATURE:
-				emit_signal("__inbound_projectile", combatant)
-			else:
-				detected.append(combatant)
-				emit_signal("__bogey_detected", combatant)
-
-func _get_all_combatants() -> Array:
-	var list := []
-	var current_tree = tree.current_scene
-	var children: Array = current_tree.get_children()
-	for c in children:
-		if c is Combatant:
-				list.append(c)
-	return list
+			detected.append(combatant)
+			emit_signal("__bogey_detected", combatant)

@@ -6,11 +6,11 @@ class_name SimpleFlightComputer
 var weapon_profile: WeaponConfiguration = null setget set_wp
 var weapon_mlrs := 0.0
 var weapon_sa := ForwardLookingGuidance.DEFAULT_SEEKING_ANGLE
+var weapon_dmg := 0
 
 # Persistent
 var min_range_limit	 := 700.0 setget set_mrl
 var mrl_squared		 := 490000.0
-
 
 func _init():
 	._init()
@@ -23,6 +23,8 @@ func set_wp(profile):
 	weapon_mlrs *= weapon_mlrs
 	if weapon_profile.seekingAngle > 0.0:
 		weapon_sa = weapon_profile.seekingAngle
+	weapon_dmg = profile.baseDamage
+	Combatant
 
 func set_mrl(mrl: float):
 	min_range_limit = mrl
@@ -42,12 +44,14 @@ func _compute(delta):
 	var ev_pos: Vector3 = target.global_transform.origin
 	var ds_to_target := v_pos.distance_squared_to(ev_pos)
 	var angle_to_target := fwd_vec.angle_to(v_pos.direction_to(ev_pos))
-	if ds_to_target < mrl_squared:
+	if not is_instance_valid(target):
+		idle_mode(delta)
+	elif ds_to_target < mrl_squared:
 		evade_mode(delta)
 	else:
 		chase_mode(delta)
 	if  (ds_to_target < weapon_mlrs) and \
-		( angle_to_target < weapon_sa):
+		(angle_to_target < weapon_sa):
 			fire_mode(delta)
 
 func idle_mode(_delta):
