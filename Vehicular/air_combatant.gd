@@ -11,6 +11,7 @@ enum PROJECTILE_TYPE {
 	MISSILE 	= 2,
 	AAM 		= 4,
 	AGM 		= 8,
+	SAM			= 16,
 }
 
 signal __tracking_target(brain, target)
@@ -37,19 +38,28 @@ var speedPercentage := 0.0
 var distance := 0.0 setget , get_distance
 var distance_squared := 0.0
 
-func _enter_tree():
+func ref_handler():
+	var g: PoolStringArray = []
 	if device & PROJECTILE_TYPE.AIRCRAFT:
-		add_to_group("air_combatants")
+		g.push_back("air_combatants")
 	elif device & PROJECTILE_TYPE.MISSILE:
-		add_to_group("missiles")
+		g.push_back("missiles")
+		if device & PROJECTILE_TYPE.AAM:
+			g.push_back("aam_missiles")
+		elif device & PROJECTILE_TYPE.AGM:
+			g.push_back("agm_missiles")
+		elif device & PROJECTILE_TYPE.SAM:
+			g.push_back("sam_missiles")
+	IRM.add(_ref, g)
+
+func _enter_tree():
+	_ref = InRef.new(self)
 
 func _exit_tree():
-	if device & PROJECTILE_TYPE.AIRCRAFT:
-		remove_from_group("air_combatants")
-	elif device & PROJECTILE_TYPE.MISSILE:
-		remove_from_group("missiles")
+	_ref.cut_tie()
 
 func _ready():
+	ref_handler()
 	rudder = Spatial.new()
 	add_child(rudder)
 	rudder.translation = Vector3(0.0, 0.0, -50.0)
@@ -67,4 +77,6 @@ func set_distance(_d) -> void:
 	pass
 
 func get_distance() -> float:
+	if distance_squared == null:
+		return 0.0
 	return sqrt(distance_squared)

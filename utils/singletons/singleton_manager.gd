@@ -3,8 +3,8 @@ extends Node
 const DEFAULT_AUTOLOAD := PoolStringArray([
 	"res://addons/GameFramework/level_manager.gd",
 	"res://addons/Processors/processors_swarm.gd",
-	"res://addons/utils/path_utils.gd",
-	"res://addons/utils/core_settings.gd",
+	"res://addons/utils/singletons/path_utils.gd",
+	"res://addons/utils/singletons/core_settings.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
 	"LevelManager",
@@ -14,6 +14,7 @@ const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
 ])
 
 var services := {}
+var ready := false
 
 func _ready():
 	var iter := 0
@@ -21,8 +22,11 @@ func _ready():
 	for count in range(0, size):
 		add_singleton_from_script(DEFAULT_AUTOLOAD[count],\
 			DEFAULT_AUTOLOAD_NAME[count])
+	ready = true
 
 func fetch(name: String):
+	while not ready:
+		pass
 	if services.has(name):
 		return services[name]
 	Out.print_error("Service not exist: " + name,

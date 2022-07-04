@@ -78,15 +78,14 @@ func _boot_rwr():
 
 func rwr_proc():
 	var assigned_craft: AirCombatant = host.assigned_combatant
-	var missiles_list := tree.get_nodes_in_group("missiles")
+	var missiles_list := IRM.fetch("missiles")
 	for missile in missiles_list:
-		if missile._controller.target == assigned_craft \
-			and missile.device & AirCombatant.PROJECTILE_TYPE.AAM:
+		if missile._controller.target == assigned_craft:
 				lock_on_handler(missile)
 
 func detect_missiles():
 	var assigned_craft: AirCombatant = host.assigned_combatant
-	var missiles_list := tree.get_nodes_in_group("missiles")
+	var missiles_list := IRM.fetch("missiles")
 	for missile in missiles_list:
 		if is_aircraft_detected(missile):
 			emit_signal("__projectile_detected", missile)
@@ -121,7 +120,7 @@ func is_aircraft_detected(bogey: AirCombatant) -> bool:
 		return false
 
 func detect_aircraft() -> void:
-	var clist := tree.get_nodes_in_group("air_combatants")
+	var clist := IRM.fetch("air_combatants")
 	for c in clist:
 		var combatant: AirCombatant = c
 		if is_aircraft_detected(combatant):
