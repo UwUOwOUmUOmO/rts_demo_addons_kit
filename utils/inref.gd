@@ -6,6 +6,7 @@ const DEFAULT_GC_INTERVAL := 1.0
 
 var tree: SceneTree = null
 var to: Node = null
+var desc := ""
 
 var interval := DEFAULT_GC_INTERVAL
 var participation: Array = []
@@ -24,6 +25,7 @@ func remove_from(name: String):
 
 func cut_tie():
 	IRM.cut_tie(self)
+	to = null
 
 func gc():
 	if tree == null:

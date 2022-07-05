@@ -86,7 +86,8 @@ func rwr_proc():
 func detect_missiles():
 	var assigned_craft: AirCombatant = host.assigned_combatant
 	var missiles_list := IRM.fetch("missiles")
-	for missile in missiles_list:
+	for ref in missiles_list:
+		var missile = ref.to
 		if is_aircraft_detected(missile):
 			emit_signal("__projectile_detected", missile)
 
@@ -122,7 +123,7 @@ func is_aircraft_detected(bogey: AirCombatant) -> bool:
 func detect_aircraft() -> void:
 	var clist := IRM.fetch("air_combatants")
 	for c in clist:
-		var combatant: AirCombatant = c
+		var combatant: AirCombatant = c.to
 		if is_aircraft_detected(combatant):
 			detected.append(combatant)
 			emit_signal("__bogey_detected", combatant)

@@ -1,27 +1,24 @@
-extends ProcessEnforcer
+extends Node
 
-func run_process(delta: float, pp := false):
-	run_process_safe(delta, pp)
+func add_cluster(cluster_name := "") -> ProcessorsCluster:
+	var new_cluster := ProcessorsCluster.new()
+	if not cluster_name.empty():
+		new_cluster.name = cluster_name
+	call_deferred("add_child", new_cluster)
+	return new_cluster
 
-func _set_processor_list(procs: Array):
-	for c in procs:
-		if c is Processor:
-			if not c.enforcer_assigned:
-				c.enforcer_assigned = true
-				c._boot()
-				processor_list.append(c)
+func fetch(cluster_name: String) -> ProcessorsCluster:
+	return get_node_or_null(cluster_name) as ProcessorsCluster
 
-func add_processor(proc: Processor):
-	if not proc.enforcer_assigned:
-		proc.enforcer_assigned = true
-		proc._boot()
-		processor_list.append(proc)
+func decommission(cluster_name: String) -> void:
+	var cluster = get_node_or_null(cluster_name)
+	if cluster == null:
+		Out.print_error("Cluster not available for decommission: " \
+			+ cluster_name, get_stack())
+		return
+	cluster.decommission()
 
-func _ready():
-	enforce()
-
-func _process(delta):
-	run_process(delta)
-
-func _physics_process(delta):
-	run_process(delta, true)
+func decommission_all() -> void:
+	var childrens := get_children()
+	for child in childrens:
+		child.decommission()

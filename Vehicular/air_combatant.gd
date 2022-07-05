@@ -57,6 +57,7 @@ func _enter_tree():
 
 func _exit_tree():
 	_ref.cut_tie()
+	_ref = null
 
 func _ready():
 	ref_handler()

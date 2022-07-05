@@ -1,14 +1,30 @@
 extends Node
 
-var groups := {}
+var groups := {} setget set_groups, get_groups
 var gc := false
 
+var allow_probbing := false
+var allow_query := true
 var glock := Mutex.new()
+
+func set_groups(_g):
+	pass
+
+func get_groups():
+	if allow_probbing:
+		return groups.duplicate(true)
+	else:
+		return {}
 
 func clean(name: String) -> void:
 	glock.lock()
 	groups[name] = []
 	glock.unlock()
+
+func query(input: FuncRef):
+	if allow_query:
+		return input.call_func(groups)
+	return null
 
 func fetch(name: String) -> Array:
 	if not groups.has(name):
@@ -26,7 +42,6 @@ func add(ref: InRef, to: PoolStringArray) -> void:
 			groups[part] = []
 		groups[part].append(ref)
 		ref.participation.append(part)
-		pass
 	glock.unlock()
 
 func remove(ref: InRef, from: PoolStringArray) -> bool:
