@@ -24,7 +24,6 @@ func set_wp(profile):
 	if weapon_profile.seekingAngle > 0.0:
 		weapon_sa = weapon_profile.seekingAngle
 	weapon_dmg = profile.baseDamage
-	Combatant
 
 func set_mrl(mrl: float):
 	min_range_limit = mrl

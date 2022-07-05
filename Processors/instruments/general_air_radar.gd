@@ -79,7 +79,8 @@ func _boot_rwr():
 func rwr_proc():
 	var assigned_craft: AirCombatant = host.assigned_combatant
 	var missiles_list := IRM.fetch("missiles")
-	for missile in missiles_list:
+	for ref in missiles_list:
+		var missile = ref.to
 		if missile._controller.target == assigned_craft:
 				lock_on_handler(missile)
 

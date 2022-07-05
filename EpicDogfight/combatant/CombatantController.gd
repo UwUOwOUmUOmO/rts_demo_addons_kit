@@ -2,6 +2,21 @@ extends Node
 
 class_name CombatantController
 
+const COMPUTER_DEFAULT_SIGNALS := {
+	"__target_changed": "_target_change_handler",
+	"__target_defeated": "_target_defeated_handler", 
+	"__combatant_changed": "_vessel_change_handler",
+	"__lock_on_detected": "_lock_on_handler",
+	"__projectile_loose_lock": "_loose_lock_handler",
+}
+const INSTRUMENT_DEFAULT_SIGNALS := {
+	"__lock_on_detected": "_lock_on_handler",
+	"__projectile_loose_lock": "_loose_lock_handler",
+}
+
+signal __lock_on_detected(source)
+signal __projectile_loose_lock(source)
+
 signal __target_defeated(controller)
 signal __target_changed(new_target)
 signal __combatant_changed(new_combatant)
@@ -9,9 +24,10 @@ signal __computer_changed(controller, new_computer)
 signal __instrument_changed(controller, new_instrument)
 
 onready var processors_swarm		= SingletonManager.fetch("ProcessorsSwarm")
+onready var utils_settings			= SingletonManager.fetch("UtilsSettings")
 
 var auto_ready: bool				= true
-var use_physics_process: bool		= SingletonManager.fetch("UtilsSettings").use_physics_process
+var use_physics_process: bool		= utils_settings.use_physics_process
 var green_light: bool				= false setget _set_operation
 var assigned_combatant: Combatant	= null  setget _set_combatant
 var target							= null  setget _set_target
@@ -59,15 +75,13 @@ func _set_computer(com):
 	if com == computer:
 		return
 	if is_instance_valid(computer):
-		disconnect("__target_changed", computer, "_target_change_handler")
-		disconnect("__target_defeated", computer, "_target_defeated_handler")
-		disconnect("__combatant_changed", computer, "_vessel_change_handler")
+		utils_settings.disconnect_from(self, computer, \
+			COMPUTER_DEFAULT_SIGNALS)
 	if com is CombatComputer:
 		computer = com
 		computer.controller = self
-		connect("__target_changed", computer, "_target_change_handler")
-		connect("__target_defeated", computer, "_target_defeated_handler")
-		connect("__combatant_changed", computer, "_vessel_change_handler")
+		utils_settings.connect_from(self, computer, \
+			COMPUTER_DEFAULT_SIGNALS)
 		# Emit the signal before connecting it to the new computer
 		# so the old computer could clean itself up
 		# while not affecting the new computer
@@ -79,14 +93,21 @@ func _set_computer(com):
 		else:
 			cluster.add_nopr(computer)
 		auto_ready_check()
-	
 
 func _set_instrument(sen):
-	if sen is CombatInstrument and not sen == instrument:
+	if sen == instrument:
+		return
+	if is_instance_valid(instrument):
+		utils_settings.disconnect_from(self, instrument, \
+			INSTRUMENT_DEFAULT_SIGNALS)
+	if sen is CombatInstrument:
 		instrument = sen
+		utils_settings.connect_from(self, instrument, \
+			INSTRUMENT_DEFAULT_SIGNALS)
+
+		emit_signal("__instrument_changed", self, instrument)
 		connect("__instrument_changed", instrument,\
 			"_controller_instrument_changed", [], CONNECT_ONESHOT)
-		emit_signal("__instrument_changed", self, sen)
 		if green_light:
 			cluster.add_processor(instrument)
 		else:
@@ -104,6 +125,12 @@ func auto_ready_check():
 		elif not is_instance_valid(instrument):
 			return
 		_set_operation()
+
+func lock_on_handler(source, _tar):
+	emit_signal("__lock_on_detected", source)
+
+func loose_lock_handler(source, _tar):
+	emit_signal("__projectile_loose_lock", source)
 
 func _target_defeated_check():
 	if is_instance_valid(target):

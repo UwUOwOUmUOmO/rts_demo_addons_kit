@@ -2,16 +2,27 @@ extends WeaponGuidance
 
 class_name HomingGuidance
 
+const CONTROLLER_DEFAULT_SIGNALS := {
+	"__lock_on": "lock_on_handler",
+	"__loose_lock": "loose_on_handler",
+}
+
+signal __lock_on(source, tar)
+signal __loose_lock(source, tar)
+
+onready var utils_settings = SingletonManager.fetch("UtilsSettings")
+
 var handler = null
 var vtol: VTOLFighterBrain = null
 var target: Spatial = null
 var rudder_control: Spatial = null
 
+var proximity_mode: int = WeaponConfiguration.PROXIMITY_MODE.SPATIAL
+var projectile_type: int = AirCombatant.PROJECTILE_TYPE.AAM
 var vtol_profile: AircraftConfiguration = null\
 	setget set_profile, get_profile
 var active_range := 100.0 setget set_range, get_range
 var active_range_squared := 10000.0
-var proximity_mode: int = WeaponConfiguration.PROXIMITY_MODE.SPATIAL
 var detonation_distance := 1.0 setget set_ddistance, get_ddistance
 var detonation_distance_squared := 1.0
 var inherited_speed := 0.0
@@ -72,6 +83,7 @@ func _guide(delta: float):
 		if vtol.trackingTarget != target:
 			vtol.set_tracking_target(target)
 			manual_control = false
+			emit_signal("__lock_on", self, target)
 		if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.FORWARD:
 			if proximity_check(distance_squared):
 				return
@@ -85,6 +97,7 @@ func _guide(delta: float):
 
 func dumb_control():
 	if not manual_control:
+		emit_signal("__loose_lock", self, target)
 		vtol.useRudder = true
 		manual_control = true
 
@@ -99,12 +112,20 @@ func _clean():
 	vtol.queue_free()
 	queue_free()
 
+func _initialize():
+	._initialize()
+	if not is_instance_valid(target):
+		return
+	if not target is Combatant:
+		return
+	utils_settings.connect_from(self, target._controller,
+		CONTROLLER_DEFAULT_SIGNALS)
+
 func _start(move := true):
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
 	var scene := get_tree().get_current_scene()
-	vtol.device = AirCombatant.PROJECTILE_TYPE.MISSILE \
-				+ AirCombatant.PROJECTILE_TYPE.AAM
+	vtol.device = AirCombatant.PROJECTILE_TYPE.MISSILE + projectile_type
 	vtol._controller = self
 	if scene:
 		scene.call_deferred("add_child", vtol)
@@ -127,3 +148,11 @@ func _start(move := true):
 	_initialize()
 	_green_light = true
 	_boot_subsys()
+
+func lock_on_handler(_tar):
+	Out.print_error("This handler is not supposed to be used", \
+		get_stack())
+
+func loose_on_handler(_tar):
+	Out.print_error("This handler is not supposed to be used", \
+		get_stack())

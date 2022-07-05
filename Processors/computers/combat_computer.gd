@@ -13,8 +13,6 @@ var all_check := false
 var coprocess := true
 
 func _init():
-	
-	# exclusion_list.append_array(["memory", "target", "vessel", "all_check"])
 	remove_properties(["memory", "target", "vessel", "all_check"])
 	name = "CombatComputer"
 	return self
@@ -43,3 +41,9 @@ func _target_change_handler(new_target):
 
 func _target_defeated_handler(_con):
 	target = null
+
+func _lock_on_handler(_tar):
+	pass
+
+func _loose_lock_handler(_tar):
+	pass

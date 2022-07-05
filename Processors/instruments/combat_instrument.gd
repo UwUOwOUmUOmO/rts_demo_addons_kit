@@ -11,6 +11,10 @@ func _init():
 	name = "CombatInstrument"
 	return self
 
+func _reset_volatile() -> void:
+	._reset_volatile()
+	green_light = false
+
 func _controller_instrument_changed(controller, new_instrument):
 	if new_instrument != self:
 		green_light = false
@@ -18,6 +22,8 @@ func _controller_instrument_changed(controller, new_instrument):
 		# controller.disconnect("__computer_changed", self,\
 		# 	"_controller_computer_changed")
 
-func _reset_volatile() -> void:
-	._reset_volatile()
-	green_light = false
+func _lock_on_handler(target):
+	pass
+
+func _loose_lock_handler(_tar):
+	pass

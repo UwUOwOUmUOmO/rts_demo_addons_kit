@@ -31,9 +31,11 @@ func _guide(delta: float):
 			if target._heat_signature > heat_threshold:
 				vtol.set_tracking_target(target)
 				manual_control = false
+				emit_signal("__lock_on", self, target)
 		elif vtol.trackingTarget != target:
 			vtol.set_tracking_target(target)
 			manual_control = false
+			emit_signal("__lock_on", self, target)
 		if proximity_mode == WeaponConfiguration.PROXIMITY_MODE.FORWARD:
 			pc_check = proximity_check(distance_squared)
 			if pc_check:
