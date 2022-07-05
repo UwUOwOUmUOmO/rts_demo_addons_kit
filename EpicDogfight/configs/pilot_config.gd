@@ -62,7 +62,7 @@ func set_coef(key: String, val):
 		bake_base_coef()
 
 func _init():
-	._init()
+	
 	name = "PilotConfiguration"
 	remove_properties(["piloting", "base_coef"])
 	no_deep_scan.append("baked_stats")

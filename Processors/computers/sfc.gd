@@ -13,7 +13,7 @@ var min_range_limit	 := 700.0 setget set_mrl
 var mrl_squared		 := 490000.0
 
 func _init():
-	._init()
+	
 	name = "SimpleFlightComputer"
 	return self
 

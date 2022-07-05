@@ -9,7 +9,7 @@ var memory := {}
 var storage := {}
 
 func _init():
-	._init()
+	
 	remove_property("memory")
 	
 	name = "SerializableStorage"

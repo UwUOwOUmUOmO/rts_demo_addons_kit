@@ -18,7 +18,7 @@ var detected_bogeys := []
 var vehicles := {}
 
 func _init():
-	._init()
+	
 	connect("enemy_squadron_changed", self, "enemy_change_handler")
 
 func add_vehicle(v_name: String, v: Spatial):

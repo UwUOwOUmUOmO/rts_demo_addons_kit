@@ -13,7 +13,7 @@ var all_check := false
 var coprocess := true
 
 func _init():
-	._init()
+	
 	# exclusion_list.append_array(["memory", "target", "vessel", "all_check"])
 	remove_properties(["memory", "target", "vessel", "all_check"])
 	name = "CombatComputer"

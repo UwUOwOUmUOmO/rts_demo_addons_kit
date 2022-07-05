@@ -33,7 +33,7 @@ var damageCurve: Curve			 = null
 var damageModifier				:= DamageModifiersConfiguration.new()
 
 func _init():
-	._init()
+	
 	name = "WeaponConfiguration"
 	return self
 	

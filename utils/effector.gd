@@ -9,7 +9,7 @@ var course: Curve	   = null
 var type: int		   = CHARTABLE_DATA.AUTO
 
 func _init(c := "", t: int = CHARTABLE_DATA.AUTO):
-	._init()
+	
 	if not c.empty():
 		course = ResourceLoader.load(c, "Curve")
 	type = t

@@ -13,7 +13,7 @@ var func_name   := ""
 
 # Modified FuncRef created to be serializable
 func _init():
-	._init()
+	
 	remove_properties(["script_instance", "fref"])
 	name = "ModifiedFuncRef"
 

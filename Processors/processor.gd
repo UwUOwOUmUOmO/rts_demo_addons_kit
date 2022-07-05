@@ -26,7 +26,7 @@ func _set_tree(t):
 	tree = t
 
 func _init():
-	# ._init()
+	# 
 	remove_properties(["host", "tree", "terminated",\
 		"enforcer_assigned"])
 	name = "Processor"

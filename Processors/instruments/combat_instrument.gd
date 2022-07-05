@@ -6,7 +6,7 @@ class_name CombatInstrument
 var green_light := false
 
 func _init():
-	._init()
+	
 	remove_property("green_light")
 	name = "CombatInstrument"
 	return self

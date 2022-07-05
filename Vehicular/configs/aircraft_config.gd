@@ -25,6 +25,6 @@ var weight			:= 10.0
 var speedLossMod	:= 17.0
  
 func _init():
-	._init()
+	
 	name = "AircraftConfiguration"
 	return self

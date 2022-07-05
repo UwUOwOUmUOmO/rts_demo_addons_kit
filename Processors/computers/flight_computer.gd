@@ -9,7 +9,7 @@ const DEFAULT_DEVICE_STR := "AIRCRAFT"
 var type := DEFAULT_DEVICE
 
 func _init():
-	._init()
+	
 	name = "FlightComputer"
 	return self
 

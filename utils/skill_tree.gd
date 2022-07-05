@@ -17,7 +17,7 @@ var skill_attributes		:= {}
 var skill_branches			:= {}
 
 func _init():
-	._init()
+	
 	no_deep_scan.append("skill_attributes")
 	remove_property("skill_origin")
 	name = "SkillTree"

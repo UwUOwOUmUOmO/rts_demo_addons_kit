@@ -27,7 +27,7 @@ var none		:= 1.0
 var special_behavior := {}
 
 func _init():
-	._init()
+	
 	name = "DamageModifiersConfiguration"
 	return self
 

@@ -18,7 +18,7 @@ func set_pilot(pilot):
 	pilot_config = pilot
 
 func _init():
-	._init()
+	
 	name = "PilotController"
 	return self
 
