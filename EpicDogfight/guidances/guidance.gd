@@ -2,9 +2,16 @@ extends Spatial
 
 class_name WeaponGuidance
 
+const PROJECTILE_DEFAULT_SIGNALS := {
+	"__armament_fired":			"arm_launched",
+	"__armament_detonated":		"arm_arrived",
+}
+
 signal __armament_fired(guidance)
 signal __armmament_armed(guidance)
 signal __armament_detonated(guidance)
+
+onready var utils_settings = SingletonManager.fetch("UtilsSettings")
 
 var _weapon_base_config: WeaponConfiguration = null
 
@@ -63,10 +70,8 @@ func _start(move := true):
 	_boot_subsys()
 
 func _signals_init():
-	if _projectile.has_method("arm_launched"):
-		connect("__armament_fired", _projectile, "arm_launched")
-	if _projectile.has_method("arm_arrived"):
-		connect("__armament_detonated", _projectile, "arm_arrived")
+	utils_settings.connect_from(self, _projectile, \
+		PROJECTILE_DEFAULT_SIGNALS, true)
 
 func _boot_subsys():
 	if is_instance_valid(_computer) and not _computer.enforcer_assigned:
@@ -95,34 +100,6 @@ func _finalize():
 	_damage_call()
 	_clean()
 
-func dmg_zone_area_max_distance() -> float:
-	var collision_shape: CollisionShape = _damage_zone.get_child(0)
-	var shape := collision_shape.shape
-	if shape is SphereShape:
-		return shape.radius
-	elif shape is CapsuleShape:
-		return max(shape.radius, shape.height)
-	return 0.0
-
-func dmg_cal_linear(distance: float, percent := 0.0) -> float:
-	var max_dis := dmg_zone_area_max_distance()
-	return (_weapon_base_config.baseDamage * percent)
-
-func _damage_calculate(distance: float, dmg_curve: Curve = null) \
-	-> float:
-		var max_dis := dmg_zone_area_max_distance()
-		var percent: float
-		if max_dis == 0.0:
-			percent = 0.0
-		else:
-			percent = distance / max_dis
-		if dmg_curve == null:
-			return dmg_cal_linear(distance, percent)
-		var interp := dmg_curve.interpolate(percent)
-		if dmg_curve.max_value == 1.0:
-			return (_weapon_base_config.baseDamage * interp)
-		return interp
-
 func _damage_call():
 	if not is_instance_valid(_damage_zone):
 		return
@@ -131,10 +108,7 @@ func _damage_call():
 	for body in overlapped:
 		var parent: Node = body.get_parent()
 		if parent.has_method("_damage"):
-			var combatant_origin: Vector3 = parent.global_transform.origin
-			var dis := area_origin.distance_to(combatant_origin)
-			var dmg := _damage_calculate(dis, _weapon_base_config.damageCurve)
-			parent._damage(dmg)
+			parent._damage(_weapon_base_config.baseDamage)
 
 func _clean():
 	queue_free()

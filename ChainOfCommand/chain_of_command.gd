@@ -20,7 +20,7 @@ func _compute(delta: float):
 	# If the Command Chain has not been activated then return
 	if activated:
 		if not is_instance_valid(host):
-			terminated = true
+			set_terminated(true)
 			return
 	else:
 		return

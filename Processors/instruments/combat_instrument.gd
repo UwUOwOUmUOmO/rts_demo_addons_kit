@@ -18,9 +18,12 @@ func _reset_volatile() -> void:
 func _controller_instrument_changed(controller, new_instrument):
 	if new_instrument != self:
 		green_light = false
-		terminated = true
+		set_terminated(true)
 		# controller.disconnect("__computer_changed", self,\
 		# 	"_controller_computer_changed")
+
+func _vessel_defeated_handler(_con):
+	set_terminated(true)
 
 func _lock_on_handler(target):
 	pass

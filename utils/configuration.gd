@@ -2,7 +2,7 @@ extends Resource
 
 class_name Configuration
 
-const CONFIG_VERSION := "1.2.2"
+const CONFIG_VERSION := "1.2.3"
 
 var prop_mutex := Mutex.new()
 
@@ -77,7 +77,6 @@ static func try_instance_config(path: String):
 	var instance := Resource.new()
 	instance.set_script(script)
 	return instance
-
 
 static func resource_dererialize(dict: Dictionary) -> Resource:
 	var class_n: String = dict["__base_class_name"]
@@ -198,6 +197,12 @@ func copy(from: Configuration) -> bool:
 			continue
 		set(component, from.get(component))
 	return full_completion and _data_correction()
+
+func config_duplicate() -> Configuration:
+	var dup_res = Resource.new()
+	dup_res.set_script(get_script())
+	dup_res.copy(self)
+	return dup_res
 
 func version_greater(target: String):
 	var target_sliced := target.rsplit(".", true, 2)

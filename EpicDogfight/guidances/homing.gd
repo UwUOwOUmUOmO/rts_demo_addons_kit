@@ -3,14 +3,12 @@ extends WeaponGuidance
 class_name HomingGuidance
 
 const CONTROLLER_DEFAULT_SIGNALS := {
-	"__lock_on": "lock_on_handler",
-	"__loose_lock": "loose_on_handler",
+	"__lock_on":		"lock_on_handler",
+	"__loose_lock":		"loose_lock_handler",
 }
 
 signal __lock_on(source, tar)
 signal __loose_lock(source, tar)
-
-onready var utils_settings = SingletonManager.fetch("UtilsSettings")
 
 var handler = null
 var vtol: VTOLFighterBrain = null
@@ -153,6 +151,6 @@ func lock_on_handler(_tar):
 	Out.print_error("This handler is not supposed to be used", \
 		get_stack())
 
-func loose_on_handler(_tar):
+func loose_lock_handler(_tar):
 	Out.print_error("This handler is not supposed to be used", \
 		get_stack())

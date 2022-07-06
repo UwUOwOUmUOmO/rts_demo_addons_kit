@@ -9,7 +9,6 @@ const AFT					= -FORE
 const HARD_PORT				= PI / 2.0
 const HARD_STARBOARD		= -HARD_PORT
 
-#var _is_ordanance := false
 var _trackable := true
 var _controller = null
 var _trackedBy = null

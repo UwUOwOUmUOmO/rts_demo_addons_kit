@@ -3,22 +3,33 @@ extends Node
 class_name CombatantController
 
 const COMPUTER_DEFAULT_SIGNALS := {
-	"__target_changed": "_target_change_handler",
-	"__target_defeated": "_target_defeated_handler", 
-	"__combatant_changed": "_vessel_change_handler",
-	"__lock_on_detected": "_lock_on_handler",
-	"__projectile_loose_lock": "_loose_lock_handler",
+	"__target_changed":			"_target_change_handler",
+	"__target_defeated":		"_target_defeated_handler", 
+	"__combatant_changed":		"_vessel_change_handler",
+	"__lock_on_detected":		"_lock_on_handler",
+	"__projectile_loose_lock":	"_loose_lock_handler",
+	"__combatant_defeated":		"_vessel_defeated_handler",
 }
 const INSTRUMENT_DEFAULT_SIGNALS := {
-	"__lock_on_detected": "_lock_on_handler",
-	"__projectile_loose_lock": "_loose_lock_handler",
+	"__lock_on_detected":		"_lock_on_handler",
+	"__projectile_loose_lock":	"_loose_lock_handler",
+	"__combatant_defeated":		"_vessel_defeated_handler",
+}
+const COMBATANT_DEFAULT_SIGNALS := {
+	"__combatant_out_of_hp":	"combatant_defeated_handler"
+}
+const TARGET_S_DEFAULT_SIGNALS := {
+	"__combatant_out_of_hp":	"target_defeated_handler"
 }
 
+# Bridge signals
 signal __lock_on_detected(source)
 signal __projectile_loose_lock(source)
 
+# Main signals
 signal __target_defeated(controller)
 signal __target_changed(new_target)
+signal __combatant_defeated(controller)
 signal __combatant_changed(new_combatant)
 signal __computer_changed(controller, new_computer)
 signal __instrument_changed(controller, new_instrument)
@@ -27,6 +38,7 @@ onready var processors_swarm		= SingletonManager.fetch("ProcessorsSwarm")
 onready var utils_settings			= SingletonManager.fetch("UtilsSettings")
 
 var auto_ready: bool				= true
+var auto_free: bool					= true
 var use_physics_process: bool		= utils_settings.use_physics_process
 var green_light: bool				= false setget _set_operation
 var assigned_combatant: Combatant	= null  setget _set_combatant
@@ -59,15 +71,29 @@ func _set_operation(fl := true):
 		_finalize()
 
 func _set_combatant(com):
-	if com is Combatant and not com == assigned_combatant:
+	if com == assigned_combatant:
+		return
+	if is_instance_valid(assigned_combatant):
+		utils_settings.disconnect_from(assigned_combatant, self, \
+			COMBATANT_DEFAULT_SIGNALS)
+	if com is Combatant:
 		assigned_combatant = com
+		utils_settings.connect_from(assigned_combatant, self, \
+			COMBATANT_DEFAULT_SIGNALS)
 		emit_signal("__combatant_changed", com)
 		auto_ready_check()
 
 func _set_target(tar):
-	if tar is Combatant and not tar == target:
+	if tar == target:
+		return
+	if is_instance_valid(target):
+		utils_settings.disconnect_from(target, self, \
+			TARGET_S_DEFAULT_SIGNALS)
+	if tar is Combatant:
 		target = tar
 		target._controller = self
+		utils_settings.connect_from(target, self, \
+			TARGET_S_DEFAULT_SIGNALS)
 		emit_signal("__target_changed", tar)
 		auto_ready_check()
 
@@ -132,18 +158,15 @@ func lock_on_handler(source, _tar):
 func loose_lock_handler(source, _tar):
 	emit_signal("__projectile_loose_lock", source)
 
-func _target_defeated_check():
-	if is_instance_valid(target):
-		return
-	elif target.hp > 0.0:
-		return
+func target_defeated_handler(_tar):
 	emit_signal("__target_defeated", self)
 
-func _compute(delta: float):
-	_target_defeated_check()
-
-func _process(delta):
-	_target_defeated_check()
+func combatant_defeated_handler(_comb):
+	emit_signal("__combatant_defeated", self)
+	if auto_free:
+		cluster.decommission()
+		_finalize()
+		queue_free()
 
 func _finalize():
 	_clean()

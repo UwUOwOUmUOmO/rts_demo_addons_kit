@@ -14,7 +14,7 @@ const REACTION_SPEED_MOD	:= 1.0
 const MAX_REACTION_SPEED	:= 1.0
 # Volatile
 var bake_after_set := true
-var piloting: int = AIRCRAFT_TYPE.NA
+var piloting: int = AIRCRAFT_TYPE.UNKNOWN
 var base_coef := -1.0
 
 # Persistent
@@ -32,32 +32,37 @@ var current_proficience: PoolRealArray = [
 var skills_list: PoolStringArray = [
 	
 ]
-var current_main: int = AIRCRAFT_TYPE.NA
+var current_main: int = AIRCRAFT_TYPE.UNKNOWN
 var main_bonus := BASE_MAIN_BONUS setget set_bonus
 var main_deficiency := BASE_DEFICIENCY setget set_deficit
 
 var base_reaction_time  := 0.3 setget set_brt
 
 func set_base_eff(val: float):
-	set_coef("base_efficiency", val)
+	base_efficiency = val
+	bake_stuff()
 
 func set_curr_proef(val: PoolRealArray):
-	set_coef("current_proficience", val)
+	current_proficience = val
+	bake_stuff()
 
 func set_main(val: int):
-	set_coef("current_main", val)
+	current_main = val
+	bake_stuff()
 
 func set_bonus(val: float):
-	set_coef("main_bonus", val)
+	main_bonus = val
+	bake_stuff()
 
 func set_deficit(val: float):
-	set_coef("main_deficiency", val)
+	main_deficiency = val
+	bake_stuff()
 
 func set_brt(val: float):
-	set_coef("base_reaction_time", val)
+	base_reaction_time = val
+	bake_stuff()
 
-func set_coef(key: String, val):
-	set(key, val)
+func bake_stuff():
 	if bake_after_set:
 		bake_base_coef()
 

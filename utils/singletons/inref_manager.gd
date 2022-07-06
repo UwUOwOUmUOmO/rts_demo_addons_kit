@@ -1,7 +1,8 @@
 extends Node
 
+const READ_ONLY := true
+
 var groups := {} setget set_groups, get_groups
-var gc := false
 
 var allow_probbing := false
 var allow_query := true
@@ -12,7 +13,9 @@ func set_groups(_g):
 
 func get_groups():
 	if allow_probbing:
-		return groups.duplicate(true)
+		if READ_ONLY:
+			return groups.duplicate()
+		return groups
 	else:
 		return {}
 
@@ -23,6 +26,8 @@ func clean(name: String) -> void:
 
 func query(input: FuncRef):
 	if allow_query:
+		if READ_ONLY:
+			return input.call_func(groups.duplicate())
 		return input.call_func(groups)
 	return null
 

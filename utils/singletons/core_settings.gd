@@ -4,20 +4,30 @@ var use_physics_process := true
 var physics_fps: int = ProjectSettings.get_setting("physics/common/physics_fps")
 var fixed_delta := 1.0 / float(physics_fps)
 
-static func connect_from(from: Object, to: Object, table: Dictionary) -> void:
+static func connect_from(from: Object, to: Object, table: Dictionary, \
+		check := false, prompt := true) -> void:
 	if not is_instance_valid(from) or not is_instance_valid(to):
-		Out.print_error("Invalid connection", get_stack())
+		if prompt:
+			Out.print_error("Invalid connection", get_stack())
 		return
 	for sig in table:
 		var handler: String = table[sig]
+		if check:
+			if not to.has_method(handler):
+				if prompt:
+					Out.print_error("Signal receiver does not have method: " + handler, \
+						get_stack())
+				continue
 		from.connect(sig, to, handler)
 
-static func disconnect_from(from: Object, to: Object, table := {}):
+static func disconnect_from(from: Object, to: Object, table := {}, \
+		prompt := true) -> void:
 	if table.empty():
 		disconnect_all(from, to)
 		return
 	if not is_instance_valid(from) or not is_instance_valid(to):
-		Out.print_error("Invalid connection", get_stack())
+		if prompt:
+			Out.print_error("Invalid connection", get_stack())
 		return
 	for sig in table:
 		var handler: String = table[sig]

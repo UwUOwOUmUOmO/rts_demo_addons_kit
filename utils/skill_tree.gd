@@ -2,78 +2,36 @@ extends Configuration
 
 class_name SkillTree
 
-enum SKILL_FETCH_MODE { FETCH, FLICK, COLLECT_ATTR }
+const UID_START_NUM := 1000
 
 # Volatile
-var skill_origin = null
+var table_lock		:= Mutex.new()
 
 # Persistent
-var skill_uid				:= 0
-var skill_name				:= ""
-var skill_description		:= ""
-var activated				:= false
-var activation_condition	:= {}
-var skill_attributes		:= {}
-var skill_branches			:= {}
+var tree_name		:= ""
+var current_uid		:= UID_START_NUM
+var lookup_table	:= {}
 
-func _init():
-	
-	no_deep_scan.append("skill_attributes")
-	remove_property("skill_origin")
+func _init(serialized := {}):
 	name = "SkillTree"
-	return self
+	remove_properties(["table_lock"])
+	if serialized != {}:
+		deserialize(serialized)
 
-func fetch_skill(s_name: String, branches: Dictionary):
-	for key in branches:
-		var value = branches[key]
-		if value.skill_name == s_name:
-			return value
-	return null
+func add_branch(branch):
+	table_lock.lock()
+	lookup_table[current_uid] = branch
+	current_uid += 1
+	table_lock.unlock()
 
-func fetch_from_id(uid: int):
-	if skill_uid == uid:
-		return self
-	for key in skill_branches:
-		var value = skill_branches[key]
-		var fetched = value.fetch_from_id(uid)
-		if fetched != null:
-			return fetched
-	return null
-		
-func fetch(skill_path: String):
-	return manipulate(skill_path)
+func fetch_branch(id: int):
+	return lookup_table[id]
 
-func flick(skill_path: String, sig := true):
-	return manipulate(skill_path, SKILL_FETCH_MODE.FLICK, sig)
-
-func collect_attributes(skill_path: String):
-	return manipulate(skill_path, SKILL_FETCH_MODE.COLLECT_ATTR)
-
-func manipulate(skill_path: String, mode: int = SKILL_FETCH_MODE.FETCH, sig := false):
-	var path_utils = SingletonManager.fetch("PathUtils")
-	var sliced_path := Array(path_utils.slice_path(skill_path))
-	var re = null
-	var attr := [skill_attributes]
-	var current_branch := skill_branches
-	if mode == SKILL_FETCH_MODE.FLICK:
-		activated = sig
-	while true:
-		var curr_skill_name: String = sliced_path.pop_front()
-		if curr_skill_name == null:
-			break
-		re = fetch_skill(curr_skill_name, current_branch)
-		if re == null:
-			Out.print_error("Failed to fetch skill at path: "\
-				+ skill_path, get_stack())
-			return null
-		if mode == SKILL_FETCH_MODE.FLICK:
-			re.activated = sig
-		current_branch = re.skill_branches
-		attr.append(re.skill_attributes)
-		
-	if mode == SKILL_FETCH_MODE.FETCH:
-		return re
-	elif mode == SKILL_FETCH_MODE.COLLECT_ATTR:
-		return attr
-	else:
-		return null
+func duplicate_table(deep := false):
+	if not deep:
+		return lookup_table
+	var table_dup := {}
+	for id in lookup_table:
+		var branch = lookup_table[id]
+		table_dup[id] = branch.config_duplicate()
+	return table_dup
