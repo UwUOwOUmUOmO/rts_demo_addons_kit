@@ -19,21 +19,20 @@ var weaponFireMode: int 		 = FIRE_MODE.UNKNOWN
 var weaponGuidance: int 		 = GUIDANCE.NA
 var weaponProximityMode: int	 = PROXIMITY_MODE.SPATIAL
 
-var weaponSignature				:= 	0.9
-var minLaunchRange				:= 	10.0
-var maxLaunchRange				:=	100.0
-var travelTime					:=	200.0
-var travelSpeed					:=	100.0
-var heatThreshold				:=	10.0
-var proximity					:= 	3.0
-var seekingAngle				:=	deg2rad(30.0)
-var homingRange					:=	0.0
-var dvConfig					:=	AircraftConfiguration.new()
+var weaponSignature				:= 0.9
+var minLaunchRange				:= 10.0
+var maxLaunchRange				:= 100.0
+var travelTime					:= 200.0
+var travelSpeed					:= 100.0
+var heatThreshold				:= 10.0
+var proximity					:= 3.0
+var seekingAngle				:= deg2rad(30.0)
+var homingRange					:= 0.0
+var dvConfig					:= AircraftConfiguration.new()
 var damageCurve: Curve			 = null
 var damageModifier				:= DamageModifiersConfiguration.new()
 
 func _init():
-	
 	name = "WeaponConfiguration"
 	return self
 	

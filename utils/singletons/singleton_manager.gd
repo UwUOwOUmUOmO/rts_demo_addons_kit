@@ -2,15 +2,15 @@ extends Node
 
 const DEFAULT_AUTOLOAD := PoolStringArray([
 	"res://addons/GameFramework/level_manager.gd",
-	"res://addons/Processors/processors_swarm.gd",
 	"res://addons/utils/singletons/path_utils.gd",
 	"res://addons/utils/singletons/core_settings.gd",
+	# "res://addons/Processors/processors_swarm.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
 	"LevelManager",
-	"ProcessorsSwarm",
 	"PathUtils",
-	"UtilsSettings"
+	"UtilsSettings",
+	# "ProcessorsSwarm",
 ])
 
 var services := {}
@@ -32,6 +32,26 @@ func fetch(name: String):
 	Out.print_error("Service not exist: " + name,
 		get_stack())
 	return null
+
+func remove_single(s_name: String) -> void:
+	var service := get_node_or_null(s_name)
+	if not is_instance_valid(service):
+		Out.print_error("Service does not exist: " + s_name, \
+			get_stack())
+		return
+	service.queue_free()
+
+func remove_multiple(queued: Array) -> void:
+	for s_name in queued:
+		remove_single(s_name)
+
+func remove(ser) -> void:
+	if ser is String:
+		remove_single(ser)
+	elif ser is PoolStringArray or ser is Array:
+		remove_multiple(ser)
+	Out.print_error("Input argument is neither Array nor String", \
+		get_stack())
 
 func add_singleton(singleton: Node):
 	if is_instance_valid(singleton.get_parent()):

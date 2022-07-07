@@ -14,10 +14,9 @@ var no_deep_scan: PoolStringArray = []
 func _init():
 	# Create a property list, inheritance can edit exclusion_list
 	# to omit volatile variables
-	exclusion_list.append_array(\
-		["name", "property_list", "exclusion_list", "no_deep_scan",\
-		 "prop_mutex"])
 	property_list = cleanse_property_list(get_property_list())
+	remove_properties(["name", "property_list", "exclusion_list", "no_deep_scan",\
+		 "prop_mutex", "_ref"])
 	# OPTIONAL: reset volatile variables
 	_reset_volatile()
 	return self

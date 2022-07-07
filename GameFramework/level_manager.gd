@@ -2,6 +2,7 @@ extends Node
 
 signal __changing_to_scene(to)
 
+var oneshot_singletons := []
 var preloaded := []
 var curr_lmac: LM_AssistClass = null
 
@@ -27,6 +28,23 @@ class LM_AssistClass extends Reference:
 	func _init(t: SceneTree):
 		tree = t
 		connect("__finished_all", self, "load_main_finished_handler")
+
+	static func load_singleton(s_dict: Dictionary):
+		var oneshot := false
+		if not s_dict.has_all(["name", "path"]):
+			Out.print_error("Singleton config does not have name and/or path", \
+				get_stack())
+			return
+		if s_dict.has("is_oneshot"):
+			oneshot = s_dict["is_oneshot"]
+		SingletonManager.add_singleton_from_script(s_dict["path"], s_dict["name"])
+		if oneshot:
+			var lvl_mgr = SingletonManager.fetch("LevelManager")
+			lvl_mgr.oneshot_singletons.append(s_dict["name"])
+
+	static func setup_autoloads(s_list: Array):
+		for single in s_list:
+			load_singleton(single)
 
 	func defer_loading_scene(path: String) -> AssetsPreloader:
 		var preload_com := AssetsPreloader.new(tree)
@@ -116,12 +134,20 @@ func load_level(cfg: LevelConfiguration, wait := false) -> bool:
 			Out.print_warning("A different level is currently being loaded", \
 				get_stack())
 			return false
+	level_change_cleanup()
 	curr_lmac = LM_AssistClass.new(get_tree())
 	curr_lmac.connect("__lmac_finished", self, "lmac_finish_handler")
 	curr_lmac.connect("__change_next_frame", self, "lmac_change_next_frame_handler")
+	curr_lmac.setup_autoloads(cfg.singletons_list)
 	curr_lmac.spawn_loading_scene(cfg.loading_scene_path)
 	curr_lmac.load_main(cfg.scene_path, cfg.preload_list)
+
 	return true
+
+func level_change_cleanup():
+	if oneshot_singletons.empty():
+		return
+	SingletonManager.remove_multiple(oneshot_singletons)
 
 func manual_change_scene(to: PackedScene):
 	get_tree().change_scene_to(to)

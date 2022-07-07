@@ -2,14 +2,14 @@ extends Configuration
 
 class_name SkillTree
 
-const UID_START_NUM := 1000
+const ST_UID_START_NUM := 10000
 
 # Volatile
 var table_lock		:= Mutex.new()
 
 # Persistent
 var tree_name		:= ""
-var current_uid		:= UID_START_NUM
+var current_uid		:= ST_UID_START_NUM
 var lookup_table	:= {}
 
 func _init(serialized := {}):
