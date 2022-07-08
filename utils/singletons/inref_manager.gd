@@ -24,6 +24,20 @@ func clean(name: String) -> void:
 	groups[name] = []
 	glock.unlock()
 
+func search_key(sample: String) -> Array:
+	var found := []
+	for key in groups:
+		if sample in key:
+			found.append(key)
+	return found
+
+func search_and_get(sample: String) -> Array:
+	var found := []
+	for key in groups:
+		if sample in key:
+			found.append_array(groups[key])
+	return found
+
 func query(input: FuncRef):
 	if allow_query:
 		if READ_ONLY:
@@ -32,9 +46,12 @@ func query(input: FuncRef):
 	return null
 
 func fetch(name: String) -> Array:
-	if not groups.has(name):
+	if not exists(name):
 		return []
 	return groups[name]
+
+func exists(key: String) -> bool:
+	return groups.has(key)
 
 func add(ref: InRef, to: PoolStringArray) -> void:
 	if to.empty():

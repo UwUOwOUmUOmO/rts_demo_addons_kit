@@ -4,22 +4,32 @@ class_name SquadronController
 
 enum ASSIGNMENT_METHOD { SIMPLE }
 
-signal enemy_squadron_changed(controller, new_enemy)
+signal __enemy_squadron_changed(controller, new_enemy)
 
+var ref_team_name := ""
+
+var squad_name := ""
+var squad_uid := 0
 var current_assignment_method: int = ASSIGNMENT_METHOD.SIMPLE
-var board_lock := Mutex.new()
 
+var is_ready := false
+var board_lock := Mutex.new()
 var enemy_squadron = null setget set_senemy
 var enemy_vehicles := {}
 var assignment_board := {}
-
 var detected_bogeys := []
-
 var vehicles := {}
+var _ref: InRef = null
 
-func _init():
-	
-	connect("enemy_squadron_changed", self, "enemy_change_handler")
+func _ready():
+	_ref = InRef.new(self)
+	IRM.add(_ref, ["squadron_controllers", ref_team_name])
+	connect("__enemy_squadron_changed", self, "enemy_change_handler")
+	is_ready = true
+
+func _exit_tree():
+	_ref.cut_tie()
+	_ref = null
 
 func add_vehicle(v_name: String, v: Spatial):
 	vehicles[name] = v
@@ -68,7 +78,7 @@ func set_senemy(new_enemy):
 	enemy_squadron = new_enemy
 	enemy_vehicles = enemy_squadron.vehicles
 	reset_assignment_board()
-	emit_signal("enemy_squadron_changed", self, enemy_squadron)
+	emit_signal("__enemy_squadron_changed", self, enemy_squadron)
 
 func enemy_change_handler(_con, _enemy):
 	simple_reassign_all_targets()
