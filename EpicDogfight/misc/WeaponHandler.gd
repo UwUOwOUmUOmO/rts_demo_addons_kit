@@ -17,7 +17,6 @@ var profile: WeaponConfiguration = null setget set_profile, get_profile
 var compensator: DistanceCompensatorV2 = null
 var carrier: Spatial = null
 var target: Spatial = null
-var projectile: PackedScene = null
 var hardpoints := []
 var hardpoints_last_fire: PoolRealArray = []
 var hardpoints_activation: PoolIntArray = [] # 1 is activated, other is not
@@ -45,8 +44,9 @@ func set_profile(p: WeaponConfiguration):
 func get_profile():
 	return profile
 
-func set_hardpoints(num: int, h_list := []):
+func set_hardpoints(h_list := []):
 	var last_fire := timer
+	var num := h_list.size()
 	hardpoints.clear()
 	hardpoints_last_fire.resize(num)
 	hardpoints_activation.resize(num)
@@ -98,11 +98,12 @@ func clear_for_fire() -> bool:
 
 func guidance_instancing(g: WeaponGuidance):
 	var scene := get_tree().get_current_scene()
+	# var scene := self
 	if not scene:
 		Out.print_error("Scene not ready", get_stack())
 		return false
-	if g.get_parent():
-		g.get_parent().remove_child(g)
+	# if g.get_parent():
+	# 	g.get_parent().remove_child(g)
 	scene.call_deferred("add_child", g)
 	while not g.get_parent():
 		yield(get_tree(), "idle_frame")
@@ -145,10 +146,10 @@ func spawn_projectile(no: int):
 		if inherite_carrier_speed and "currentSpeed" in carrier:
 			guidance.inherited_speed = carrier.currentSpeed
 		guidance.target = target
-	if instancing_result is bool:
-		if not instancing_result:
-			Out.print_error("Failed to instance guidance", get_stack())
-			return
+	# if instancing_result is bool:
+	# 	if not instancing_result:
+	# 		Out.print_error("Failed to instance guidance", get_stack())
+	# 		return
 	guidance._velocity = profile.travelSpeed
 	guidance._barrel = hardpoints[no].global_transform.origin
 	guidance._weapon_base_config = profile
@@ -156,7 +157,7 @@ func spawn_projectile(no: int):
 	var fwd_vec := -h.global_transform.basis.z
 	var euler := h.global_transform.basis.get_euler()
 	guidance._direction = fwd_vec
-	guidance._projectile_scene = projectile
+	guidance._projectile_scene = profile.projectile
 	while not guidance.get_parent():
 		yield(get_tree(), "idle_frame")
 	guidance._start()
@@ -169,6 +170,8 @@ func is_out_of_ammo() -> bool:
 		return false
 
 func fire_once(delta := 0.0):
+	if hardpoints.size() == 0:
+		return
 	var last_fire := timer
 	var is_fired := false
 	if current_fire_mode == WeaponConfiguration.FIRE_MODE.SALVO:
@@ -212,7 +215,7 @@ func setup():
 	compensator = DistanceCompensatorV2.new()
 	compensator.target = target
 	compensator.barrel = carrier
-	compensator.projectile_speed = profile.travelSpeed
+	compensator.profile.projectile_speed = profile.travelSpeed
 	get_tree().current_scene.add_child(compensator)
 
 func _ready():

@@ -17,10 +17,6 @@ func _ready():
 	_ref.add_to("processor_swarm")
 	is_ready = true
 
-func _exit_tree():
-	_ref.cut_tie()
-	_ref = null
-
 func add_processor(proc: Processor):
 	if is_commissioned:
 		boot_mutex.lock()

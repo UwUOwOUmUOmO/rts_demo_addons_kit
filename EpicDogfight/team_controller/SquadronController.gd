@@ -27,10 +27,6 @@ func _ready():
 	connect("__enemy_squadron_changed", self, "enemy_change_handler")
 	is_ready = true
 
-func _exit_tree():
-	_ref.cut_tie()
-	_ref = null
-
 func add_vehicle(v_name: String, v: Spatial):
 	vehicles[name] = v
 	if v.has_signal("__target_defeated"):

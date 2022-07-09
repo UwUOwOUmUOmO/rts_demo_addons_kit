@@ -12,6 +12,9 @@ signal __armmament_armed(guidance)
 signal __armament_detonated(guidance)
 
 onready var utils_settings = SingletonManager.fetch("UtilsSettings")
+onready var processors_swarm = SingletonManager.fetch("ProcessorsSwarm")
+onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
+			.fixed_delta
 
 var _weapon_base_config: WeaponConfiguration = null
 
@@ -24,33 +27,19 @@ var _projectile_scene: PackedScene = null
 var _projectile: Spatial = null
 var _computer: FlightComputer = null
 var _instrument: AirInstrument = null
+var _cluster: ProcessorsCluster = null
 var _damage_zone: Area = null
 var _green_light := false
 var _arm_time := 0.3
 var _armed := false
 
 func _process(delta):
-	_computer_handler(delta)
 	if not _use_physics_process and _green_light:
 		_guide(delta)
 
 func _physics_process(delta):
-	_computer_handler(delta, true)
 	if _use_physics_process and _green_light:
-		var fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
-			.fixed_delta
 		_guide(fixed_delta)
-
-func _computer_handler(delta: float, pp := false):
-	if is_instance_valid(_computer):
-		if (pp and _computer.use_physics_process) or \
-		   (not pp and not _computer.use_physics_process):
-				_computer._compute(delta)
-
-	if is_instance_valid(_instrument):
-		if (pp and _instrument.use_physics_process) or \
-		   (not pp and not _instrument.use_physics_process):
-				_instrument._compute(delta)
 
 func _guide(delta: float):
 	pass
@@ -74,22 +63,25 @@ func _signals_init():
 		PROJECTILE_DEFAULT_SIGNALS, true)
 
 func _boot_subsys():
+	_cluster = processors_swarm.add_cluster(name + "_proc_cluster")
+	var required_cluster := false
 	if is_instance_valid(_computer) and not _computer.enforcer_assigned:
 		_computer.enforcer_assigned = true
 		_computer.host = self
-		if not _computer.coprocess:
-			_green_light = false
-		_computer._boot()
-	else:
-		_computer = null
+		required_cluster = true
+		_cluster.add_nopr(_computer)
 	if is_instance_valid(_instrument) and not _instrument.enforcer_assigned:
 		_instrument.enforcer_assigned = true
 		_instrument.host = self
-		if not _instrument.coprocess:
-			_green_light = false
-		_instrument._boot()
+		required_cluster = true
+		_cluster.add_nopr(_instrument)
+	if not required_cluster:
+		_cluster.queue_free()
 	else:
-		_instrument = null
+		_cluster.commission()
+		if not _computer.coprocess:
+			set_physics_process(false)
+			set_process(false)
 
 func _initialize():
 	emit_signal("__armament_fired", self)

@@ -17,9 +17,13 @@ var _vehicle_config: Configuration = null
 var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 
 var _heat_signature := 10.0
-
 var hp := 100.0
 var currentSpeed := 0.0
+
+var hardpoints := {
+	"PRIMARY":		[],
+	"SECONDARY":	[],
+}
 
 func _damage(amount: float) -> void:
 	hp -= amount

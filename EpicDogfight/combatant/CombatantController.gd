@@ -2,7 +2,11 @@ extends Node
 
 class_name CombatantController
 
-const COMPUTER_DEFAULT_SIGNALS := {
+const DEFAULT_WEAPONS := {
+	"PRIMARY": null,
+	"SECONDARY": null,
+}
+const COMPUTER_DEFAULT_SIGNALS		:= {
 	"__target_changed":			"_target_change_handler",
 	"__target_defeated":		"_target_defeated_handler", 
 	"__combatant_changed":		"_vessel_change_handler",
@@ -10,15 +14,15 @@ const COMPUTER_DEFAULT_SIGNALS := {
 	"__projectile_loose_lock":	"_loose_lock_handler",
 	"__combatant_defeated":		"_vessel_defeated_handler",
 }
-const INSTRUMENT_DEFAULT_SIGNALS := {
+const INSTRUMENT_DEFAULT_SIGNALS	:= {
 	"__lock_on_detected":		"_lock_on_handler",
 	"__projectile_loose_lock":	"_loose_lock_handler",
 	"__combatant_defeated":		"_vessel_defeated_handler",
 }
-const COMBATANT_DEFAULT_SIGNALS := {
+const COMBATANT_DEFAULT_SIGNALS		:= {
 	"__combatant_out_of_hp":	"combatant_defeated_handler"
 }
-const TARGET_S_DEFAULT_SIGNALS := {
+const TARGET_S_DEFAULT_SIGNALS		:= {
 	"__combatant_out_of_hp":	"target_defeated_handler"
 }
 
@@ -47,18 +51,15 @@ var computer: CombatComputer		= null  setget _set_computer
 var instrument: CombatInstrument	= null  setget _set_instrument
 var cluster: ProcessorsCluster		= null
 var _ref: InRef						= null
-var weapons := {
-	"PRIMARY": null
-}
+var weapons: Dictionary				= DEFAULT_WEAPONS
+
+func _init():
+	connect("__combatant_changed", self, "combatant_change_handler")
 
 func _ready():
 	_ref = InRef.new(self)
 	_ref.add_to("combatant_controllers")
 	cluster = processors_swarm.add_cluster(name + "_proc_cluster")
-
-func _exit_tree():
-	_ref.cut_tie()
-	_ref = null
 
 func _set_operation(fl := true):
 	if fl and not green_light:
@@ -140,6 +141,28 @@ func _set_instrument(sen):
 			cluster.add_nopr(instrument)
 		auto_ready_check()
 
+func setup_hardpoints():
+	for type in weapons:
+		var handler: WeaponHandler = weapons[type]
+		if not assigned_combatant.hardpoints.has(type):
+			if is_instance_valid(handler):
+				handler.queue_free()
+				weapons[type] = null
+			continue
+		handler.set_hardpoints(assigned_combatant.hardpoints[type])
+
+func _set_weapon(w: WeaponConfiguration, cat := "PRIMARY"):
+	var new_handler := WeaponHandler.new()
+	new_handler.profile = w
+	weapons[cat] = new_handler
+	if is_instance_valid(assigned_combatant):
+		setup_hardpoints()
+	call_deferred("add_child", new_handler)
+
+func _set_weapon_manual(w: WeaponHandler, cat := "PRIMARY"):
+	weapons[cat] = w
+	call_deferred("add_child", w)
+
 func auto_ready_check():
 	if auto_ready:
 		if not is_instance_valid(assigned_combatant):
@@ -151,6 +174,10 @@ func auto_ready_check():
 		elif not is_instance_valid(instrument):
 			return
 		_set_operation()
+
+func combatant_change_handler(_comb):
+	# weapons = DEFAULT_WEAPONS
+	setup_hardpoints()
 
 func lock_on_handler(source, _tar):
 	emit_signal("__lock_on_detected", source)

@@ -30,10 +30,6 @@ func _ready():
 	IRM.add(_ref, ["team_controllers", ref_team_name])
 	is_ready = true
 
-func _exit_tree():
-	_ref.cut_tie()
-	_ref = null
-
 func spawn_squadron(squad_name: String, _type = SquadronController):
 	var new_squad = _type.new()
 	new_squad.squad_name = squad_name

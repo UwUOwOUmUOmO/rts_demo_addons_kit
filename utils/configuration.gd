@@ -16,7 +16,7 @@ func _init():
 	# to omit volatile variables
 	property_list = cleanse_property_list(get_property_list())
 	remove_properties(["name", "property_list", "exclusion_list", "no_deep_scan",\
-		 "prop_mutex", "_ref"])
+		 "prop_mutex"])
 	# OPTIONAL: reset volatile variables
 	_reset_volatile()
 	return self

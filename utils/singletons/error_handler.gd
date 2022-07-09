@@ -2,7 +2,7 @@ extends Node
 
 var allow_output := true
 var allow_debug  := true
-var trace_stack  := true
+var trace_stack  := OS.is_debug_build()
 
 func push_stack(stack: Array):
 	if not trace_stack:

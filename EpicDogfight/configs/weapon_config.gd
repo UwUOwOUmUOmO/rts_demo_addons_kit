@@ -31,6 +31,7 @@ var homingRange					:= 0.0
 var dvConfig					:= AircraftConfiguration.new()
 var damageCurve: Curve			 = null
 var damageModifier				:= DamageModifiersConfiguration.new()
+var projectile: PackedScene		 = null
 
 func _init():
 	name = "WeaponConfiguration"

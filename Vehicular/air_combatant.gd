@@ -18,6 +18,10 @@ signal __tracking_target(brain, target)
 signal __loss_track_of_target(brain)
 signal __destination_arrived(brain)
 
+# Exports
+export(NodePath) var hardpoints_holder_primary := ""
+export(NodePath) var hardpoints_holder_secondary := ""
+
 # Settings
 var useBuiltinTranslator := true
 var isReady := false
@@ -52,18 +56,25 @@ func ref_handler():
 			g.push_back("sam_missiles")
 	IRM.add(_ref, g)
 
+func hardpoints_handler():
+	if device & PROJECTILE_TYPE.AIRCRAFT:
+		var holder_primary := get_node_or_null(hardpoints_holder_primary)
+		if is_instance_valid(holder_primary):
+			hardpoints["PRIMARY"] = holder_primary.get_children()
+		var holder_secondary := get_node_or_null(hardpoints_holder_secondary)
+		if is_instance_valid(holder_secondary) and \
+			not (hardpoints_holder_primary == hardpoints_holder_secondary):
+				hardpoints["SECONDARY"] = holder_secondary.get_children()
+
 func _enter_tree():
 	_ref = InRef.new(self)
-
-func _exit_tree():
-	_ref.cut_tie()
-	_ref = null
 
 func _ready():
 	ref_handler()
 	rudder = Spatial.new()
 	add_child(rudder)
 	rudder.translation = Vector3(0.0, 0.0, -50.0)
+	hardpoints_handler()
 
 func set_course(des: Vector3) -> void:
 	pass

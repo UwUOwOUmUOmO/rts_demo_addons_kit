@@ -2,6 +2,9 @@ extends AirCombatant
 
 class_name VTOLFighterBrain
 
+onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
+			.fixed_delta
+
 # Volatile
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
@@ -29,8 +32,6 @@ func _process(delta):
 
 func _physics_process(delta):
 	if _use_physics_process:
-		var fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
-			.fixed_delta
 		_compute(fixed_delta)
 
 func _compute(delta):
