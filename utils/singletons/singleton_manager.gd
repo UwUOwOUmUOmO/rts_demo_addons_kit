@@ -1,49 +1,45 @@
 extends Node
 
 const DEFAULT_AUTOLOAD := PoolStringArray([
-	"res://addons/GameFramework/level_manager.gd",
 	"res://addons/utils/singletons/path_utils.gd",
 	"res://addons/utils/singletons/core_settings.gd",
-	# "res://addons/Processors/processors_swarm.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
-	"LevelManager",
 	"PathUtils",
 	"UtilsSettings",
-	# "ProcessorsSwarm",
 ])
 
-var services := {}
-var ready := false
+var local_singletons_swarm: Node = null
+
+var services := {} setget set_services, get_services
+var static_services := {}
 
 func _ready():
 	var iter := 0
 	var size = DEFAULT_AUTOLOAD.size()
 	for count in range(0, size):
-		add_singleton_from_script(DEFAULT_AUTOLOAD[count],\
+		add_static_from_script(DEFAULT_AUTOLOAD[count],\
 			DEFAULT_AUTOLOAD_NAME[count])
-	ready = true
+
+func set_services(s):
+	return
+
+func get_services():
+	return local_singletons_swarm.services
 
 func fetch(name: String):
-	while not ready:
-		pass
-	if services.has(name):
-		return services[name]
+	if static_services.has(name):
+		return static_services[name]
+	if local_singletons_swarm.services.has(name):
+		return local_singletons_swarm.services[name]
 	Out.print_error("Service not exist: " + name,
 		get_stack())
-	return null
 
 func remove_single(s_name: String) -> void:
-	var service := get_node_or_null(s_name)
-	if not is_instance_valid(service):
-		Out.print_error("Service does not exist: " + s_name, \
-			get_stack())
-		return
-	service.queue_free()
+	local_singletons_swarm.remove_singleton(s_name)
 
-func remove_multiple(queued: Array) -> void:
-	for s_name in queued:
-		remove_single(s_name)
+func remove_multiple(queued: PoolStringArray) -> void:
+	local_singletons_swarm.remove_singletons(queued)
 
 func remove(ser) -> void:
 	if ser is String:
@@ -54,23 +50,26 @@ func remove(ser) -> void:
 		get_stack())
 
 func add_singleton(singleton: Node):
-	if is_instance_valid(singleton.get_parent()):
-		singleton.get_parent().remove_child(singleton)
-	add_child(singleton)
+	local_singletons_swarm.add_instanced_singleton(singleton)
 
-func add_singleton_from_script(script_loc: String, name := ""):
-	var s = load(script_loc)
-	if not s is Script:
-		Out.print_error("Resource at {path} is not a script"\
-			.format({"path": script_loc}), get_stack())
+func add_singleton_from_script(script_loc: String, s_name := ""):
+	local_singletons_swarm.add_singleton(s_name, script_loc)
+
+func add_static(singleton: Node):
+	if is_instance_valid(singleton.get_parent()):
+		Out.print_error("Singleton already has a parent", get_stack())
 		return
-	elif s.get_instance_base_type() != "Node":
-		Out.print_error("Singleton at {path} must extend on type Node"\
-			.format({"path": script_loc}), get_stack())
+	call_deferred("add_child", singleton)
+	static_services[singleton.name] = singleton
+
+func add_static_from_script(script_loc: String, s_name: String):
+	var s_script: Script = ResourceLoader.load(script_loc, "Script")
+	var new_node := Node.new()
+	if s_name.empty():
+		Out.print_error("Static singleton must have non-empty name", get_stack())
+		new_node.free()
 		return
-	var singleton := Node.new()
-	singleton.set_script(s)
-	if not name.empty():
-		singleton.name = name
-	add_child(singleton)
-	services[name] = singleton
+	new_node.name = s_name
+	new_node.set_script(s_script)
+	call_deferred("add_child", new_node)
+	static_services[s_name] = new_node

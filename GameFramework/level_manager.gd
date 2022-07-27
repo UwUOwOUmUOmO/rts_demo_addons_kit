@@ -1,7 +1,12 @@
 extends Node
 
 signal __changing_to_scene(to)
+signal __template_changed()
 
+const LEVEL_TEMPLATE_SOURCE := preload("level_template/level_template.tscn")
+
+var template: LevelTemplate = null setget set_template, get_template
+var singletons := {}
 var oneshot_singletons := []
 var preloaded := []
 var curr_lmac: LM_AssistClass = null
@@ -11,6 +16,8 @@ class LM_AssistClass extends Reference:
 	signal __loading_percentage(percent)
 	signal __lmac_finished()
 	signal __change_next_frame(to)
+
+	var curr_template: LevelTemplate = null
 
 	var lspc: AssetsPreloader = null
 	var mpc: AssetsPreloader = null
@@ -27,6 +34,7 @@ class LM_AssistClass extends Reference:
 
 	func _init(t: SceneTree):
 		tree = t
+		curr_template = tree.current_scene
 		connect("__finished_all", self, "load_main_finished_handler")
 
 	static func load_singleton(s_dict: Dictionary):
@@ -39,8 +47,7 @@ class LM_AssistClass extends Reference:
 			oneshot = s_dict["is_oneshot"]
 		SingletonManager.add_singleton_from_script(s_dict["path"], s_dict["name"])
 		if oneshot:
-			var lvl_mgr = SingletonManager.fetch("LevelManager")
-			lvl_mgr.oneshot_singletons.append(s_dict["name"])
+			LevelManager.oneshot_singletons.append(s_dict["name"])
 
 	static func setup_autoloads(s_list: Array):
 		for single in s_list:
@@ -62,7 +69,8 @@ class LM_AssistClass extends Reference:
 
 	func loading_scene_finished_loading(preloader):
 		loading_scene = preloader.assets[0].instance()
-		tree.current_scene.add_child(loading_scene)
+		# tree.current_scene.add_child(loading_scene)
+		curr_template.add_scene(loading_scene, false)
 		if loading_scene.has_method("change_percentage"):
 		   connect("__loading_percentage", loading_scene, "change_percentage")
 		ls_status = true
@@ -96,9 +104,12 @@ class LM_AssistClass extends Reference:
 					loading_scene.queue_free()
 				emit_signal("__change_next_frame", main_scene_packed)
 				# yield(tree, "idle_frame")
-				var curr_scene := tree.current_scene
-				curr_scene.queue_free()
-				tree.change_scene_to(main_scene_packed)
+				# var curr_scene := tree.current_scene
+				# curr_scene.queue_free()
+				# tree.change_scene_to(main_scene_packed)
+				var new_main = main_scene_packed.instance()
+				curr_template.add_scene(new_main, false)
+
 				emit_signal("__finished_all")
 				break
 			yield(tree, "idle_frame")
@@ -121,12 +132,35 @@ class LM_AssistClass extends Reference:
 			yield(tree, "idle_frame")
 
 	func load_main_finished_handler():
-		var lvl_mgr = SingletonManager.fetch("LevelManager")
-		lvl_mgr.preloaded = mpc.assets
+		LevelManager.preloaded = mpc.assets
 		main_status = true
 		emit_signal("__lmac_finished")
 
-func load_level(cfg: LevelConfiguration, wait := false) -> bool:
+func _ready():
+	connect("__template_changed", self, "template_change_handler")
+
+func set_template(t):
+	return
+
+func get_template(reset := false) -> LevelTemplate:
+	if reset:
+		template = get_tree().current_scene
+	# if not scene is LevelTemplate:
+	# 	return null
+	return template
+
+func set_singletons(s):
+	return
+
+func get_singletons() -> Dictionary:
+	if not is_instance_valid(template):
+		return {}
+	return template.singletons_pool.services
+
+func load_level(cfg: LevelConfiguration, wait := false, no_temp := false) -> bool:
+	if no_temp:
+		setup_template()
+		yield(get_tree(), "idle_frame")
 	while curr_lmac != null:
 		if wait:
 			yield(get_tree(), "idle_frame")
@@ -144,13 +178,28 @@ func load_level(cfg: LevelConfiguration, wait := false) -> bool:
 
 	return true
 
+func setup_template():
+	var curr_main := get_tree().current_scene
+	get_tree().change_scene_to(LEVEL_TEMPLATE_SOURCE)
+	curr_main.queue_free()
+	emit_signal("__template_changed")
+
 func level_change_cleanup():
 	if oneshot_singletons.empty():
 		return
 	SingletonManager.remove_multiple(oneshot_singletons)
 
-func manual_change_scene(to: PackedScene):
+func change_template(to: PackedScene):
+	var curr_main := get_tree().current_scene
 	get_tree().change_scene_to(to)
+	curr_main.queue_free()
+	emit_signal("__template_changed")
+
+func template_change_handler():
+	yield(get_tree(), "idle_frame")
+	get_template(true)
+	IRM.local_irm = template.local_irm
+	SingletonManager.local_singletons_swarm = template.singletons_pool
 
 func lmac_finish_handler():
 	curr_lmac.disconnect("__lmac_finished", self, "lmac_finish_handler")

@@ -1,0 +1,38 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://addons/GameFramework/com/controllers_swarm.gd" type="Script" id=1]
+[ext_resource path="res://addons/GameFramework/level_template/level_template.gd" type="Script" id=2]
+[ext_resource path="res://addons/GameFramework/com/singletons_swarm.gd" type="Script" id=3]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+render_mode unshaded;
+uniform vec4 albedo : hint_color = vec4(1.0);
+
+void fragment(){
+	COLOR = albedo;
+}"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/albedo = Color( 0.156863, 0.164706, 0.211765, 1 )
+
+[node name="New Level" type="Node"]
+script = ExtResource( 2 )
+
+[node name="MainScenes" type="Node" parent="."]
+
+[node name="Placeholder" type="Control" parent="MainScenes"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="PanelContainer" type="PanelContainer" parent="MainScenes/Placeholder"]
+material = SubResource( 2 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ControllersSwarm" type="Node" parent="."]
+script = ExtResource( 1 )
+
+[node name="SingletonsSwarm" type="Node" parent="."]
+script = ExtResource( 3 )

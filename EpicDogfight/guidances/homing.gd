@@ -122,14 +122,15 @@ func _initialize():
 func _start(move := true):
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
-	var scene := get_tree().get_current_scene()
 	vtol.device = AirCombatant.PROJECTILE_TYPE.MISSILE + projectile_type
 	vtol._controller = self
-	if scene:
-		scene.call_deferred("add_child", vtol)
-	else:
-		Out.print_error("Scene not ready", get_stack())
-		return
+	# var scene := get_tree().get_current_scene()
+	# if scene:
+	# 	scene.call_deferred("add_child", vtol)
+	# else:
+	# 	Out.print_error("Scene not ready", get_stack())
+	# 	return
+	LevelManager.template.add_peripheral(vtol)
 	while vtol.get_parent() == null:
 		yield(get_tree(), "idle_frame")
 	vtol.global_translate(_barrel - vtol.global_transform.origin)

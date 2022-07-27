@@ -97,14 +97,8 @@ func clear_for_fire() -> bool:
 			return false
 
 func guidance_instancing(g: WeaponGuidance):
-	var scene := get_tree().get_current_scene()
-	# var scene := self
-	if not scene:
-		Out.print_error("Scene not ready", get_stack())
-		return false
-	# if g.get_parent():
-	# 	g.get_parent().remove_child(g)
-	scene.call_deferred("add_child", g)
+	# Would most likely cause some problems later on
+	LevelManager.template.add_peripheral(g)
 	while not g.get_parent():
 		yield(get_tree(), "idle_frame")
 	return true
@@ -216,7 +210,7 @@ func setup():
 	compensator.target = target
 	compensator.barrel = carrier
 	compensator.profile.projectile_speed = profile.travelSpeed
-	get_tree().current_scene.add_child(compensator)
+	LevelManager.template.add_peripheral(compensator)
 
 func _ready():
 	if compensator_autosetup:
