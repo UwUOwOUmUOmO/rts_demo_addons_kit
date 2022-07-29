@@ -6,7 +6,7 @@ signal __template_changed()
 const LEVEL_TEMPLATE_SOURCE := preload("level_template/level_template.tscn")
 
 var template: LevelTemplate = null setget set_template, get_template
-var singletons := {}
+var singletons := {} setget set_singletons, get_singletons
 var oneshot_singletons := []
 var preloaded := []
 var curr_lmac: LM_AssistClass = null
@@ -137,6 +137,7 @@ class LM_AssistClass extends Reference:
 		emit_signal("__lmac_finished")
 
 func _ready():
+	pause_mode = PAUSE_MODE_PROCESS
 	connect("__template_changed", self, "template_change_handler")
 
 func set_template(t):

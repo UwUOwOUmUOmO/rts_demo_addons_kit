@@ -20,24 +20,37 @@ func error_check(ecode: int, stack := []):
 	if ecode != OK:
 		print_error("Error code: {code}".format({"code": ecode}), stack)
 
+func print_fatal(err: String, stack := []):
+	if allow_output:
+		if not err.begins_with("[Fatal] "):
+			err = "[Fatal] " + err
+		printerr(err)
+	push_stack(stack)
+
 func print_error(err: String, stack := []):
 	if allow_output:
-		if not err.begins_with("Error: "):
-			err = "Error: " + err
+		if not err.begins_with("[Error] "):
+			err = "[Error] " + err
 		printerr(err)
 	push_stack(stack)
 
 func print_warning(warning: String, stack := []):
 	if allow_output:
-		if not warning.begins_with("Warnings: "):
-			warning = "Warning: " + warning
+		if not warning.begins_with("[Warning] "):
+			warning = "[Warning] " + warning
 		print(warning)
 	push_stack(stack)
 
+func print_steamstat(message: String):
+	if allow_output:
+		if not message.begins_with("[Steam] "):
+			message = "[Steam] " + message
+		print(message)
+
 func print_debug(msg: String, stack := []):
 	if allow_debug and allow_output:
-		if not msg.begins_with("DEBUG: "):
-			msg = "DEBUG: " + msg
+		if not msg.begins_with("[Debug] "):
+			msg = "[Debug] " + msg
 		print(msg)
 	push_stack(stack)
 

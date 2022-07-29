@@ -34,6 +34,7 @@ func fetch(name: String):
 		return local_singletons_swarm.services[name]
 	Out.print_error("Service not exist: " + name,
 		get_stack())
+	return null
 
 func remove_single(s_name: String) -> void:
 	local_singletons_swarm.remove_singleton(s_name)
