@@ -15,8 +15,8 @@ var services := {} setget set_services, get_services
 var static_services := {}
 
 func _ready():
-	var iter := 0
 	var size = DEFAULT_AUTOLOAD.size()
+	var iter := 0
 	for count in range(0, size):
 		add_static_from_script(DEFAULT_AUTOLOAD[count],\
 			DEFAULT_AUTOLOAD_NAME[count])
