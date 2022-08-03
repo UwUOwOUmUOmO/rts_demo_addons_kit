@@ -6,7 +6,7 @@ signal __template_changed()
 const LEVEL_TEMPLATE_SOURCE := preload("level_template/level_template.tscn")
 
 var template: LevelTemplate = null setget set_template, get_template
-var singletons := {} setget set_singletons, get_singletons
+var instructions := {}
 var oneshot_singletons := []
 var preloaded := []
 var curr_lmac: LM_AssistClass = null
@@ -122,6 +122,7 @@ class LM_AssistClass extends Reference:
 			elif err == ERR_FILE_EOF:
 				main_scene_packed = load_inter.get_resource()
 				current_main_stage = load_inter.get_stage_count()
+				break
 			else:
 				break
 			yield(tree, "idle_frame")
@@ -149,14 +150,6 @@ func get_template(reset := false) -> LevelTemplate:
 	# if not scene is LevelTemplate:
 	# 	return null
 	return template
-
-func set_singletons(s):
-	return
-
-func get_singletons() -> Dictionary:
-	if not is_instance_valid(template):
-		return {}
-	return template.singletons_pool.services
 
 func load_level(cfg: LevelConfiguration, wait := false, no_temp := false) -> bool:
 	if no_temp:

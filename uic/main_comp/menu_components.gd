@@ -40,13 +40,13 @@ func _non_self_pushed():
 	pass
 
 func _self_pushed():
-	pass
+	visible = true
 
 func _non_self_popped():
 	pass
 
 func _self_popped():
-	pass
+	visible = false
 
 func _idle(delta: float):
 	pass

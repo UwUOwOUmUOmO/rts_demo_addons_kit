@@ -124,34 +124,24 @@ func spawn_projectile(no: int):
 			guidance = HomingGuidance.new()
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.FLG:
 			guidance = ForwardLookingGuidance.new()
-			guidance.heat_threshold = profile.heatThreshold
-			if profile.seekingAngle > 0.0:
-				guidance.seeking_angle  = profile.seekingAngle
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.PRECISION:
 			guidance = PrecisionGuidance.new()
 			guidance.site = pgm_target
-		guidance.handler = self
-		instancing_result = guidance_instancing(guidance)
-		guidance.set_range(profile.homingRange)
-		guidance.set_profile(profile.dvConfig)
-		guidance.set_ddistance(profile.proximity)
-		guidance.proximity_mode = profile.weaponProximityMode
-		guidance.self_destruct_time = profile.travelTime
 		if inherite_carrier_speed and "currentSpeed" in carrier:
 			guidance.inherited_speed = carrier.currentSpeed
 		guidance.target = target
+		guidance.handler = self
+		instancing_result = guidance_instancing(guidance)
 	# if instancing_result is bool:
 	# 	if not instancing_result:
 	# 		Out.print_error("Failed to instance guidance", get_stack())
 	# 		return
-	guidance._velocity = profile.travelSpeed
 	guidance._barrel = hardpoints[no].global_transform.origin
 	guidance._weapon_base_config = profile
 	var h: Spatial = hardpoints[no]
 	var fwd_vec := -h.global_transform.basis.z
 	var euler := h.global_transform.basis.get_euler()
 	guidance._direction = fwd_vec
-	guidance._projectile_scene = profile.projectile
 	while not guidance.get_parent():
 		yield(get_tree(), "idle_frame")
 	guidance._start()

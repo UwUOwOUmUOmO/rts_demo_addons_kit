@@ -18,12 +18,10 @@ onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 
 var _weapon_base_config: WeaponConfiguration = null
 
-var _velocity := 0.0
 var _barrel := Vector3.ZERO
 var _direction := Vector3.ZERO
 var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings") \
 	.use_physics_process
-var _projectile_scene: PackedScene = null
 var _projectile: Spatial = null
 var _computer: FlightComputer = null
 var _instrument: AirInstrument = null
@@ -48,7 +46,7 @@ func _start(move := true):
 	if move:
 		global_translate(_barrel - global_transform.origin)
 	look_at(_direction, Vector3.UP)
-	_projectile = _projectile_scene.instance()
+	_projectile = _weapon_base_config.projectile.instance()
 	add_child(_projectile)
 	_projectile.translation = Vector3.ZERO
 	_projectile.look_at(global_transform.origin + _direction, Vector3.UP)

@@ -8,6 +8,12 @@ var heat_tracking = false
 var heat_threshold := 10.0
 var seeking_angle := DEFAULT_SEEKING_ANGLE
 
+func self_setup():
+	.self_setup()
+	heat_threshold = _weapon_base_config.heatThreshold
+	if _weapon_base_config.seekingAngle > 0.0:
+		seeking_angle  = _weapon_base_config.seekingAngle
+
 func _guide(delta: float):
 	if not is_instance_valid(target):
 		dumb_control()

@@ -37,9 +37,9 @@ func instance_script_object():
 	script_instance.set_script(target_script)
 	fref = funcref(script_instance, func_name)
 
-func deserialize(config: Dictionary) -> bool:
-	var re := .deserialize(config)
-	instance_script_object()
+static func deserialize(config: Dictionary):
+	var re = .deserialize(config)
+	re.instance_script_object()
 	return re
 
 func copy(from: Configuration) -> bool:

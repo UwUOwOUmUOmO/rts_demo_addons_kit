@@ -119,7 +119,15 @@ func _initialize():
 	utils_settings.connect_from(self, target._controller,
 		CONTROLLER_DEFAULT_SIGNALS)
 
+func self_setup():
+	set_range(_weapon_base_config.homingRange)
+	set_profile(_weapon_base_config.dvConfig)
+	set_ddistance(_weapon_base_config.proximity)
+	proximity_mode = _weapon_base_config.weaponProximityMode
+	self_destruct_time = _weapon_base_config.travelTime
+
 func _start(move := true):
+	self_setup()
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
 	vtol.device = AirCombatant.PROJECTILE_TYPE.MISSILE + projectile_type
@@ -137,7 +145,7 @@ func _start(move := true):
 	vtol.inheritedSpeed = inherited_speed
 	vtol.overdriveThrottle = 1.0
 	vtol.look_at(vtol.translation + _direction, Vector3.UP)
-	_projectile = _projectile_scene.instance()
+	_projectile = _weapon_base_config.projectile.instance()
 	rudder_control = Spatial.new()
 	vtol.add_child(_projectile)
 	vtol.add_child(rudder_control)

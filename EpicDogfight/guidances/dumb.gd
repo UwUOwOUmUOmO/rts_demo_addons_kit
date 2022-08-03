@@ -14,6 +14,6 @@ func _guide(delta: float):
 		_finalize()
 		_clean()
 		return
-	var distance := _velocity * delta
+	var distance := _weapon_base_config.travelSpeed * delta
 	global_translate((_direction * distance))
 	time_elapsed += delta

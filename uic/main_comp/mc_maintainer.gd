@@ -18,6 +18,7 @@ export(bool) var allow_no_state := true
 onready var utils_settings = SingletonManager.static_services["UtilsSettings"]
 
 var default_state: MenuComponent = null
+var current: MenuComponent = null setget set_curr, get_curr
 var states := []
 var all_states := {}
 
@@ -87,8 +88,14 @@ func push_with_key(k: String):
 func pop_state():
 	var last_state: MenuComponent = states.pop_back()
 	last_state.focus = false
-	emit_signal("__state_popped", last_state)
 	if states.empty():
 		emit_signal("__no_state")
-		return
-	states[states.size() - 1].focus = true
+	else:
+		states[states.size() - 1].focus = true
+	emit_signal("__state_popped", last_state)
+
+func set_curr(c):
+	pass
+
+func get_curr():
+	return states.back()
