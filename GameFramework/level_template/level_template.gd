@@ -15,6 +15,7 @@ func _ready():
 	lirmn.set_script(LOCAL_IRM_SCRIPT)
 	singletons_pool.add_instanced_singleton(lirmn)
 	local_irm = lirmn
+#	get_viewport().connect("size_changed", self, "size_change_handler")
 
 func free_all_scenes():
 	var old_levels := scenes_holder.get_children()
@@ -38,3 +39,6 @@ func remove_scene(s_name := ""):
 
 func add_peripheral(con: Node, auto_clean := -1.0):
 	peripherals_pool.add_peripheral(con, auto_clean)
+
+func size_change_handler():
+	scenes_holder.size = get_viewport().size

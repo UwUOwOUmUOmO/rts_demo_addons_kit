@@ -3,7 +3,7 @@ extends Reference
 var objects := []
 
 func destruct(time: float, scene: SceneTree, force_free := false):
-	yield(scene.create_timer(time), "timeout")
+	yield(scene.create_timer(time, false), "timeout")
 	for c in objects:
 		if force_free:
 			c.free()

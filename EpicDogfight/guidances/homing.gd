@@ -27,6 +27,7 @@ var inherited_speed := 0.0
 var self_destruct_time := 5.0
 var self_destruct_clock := 0.0
 var guided := false setget _set_guided, _get_guided
+var autofree_projectile := true
 
 var manual_control := false
 
@@ -107,7 +108,8 @@ func self_destruct_handler(delta: float):
 		self_destruct_clock += delta
 
 func _clean():
-	vtol.queue_free()
+	if autofree_projectile:
+		vtol.queue_free()
 	queue_free()
 
 func _initialize():
@@ -151,10 +153,15 @@ func _start(move := true):
 	vtol.add_child(rudder_control)
 	_projectile.translation = Vector3.ZERO
 	rudder_control.translation = Vector3(0.0, 0.0, -100.0)
+	vtol.connect("__combatant_out_of_hp", self, "no_hp_handler")
 	_signals_init()
 	_initialize()
 	_green_light = true
 	_boot_subsys()
+
+func no_hp_handler(_com):
+	_projectile.premature_detonation_handler()
+	_finalize()
 
 func lock_on_handler(_tar):
 	Out.print_error("This handler is not supposed to be used", \

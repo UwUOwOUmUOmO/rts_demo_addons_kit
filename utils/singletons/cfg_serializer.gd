@@ -179,6 +179,13 @@ class Deserializer_AssistClass extends Reference:
 		var main_part: Dictionary = serialized[entry]
 		final = deserializer_worker(main_part)
 
+	func deserialize_to(target):
+		if not version_check(serialized["__cfg_ver"]):
+			return
+		var entry = serialized["__entry"]
+		var main_part: Dictionary = serialized[entry]
+		final = deserializer_worker(main_part, target)
+
 	func d_dict(dict: Dictionary):
 		# Convention Dictionary
 		if dict.has("__has_branch"):
@@ -228,22 +235,22 @@ class Deserializer_AssistClass extends Reference:
 			return null
 		return ResourceLoader.load(res_loc, res["__res_class"])
 
-	func deserializer_worker(ser: Dictionary):
+	func deserializer_worker(ser: Dictionary, deserialized = null):
 		# Exploitation check
-		var deserialized = null
 		var full_completion := true
 		var target_name: String = ser["__cfg_class_name"]
 		if not target_name in allowed_serializable:
 			prompt_not_allowed(target_name)
 			return deserialized
 		var bc_name: String = ser["__cfg_base_class"]
-		deserialized = ClassDB.instance(bc_name)
-		if not is_instance_valid(deserialized):
-			prompt_no_base_class(bc_name)
-			return
-		var target_path: String = allowed_serializable[target_name]
-		var target_script: Script = ResourceLoader.load(target_path, "Script")
-		deserialized.set_script(target_script)
+		if deserialized == null:
+			deserialized = ClassDB.instance(bc_name)
+			if not is_instance_valid(deserialized):
+				prompt_no_base_class(bc_name)
+				return
+			var target_path: String = allowed_serializable[target_name]
+			var target_script: Script = ResourceLoader.load(target_path, "Script")
+			deserialized.set_script(target_script)
 		# Start deserialization
 		for var_name in deserialized.property_list:
 			var final_instance = null
@@ -275,3 +282,7 @@ func deserialize(ser: Dictionary):
 	var assist := Deserializer_AssistClass.new(ser, allowed_serializable)
 	assist.deserialize()
 	return assist.final
+
+func deserialize_to(ser: Dictionary, target):
+	var assist := Deserializer_AssistClass.new(ser, allowed_serializable)
+	assist.deserialize_to(target)

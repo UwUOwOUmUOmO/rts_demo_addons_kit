@@ -30,3 +30,17 @@ func _damage(amount: float) -> void:
 	if hp <= 0.0:
 		hp = 0.0
 		emit_signal("__combatant_out_of_hp", self)
+
+func _damage_over_time(total: float, duration: float) -> void:
+	if duration <= 0.0:
+		Out.print_error("Duration must be above 0", get_stack())
+	var dps := total / duration
+	var damage_per_turn: float = dps * \
+		float(SingletonManager.static_services["UtilsSettings"].fixed_delta)
+	while total > 0.0:
+		total -= damage_per_turn
+		_damage(damage_per_turn)
+		if hp <= 0.0:
+			break
+		yield(get_tree(), "physics_frame")
+

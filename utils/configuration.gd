@@ -21,6 +21,10 @@ func _init():
 	_reset_volatile()
 	return self
 
+func _to_string():
+	var serialized := serialize()
+	return str(serialized)
+
 func remove_property(what: String):
 	prop_mutex.lock()
 	# var size := property_list.size()
@@ -100,10 +104,10 @@ func version_greater(target: String):
 func serialize() -> Dictionary:
 	return SingletonManager.static_services["ConfigSerializer"].serialize(self)
 
-static func deserialize(config: Dictionary):
-	return SingletonManager.static_services["ConfigSerializer"].deserialize(config)
+func deserialize(config: Dictionary):
+	SingletonManager.static_services["ConfigSerializer"].deserialize_to(config)
 
-static func read_from(path: String, encryption_key := ""):
+func read_from(path: String, encryption_key := ""):
 	var file := File.new()
 	var err: int
 	if encryption_key.empty():
@@ -116,7 +120,7 @@ static func read_from(path: String, encryption_key := ""):
 	else:
 		var dict: Dictionary = file.get_var()
 		file.close()
-		return deserialize(dict)
+		deserialize(dict)
 
 func save_as(path: String, encryption_key := "") -> int:
 	var file := File.new()

@@ -87,18 +87,7 @@ func _initialize():
 func _finalize():
 	_green_light = false
 	emit_signal("__armament_detonated", self)
-	_damage_call()
 	_clean()
-
-func _damage_call():
-	if not is_instance_valid(_damage_zone):
-		return
-	var overlapped := _damage_zone.get_overlapping_areas()
-	var area_origin := _damage_zone.global_transform.origin
-	for body in overlapped:
-		var parent: Node = body.get_parent()
-		if parent.has_method("_damage"):
-			parent._damage(_weapon_base_config.baseDamage)
 
 func _clean():
 	queue_free()
