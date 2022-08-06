@@ -19,11 +19,15 @@ var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_phy
 var _heat_signature := 10.0
 var hp := 100.0
 var currentSpeed := 0.0
+var last_delta := 0.0
 
 var hardpoints := {
 	"PRIMARY":		[],
 	"SECONDARY":	[],
 }
+
+func _process(delta):
+	last_delta = delta
 
 func _damage(amount: float) -> void:
 	hp -= amount
@@ -35,12 +39,11 @@ func _damage_over_time(total: float, duration: float) -> void:
 	if duration <= 0.0:
 		Out.print_error("Duration must be above 0", get_stack())
 	var dps := total / duration
-	var damage_per_turn: float = dps * \
-		float(SingletonManager.static_services["UtilsSettings"].fixed_delta)
+	var damage_per_turn: float = dps * last_delta
 	while total > 0.0:
 		total -= damage_per_turn
 		_damage(damage_per_turn)
 		if hp <= 0.0:
 			break
-		yield(get_tree(), "physics_frame")
+		yield(get_tree(), "idle_frame")
 

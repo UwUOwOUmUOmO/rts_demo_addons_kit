@@ -27,10 +27,12 @@ func _ready():
 	set_process(not _use_physics_process)
 
 func _process(delta):
+	._process(delta)
 	if not _use_physics_process:
 		_compute(delta)
 
 func _physics_process(delta):
+#	._physics_process(delta)
 	if _use_physics_process:
 		_compute(fixed_delta)
 
@@ -66,7 +68,7 @@ func _compute(delta):
 		var forward = -global_transform.basis.z
 		moveDistance = forward * (currentSpeed)
 		moveDistance += global_transform.basis.y\
-			* (destination.y - global_transform.origin.y)\
+			* (current_destination.y - global_transform.origin.y)\
 			* _vehicle_config.climbRate
 		previousYaw = currentYaw
 	if isReady:
@@ -89,7 +91,7 @@ func rudderCheck():
 #		rotated = fwd_vec.rotated(global_transform.basis.y, rudderAngle)
 #	des += rotated
 #	des *= 100.0
-#	destination = des
+#	current_destination = des
 #	distance_squared = origin.distance_squared_to(des)
 #	if not isMoving:
 #		set_moving(true)
@@ -114,7 +116,7 @@ func _rudderControl() -> Vector3:
 
 func _prepare():
 	var currentYaw = global_transform.basis.get_euler().y
-	distance_squared = global_transform.origin.distance_squared_to(destination)
+	distance_squared = global_transform.origin.distance_squared_to(current_destination)
 	var accel: float = _vehicle_config.deccelaration
 #	var slowingTime: float = abs(currentSpeed / accel)
 	var slowingTime: float = _vehicle_config.slowingTime
@@ -127,7 +129,7 @@ func _prepare():
 		speedPercentage = 0.0
 	_calculateTurnRate()
 	_setMovement()
-	_turn(destination)
+	_turn(current_destination)
 	return {"allowedSpeed": allowedSpeed,\
 			"currentYaw": currentYaw}
 
@@ -155,7 +157,7 @@ func _calculateTurnRate():
 	allowedTurn = lerp(maxTurnrate, minTurnRate, clamp(speedPercentage, 0.0, 1.0))
 	#---------------------------------------------------------------------
 	var fwd_vec := -global_transform.basis.z
-	var target_vec := global_transform.origin.direction_to(destination)
+	var target_vec := global_transform.origin.direction_to(current_destination)
 	var angle := abs(fwd_vec.angle_to(target_vec))
 	var percentage: float = angle / FORE
 	var aero: float = _vehicle_config.aerodynamic
@@ -192,7 +194,7 @@ func _setMovement():
 			return
 		if distance_squared <= o_s:
 			set_moving(false)
-			global_translate(destination - global_transform.origin)
+			global_translate(current_destination - global_transform.origin)
 	elif slowingRange_squared >= distance_squared:
 		throttle = 0.0
 	else:
@@ -212,9 +214,9 @@ func _bakeDestination(d: Vector3):
 	useRudder = false
 	startingPoint = global_transform.origin
 	var inv_per: float = 1.0 - _vehicle_config.slowingAt
-	destination = d
-	lookAtVec = startingPoint.direction_to(destination)
-	distance_squared = global_transform.origin.distance_squared_to(destination)
+	current_destination = d
+	lookAtVec = startingPoint.direction_to(current_destination)
+	distance_squared = global_transform.origin.distance_squared_to(current_destination)
 	if currentSpeed == 0.0:
 		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config.maxSpeed)
 		inheritedSpeed = 0.0
@@ -242,6 +244,8 @@ func set_course(des: Vector3):
 func set_moving(m: bool):
 	if not m:
 		emit_signal("__destination_arrived", self)
+	else:
+		emit_signal("__started_moving", self)
 	isMoving = m
 	# Reset all variable
 	lookAtVec = Vector3()

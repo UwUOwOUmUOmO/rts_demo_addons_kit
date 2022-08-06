@@ -14,6 +14,7 @@ enum PROJECTILE_TYPE {
 	SAM			= 16,
 }
 
+signal __started_moving(brain)
 signal __tracking_target(brain, target)
 signal __loss_track_of_target(brain)
 signal __destination_arrived(brain)
@@ -28,7 +29,8 @@ var isReady := false
 var useRudder := false
 var enableGravity := false
 var rudderAngle := 0.0
-var destination := Vector3() setget set_course
+var current_destination := Vector3() setget set_course
+var destinations_list := PoolVector3Array() setget set_multides
 var trackingTarget: Spatial = null setget set_tracking_target
 var isMoving := false setget set_moving
 var overdriveThrottle := -1.0
@@ -77,6 +79,9 @@ func _ready():
 	hardpoints_handler()
 
 func set_course(des: Vector3) -> void:
+	pass
+
+func set_multides(des: PoolVector3Array) -> void:
 	pass
 
 func set_tracking_target(target: Spatial) -> void:
