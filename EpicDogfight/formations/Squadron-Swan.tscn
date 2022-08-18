@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://addons/Vehicular/squadrons/Squadron-Swan.gd" type="Script" id=2]
+[ext_resource path="res://addons/EpicDogfight/formations/Squadron-Swan.gd" type="Script" id=2]
+
 
 [node name="Squadron-Swan" type="Spatial"]
 script = ExtResource( 2 )

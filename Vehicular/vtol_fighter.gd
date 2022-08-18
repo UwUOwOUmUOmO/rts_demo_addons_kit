@@ -10,6 +10,7 @@ var startingPoint := Vector3()
 var lookAtVec := Vector3()
 var slowingRange := 0.0
 var slowingRange_squared := 0.0
+var switchDesZone_squared := 0.0
 var previousYaw := 0.0
 var currentRoll := 0.0
 var targetRoll := 0.0
@@ -17,12 +18,16 @@ var allowedTurn := 0.05
 var speedLoss := 0.0
 var realSpeedLoss := 0.0
 
+# Special
+var old_thottle_override := -1.0
+
 func _init():
 	_vehicle_config = AircraftConfiguration.new()
 
 func _ready():
 	._ready()
 	previousYaw = global_transform.basis.get_euler().y
+	_heat_signature = _vehicle_config.heatSignature
 	set_physics_process(_use_physics_process)
 	set_process(not _use_physics_process)
 
@@ -83,19 +88,6 @@ func _compute(delta):
 		_setRoll(lerp(currentRoll, 0.0, 0.9995))
 
 func rudderCheck():
-#	var origin: Vector3 = global_transform.origin
-#	var des := origin
-#	var fwd_vec: Vector3 = -global_transform.basis.z
-#	var rotated := Vector3.ZERO
-#	if rudderAngle != 0.0:
-#		rotated = fwd_vec.rotated(global_transform.basis.y, rudderAngle)
-#	des += rotated
-#	des *= 100.0
-#	current_destination = des
-#	distance_squared = origin.distance_squared_to(des)
-#	if not isMoving:
-#		set_moving(true)
-#	 _bakeDestination(des)
 	rudder.rotation = Vector3(0.0, rudderAngle, 0.0)
 	set_tracking_target(rudder)
 
@@ -118,7 +110,6 @@ func _prepare():
 	var currentYaw = global_transform.basis.get_euler().y
 	distance_squared = global_transform.origin.distance_squared_to(current_destination)
 	var accel: float = _vehicle_config.deccelaration
-#	var slowingTime: float = abs(currentSpeed / accel)
 	var slowingTime: float = _vehicle_config.slowingTime
 	slowingRange = (currentSpeed * slowingTime) + (0.5 * accel * slowingTime)
 	slowingRange_squared = slowingRange * slowingRange
@@ -148,8 +139,8 @@ func _calculateSpeed(allowedSpeed: float):
 		speedMod = _vehicle_config.deccelaration
 		clampMin = allowedSpeed
 	realSpeedLoss = abs(_vehicle_config.deccelaration * speedLoss)
-	currentSpeed = clamp(currentSpeed + speedMod,\
-		clampMin, _vehicle_config.maxSpeed) - realSpeedLoss
+	currentSpeed = clamp(clamp(currentSpeed + speedMod,\
+		clampMin, _vehicle_config.maxSpeed) - realSpeedLoss, 0.0, _vehicle_config.maxSpeed)
 
 func _calculateTurnRate():
 	var minTurnRate = _vehicle_config.turnRate
@@ -182,9 +173,14 @@ func _setMovement():
 	d_s *= d_s
 	var o_s: float = _vehicle_config.orbitError
 	o_s *= o_s
-	if overdriveThrottle != -1.0:
+	if overdriveThrottle > 0.0:
 		throttle = overdriveThrottle
+		if distance_squared <= d_s * 2.0:
+			chart_course()
 		return
+	if distance_squared <= switchDesZone_squared:
+		if chart_course():
+			return
 	if distance_squared <= d_s:
 		throttle = 0.0
 		set_moving(false)
@@ -194,6 +190,13 @@ func _setMovement():
 			return
 		if distance_squared <= o_s:
 			set_moving(false)
+		if currentSpeed < _vehicle_config.speedSnapping\
+				and throttle <= _vehicle_config.minThrottle:
+			# set_moving(false)
+			# return
+			pass
+		elif distance_squared <= o_s:
+			# set_moving(false)
 			global_translate(current_destination - global_transform.origin)
 	elif slowingRange_squared >= distance_squared:
 		throttle = 0.0
@@ -217,6 +220,10 @@ func _bakeDestination(d: Vector3):
 	current_destination = d
 	lookAtVec = startingPoint.direction_to(current_destination)
 	distance_squared = global_transform.origin.distance_squared_to(current_destination)
+	var sdzp: float= _vehicle_config.switchDesZonePerc
+	sdzp *= sdzp
+	switchDesZone_squared = clamp(distance_squared * sdzp, \
+		_vehicle_config.minSDZS, _vehicle_config.maxSDZS)
 	if currentSpeed == 0.0:
 		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config.maxSpeed)
 		inheritedSpeed = 0.0
@@ -233,6 +240,17 @@ func set_tracking_target(target: Spatial):
 	_bakeDestination(trackingTarget.global_transform.origin)
 	emit_signal("__tracking_target", self, target)
 
+func chart_course() -> bool:
+	if destinations_list.empty():
+		overdriveThrottle = old_thottle_override
+		return false
+	var next_des := destinations_list[0]
+	_dl_mutex.lock()
+	destinations_list.remove(0)
+	_dl_mutex.unlock()
+	set_course(next_des)
+	return true
+
 func set_course(des: Vector3):
 	if trackingTarget != null:
 		trackingTarget = null
@@ -240,6 +258,13 @@ func set_course(des: Vector3):
 		set_moving(true)
 	_bakeDestination(des)
 #	set_moving(true)
+
+func set_multides(des: PoolVector3Array) -> void:
+	destinations_list = des
+	# old_thottle_override = overdriveThrottle
+	# overdriveThrottle = 1.0
+	if not chart_course():
+		set_moving(false)
 
 func set_moving(m: bool):
 	if not m:

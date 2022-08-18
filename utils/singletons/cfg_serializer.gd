@@ -115,11 +115,13 @@ class Serializer_AssistClass extends Reference:
 		var id := get_id()
 		var pointer := {"__entry": id}
 		final[id] = re
-		if not curr_cfg.name in allowed_serializable:
+		var script_index := allowed_serializable.values().\
+			find(curr_cfg.get_script().resource_path)
+		if script_index == -1:
 			prompt_not_allowed(curr_cfg.name)
 			return pointer
 		re["__cfg_base_class"] = curr_cfg.get_class()
-		re["__cfg_class_name"] = curr_cfg.name
+		re["__cfg_class_name"] = allowed_serializable.keys()[script_index]
 		for var_name in curr_cfg.property_list:
 			var variable = curr_cfg.get(var_name)
 			var serialized = null
@@ -286,3 +288,9 @@ func deserialize(ser: Dictionary):
 func deserialize_to(ser: Dictionary, target):
 	var assist := Deserializer_AssistClass.new(ser, allowed_serializable)
 	assist.deserialize_to(target)
+
+func get_name_from_path(path: String) -> String:
+	for key in allowed_serializable:
+		if allowed_serializable[key] == path:
+			return key as String
+	return ""

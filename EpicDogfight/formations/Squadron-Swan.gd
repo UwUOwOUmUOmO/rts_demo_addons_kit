@@ -1,7 +1,8 @@
-extends Spatial
+extends SquadronFormation
 
-onready var center: Spatial = $Center
-onready var memberList = {
+func _ready():
+	center = $Center
+	member_list = {
 	"P0": $Center/P0,
 	"P1": $Center/P1,
 	"P2": $Center/P2,

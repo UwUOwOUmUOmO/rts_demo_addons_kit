@@ -44,6 +44,9 @@ var speedPercentage := 0.0
 var distance := 0.0 setget , get_distance
 var distance_squared := 0.0
 
+# Special
+var _dl_mutex := Mutex.new()
+
 func ref_handler():
 	var g: PoolStringArray = []
 	if device & PROJECTILE_TYPE.AIRCRAFT:
@@ -72,6 +75,7 @@ func _enter_tree():
 	_ref = InRef.new(self)
 
 func _ready():
+	._ready()
 	ref_handler()
 	rudder = Spatial.new()
 	add_child(rudder)
@@ -83,6 +87,11 @@ func set_course(des: Vector3) -> void:
 
 func set_multides(des: PoolVector3Array) -> void:
 	pass
+
+func add_destination(des: Vector3) -> void:
+	_dl_mutex.lock()
+	destinations_list.push_back(des)
+	_dl_mutex.unlock()
 
 func set_tracking_target(target: Spatial) -> void:
 	pass

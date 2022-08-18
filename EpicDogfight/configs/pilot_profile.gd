@@ -6,6 +6,6 @@ class_name PilotProfile
 var pilot_name := "Venom"
 
 func _init(pname := ""):
-	
+	name = "PilotProfile"
 	if not pname.empty():
 		pilot_name = pname

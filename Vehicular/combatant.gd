@@ -9,14 +9,21 @@ const AFT					= -FORE
 const HARD_PORT				= PI / 2.0
 const HARD_STARBOARD		= -HARD_PORT
 
+# Exports
+export(NodePath) var navigation_agent := ""
+
+# Settings
 var _trackable := true
+var _use_navagent := true
 var _controller = null
 var _trackedBy = null
 var _ref: InRef = null
 var _vehicle_config: Configuration = null
 var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 
+# Data
 var _heat_signature := 10.0
+var nav_agent: NavigationAgent = null
 var hp := 100.0
 var currentSpeed := 0.0
 var last_delta := 0.0
@@ -25,6 +32,15 @@ var hardpoints := {
 	"PRIMARY":		[],
 	"SECONDARY":	[],
 }
+
+func _ready():
+	var na := get_node_or_null(navigation_agent)
+	if na == null:
+		return
+	if na is NavigationAgent:
+		nav_agent = na
+	else:
+		Out.print_error("Assigned Node is not a NavigationAgent", get_stack())
 
 func _process(delta):
 	last_delta = delta

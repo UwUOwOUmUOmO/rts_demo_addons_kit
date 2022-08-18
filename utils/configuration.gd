@@ -19,6 +19,8 @@ func _init():
 		 "prop_mutex"])
 	# OPTIONAL: reset volatile variables
 	_reset_volatile()
+#	var cfg_server = SingletonManager.fetch("ConfigSerializer")
+#	name = cfg_server.get_name_from_path(get_script().resource_path)
 	return self
 
 func _to_string():
