@@ -29,7 +29,10 @@ var radarSignature		:= 1.5
 var heatSignature		:= 10.0
 var weight				:= 10.0
 var speedLossMod		:= 15.0
- 
+
+# Special config classes
+var hullProfile			:= HullProfile.new()
+
 func _init():
 	
 	name = "AircraftConfiguration"

@@ -3,13 +3,14 @@ extends Reference
 class_name DataBridgeStandalone
 
 var wref: WeakRef = null setget set_forbidden, get_forbidden
-var is_node := false
+var is_node := false setget set_forbidden, get_forbidden
 var fallback_value: Object = null
-var fallback_method := funcref(DataBridgeStandalone, "default_fallback_evaluation")
+var fallback_method := funcref(self, "default_fallback_evaluation")
 
 func _init(default_fallback = null, target: Object = null):
 	fallback_value = default_fallback
-	set_target(target)
+	if target != null:
+		set_target(target)
 
 static func default_fallback_evaluation(ref: WeakRef, is_node := false):
 	if is_node:

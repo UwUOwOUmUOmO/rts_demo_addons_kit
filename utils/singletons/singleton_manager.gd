@@ -1,12 +1,10 @@
 extends Node
 
 const DEFAULT_AUTOLOAD := PoolStringArray([
-	"res://addons/utils/singletons/path_utils.gd",
 	"res://addons/utils/singletons/core_settings.gd",
 	"res://addons/utils/singletons/cfg_serializer.gd",
 ])
 const DEFAULT_AUTOLOAD_NAME := PoolStringArray([
-	"PathUtils",
 	"UtilsSettings",
 	"ConfigSerializer"
 ])

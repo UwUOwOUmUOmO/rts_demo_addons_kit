@@ -118,7 +118,7 @@ func _initialize():
 		return
 	if not target is Combatant:
 		return
-	utils_settings.connect_from(self, target._controller,
+	Toolkits.SignalTools.connect_from(self, target._controller,
 		CONTROLLER_DEFAULT_SIGNALS)
 
 func self_setup():

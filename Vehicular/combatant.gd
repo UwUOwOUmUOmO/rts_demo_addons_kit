@@ -18,7 +18,7 @@ var _use_navagent := true
 var _controller = null
 var _trackedBy = null
 var _ref: InRef = null
-var _vehicle_config: Configuration = null
+var _vehicle_config: Configuration = null setget set_config
 var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 
 # Data
@@ -42,8 +42,15 @@ func _ready():
 	else:
 		Out.print_error("Assigned Node is not a NavigationAgent", get_stack())
 
+func set_config(cfg):
+	_vehicle_config = cfg
+
+func no_hp_passthrough():
+	emit_signal("__combatant_out_of_hp", self)
+
+# Outdated
 func _process(delta):
-	last_delta = delta
+	pass
 
 func _damage(amount: float) -> void:
 	hp -= amount

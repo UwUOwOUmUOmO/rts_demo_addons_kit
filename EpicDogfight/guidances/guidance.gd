@@ -11,7 +11,6 @@ signal __armament_fired(guidance)
 signal __armmament_armed(guidance)
 signal __armament_detonated(guidance)
 
-onready var utils_settings = SingletonManager.fetch("UtilsSettings")
 onready var processors_swarm = SingletonManager.fetch("ProcessorsSwarm")
 onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 			.fixed_delta
@@ -57,7 +56,7 @@ func _start(move := true):
 	_boot_subsys()
 
 func _signals_init():
-	utils_settings.connect_from(self, _projectile, \
+	Toolkits.SignalTools.connect_from(self, _projectile, \
 		PROJECTILE_DEFAULT_SIGNALS, true)
 
 func _boot_subsys():

@@ -1,5 +1,7 @@
 extends Node
 
+class_name CombatServer
+
 const TC_UID_START_NUM := 20000
 const MAX_TEAM_COUNT := 63
 
@@ -75,6 +77,78 @@ class TC_AssistClass extends Reference:
 		team2.team_relationship["allies"].erase(entry1)
 		team1.team_relationship["hostiles"].erase(entry2)
 		team2.team_relationship["hostiles"].erase(entry2)
+
+class CombatMiddleman extends Reference:
+	# Support functions
+	static func resistant_calculate(res: PoolRealArray, mixture: int) -> float:
+		var total_match := 0
+		var mixed := 0.0
+		# Calculate the average resistant of each warhead's type (blendable)
+		if mixture & DamageModifiersConfiguration.WARHEAD_TYPE.PRESSURIZED:
+			total_match += 1
+			mixed += res[1]
+		if mixture & DamageModifiersConfiguration.WARHEAD_TYPE.SELF_IMPLODED:
+			total_match += 1
+			mixed += res[2]
+		if mixture & DamageModifiersConfiguration.WARHEAD_TYPE.FOWARD_CLUSTERED:
+			total_match += 1
+			mixed += res[3]
+		if mixture & DamageModifiersConfiguration.WARHEAD_TYPE.ARMOR_PIERCING:
+			total_match += 1
+			mixed += res[4]
+		if mixture & DamageModifiersConfiguration.WARHEAD_TYPE.ENERGY:
+			total_match += 1
+			mixed += res[5]
+		if total_match <= 0:
+			return 1.0
+		var avg: float = mixed / float(total_match)
+		# Return inverted average resistant
+		return clamp(1.0 / avg, 0.0001, INF)
+
+	static func warhead_dmg_calculate(mod: DamageModifiersConfiguration) \
+			-> float:
+		var type := mod.warhead_type
+		var mixed := 1.0
+		if type == HullProfile.ARMOR_TYPE.NA:
+			mixed *= mod.none
+			return mixed
+		if type & HullProfile.ARMOR_TYPE.SPACED:
+			mixed *= mod.spaced
+		if type & HullProfile.ARMOR_TYPE.PLATED:
+			mixed *= mod.plated
+		if type & HullProfile.ARMOR_TYPE.COMPOSITE:
+			mixed *= mod.composite
+		if type & HullProfile.ARMOR_TYPE.STRUCTURE:
+			mixed *= mod.structure
+		if type & HullProfile.ARMOR_TYPE.FORT:
+			mixed *= mod.fort
+		return clamp(mixed, 0.0, INF)
+
+	static func effector_calculate(effector_list: Array) -> float:
+		# TODO: Implement Armor Effectors
+		return 1.0
+
+	# Main functions
+	static func add_hull_effector(target, eff: Effector):
+		# To be implemented
+		if target is Combatant:
+			DataBridge.try_append(target, "_vehicle_config.hullProfile.effector_pool", eff)
+		elif target is HullProfile:
+			(target as HullProfile).effector_pool
+
+	static func damage(request: DamageRequest):
+		var hull_profile: HullProfile = DataBridge.try_get(request.damage_target, \
+			"_vehicle_config.hullProfile")
+		
+		if hull_profile == null:
+			return
+		var hull_resistant_mod := resistant_calculate(hull_profile.resistant, request.damage_mod.warhead_type)
+		var warhead_dmg_mod := warhead_dmg_calculate(request.damage_mod)
+		var effectors_mod := effector_calculate(hull_profile.effector_pool)
+		var computed_damage := request.base_damage * \
+			(hull_resistant_mod * warhead_dmg_mod * effectors_mod)
+		hull_profile.damage(computed_damage)
+
 
 func _ready():
 	connect("__new_team_created", self, "new_team_handler")

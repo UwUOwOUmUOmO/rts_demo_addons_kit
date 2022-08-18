@@ -74,6 +74,15 @@ func hardpoints_handler():
 func _enter_tree():
 	_ref = InRef.new(self)
 
+func _init():
+	set_config(AircraftConfiguration.new())
+
+func set_config(cfg: AircraftConfiguration):
+	if _vehicle_config != null:
+		_vehicle_config.disconnect("__out_of_hp", self, "no_hp_passthrough")
+	_vehicle_config = cfg
+	_vehicle_config.connect("__out_of_hp", self, "no_hp_passthrough")
+
 func _ready():
 	._ready()
 	ref_handler()

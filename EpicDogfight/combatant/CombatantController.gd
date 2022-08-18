@@ -75,11 +75,11 @@ func _set_combatant(com):
 	if com == assigned_combatant:
 		return
 	if is_instance_valid(assigned_combatant):
-		utils_settings.disconnect_from(assigned_combatant, self, \
+		Toolkits.SignalTools(assigned_combatant, self, \
 			COMBATANT_DEFAULT_SIGNALS)
 	if com is Combatant:
 		assigned_combatant = com
-		utils_settings.connect_from(assigned_combatant, self, \
+		Toolkits.SignalTools.connect_from(assigned_combatant, self, \
 			COMBATANT_DEFAULT_SIGNALS)
 		emit_signal("__combatant_changed", com)
 		auto_ready_check()
@@ -88,12 +88,12 @@ func _set_target(tar):
 	if tar == target:
 		return
 	if is_instance_valid(target):
-		utils_settings.disconnect_from(target, self, \
+		Toolkits.SignalTools(target, self, \
 			TARGET_S_DEFAULT_SIGNALS)
 	if tar is Combatant:
 		target = tar
 		target._controller = self
-		utils_settings.connect_from(target, self, \
+		Toolkits.SignalTools.connect_from(target, self, \
 			TARGET_S_DEFAULT_SIGNALS)
 		emit_signal("__target_changed", tar)
 		auto_ready_check()
@@ -102,12 +102,12 @@ func _set_computer(com):
 	if com == computer:
 		return
 	if is_instance_valid(computer):
-		utils_settings.disconnect_from(self, computer, \
+		Toolkits.SignalTools(self, computer, \
 			COMPUTER_DEFAULT_SIGNALS)
 	if com is CombatComputer:
 		computer = com
 		computer.controller = self
-		utils_settings.connect_from(self, computer, \
+		Toolkits.SignalTools.connect_from(self, computer, \
 			COMPUTER_DEFAULT_SIGNALS)
 		# Emit the signal before connecting it to the new computer
 		# so the old computer could clean itself up
@@ -125,11 +125,11 @@ func _set_instrument(sen):
 	if sen == instrument:
 		return
 	if is_instance_valid(instrument):
-		utils_settings.disconnect_from(self, instrument, \
+		Toolkits.SignalTools(self, instrument, \
 			INSTRUMENT_DEFAULT_SIGNALS)
 	if sen is CombatInstrument:
 		instrument = sen
-		utils_settings.connect_from(self, instrument, \
+		Toolkits.SignalTools.connect_from(self, instrument, \
 			INSTRUMENT_DEFAULT_SIGNALS)
 
 		emit_signal("__instrument_changed", self, instrument)
@@ -144,7 +144,7 @@ func _set_instrument(sen):
 func setup_hardpoints():
 	for type in weapons:
 		var handler: WeaponHandler = weapons[type]
-		if not assigned_combatant.hardpoints.has(type):
+		if not type in assigned_combatant.hardpoints:
 			if is_instance_valid(handler):
 				handler.queue_free()
 				weapons[type] = null

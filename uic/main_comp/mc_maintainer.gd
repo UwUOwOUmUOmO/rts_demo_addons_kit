@@ -15,8 +15,6 @@ signal __state_popped(s)
 export(String) var focus_trigger := "game_pause"
 export(bool) var allow_no_state := true
 
-onready var utils_settings = SingletonManager.static_services["UtilsSettings"]
-
 var default_state: MenuComponent = null
 var current: MenuComponent = null setget set_curr, get_curr
 var states := []
@@ -61,7 +59,7 @@ func _setup():
 			all_states[c.name] = c
 			c.visible = false
 			c.uicm = self
-			utils_settings.connect_from(self, c, MAINTAINER_DEFAULT_SIGNALS)
+			Toolkits.SignalTools.connect_from(self, c, MAINTAINER_DEFAULT_SIGNALS)
 	failed_handler()
 	visible = false
 

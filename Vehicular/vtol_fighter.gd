@@ -21,9 +21,6 @@ var realSpeedLoss := 0.0
 # Special
 var old_thottle_override := -1.0
 
-func _init():
-	_vehicle_config = AircraftConfiguration.new()
-
 func _ready():
 	._ready()
 	previousYaw = global_transform.basis.get_euler().y
