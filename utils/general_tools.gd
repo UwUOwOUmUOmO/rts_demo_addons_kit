@@ -121,32 +121,68 @@ class TrialTools extends Reference:
 				return false
 		return true
 
-	static func try_set(target: Object, prop: String, value):
+	static func try_set(target: Object, prop: String, value, deferred := false):
 		var path: Array = PathTools.slice_path(prop, ['.'])
 		var final_prop = path.pop_back()
 		var final_path := PathTools.join_path(path, '.')
 		var final_instance = try_get(target, final_path)
 		if default_fallback_evaluation(final_instance, final_prop):
-			final_instance.set(final_prop, value)
+			if not deferred:
+				final_instance.set(final_prop, value)
+			else:
+				final_instance.set_deferred(final_prop, value)
+		else:
+			Out.print_error("Failed to set value {path} on base {obj}"\
+				.format({"path": prop, "obj": str(target)}), get_stack())
 
-	static func try_get(target: Object, prop: String, next_to_final := false):
-		var instance := target
+	static func try_get(target: Object, prop: String, default = null):
+		var instance = target
 		var path: Array = PathTools.slice_path(prop, ['.'])
-		if next_to_final:
-			path.pop_back()
 		var curr_prop = path.pop_front()
-		while curr_prop != null and instance is Object:
+		var completed := true
+		while curr_prop != null:
+			if not instance is Object:
+				completed = false
+				break
 			if curr_prop in instance:
 				instance = instance.get(curr_prop)
 			else:
-				instance = null
+				completed = false
+				break
 			curr_prop = path.pop_front()
-		return instance
+		if completed:
+			return instance
+		else:
+			return default
 
 	static func try_append(target: Object, prop: String, value):
 		var instance = try_get(target, prop)
 		if instance is Array:
 			instance.append(value)
+		else:
+			Out.print_error("Failed to append to [{obj}].{path}"\
+				.format({"obj": target, "path": prop}), get_stack())
+
+	static func try_arr_index(target, index):
+		if not target is Array or not index is int:
+			return null
+		if target.size() - 1 < index:
+			return null
+		return target[index]
+
+	static func try_dict_index(target, index):
+		if not target is Dictionary:
+			return null
+		if not index in target:
+			return null
+		return target[index]
+
+	static func try_index(target: Object, prop: String, index):
+		var instance = try_get(target, prop)
+		var re = try_arr_index(instance, index)
+		if re != null:
+			return re
+		return try_dict_index(instance, index)
 
 	static func try_call(target: Object, fname: String, args := []):
 		var path: Array = PathTools.slice_path(fname, ['.'])

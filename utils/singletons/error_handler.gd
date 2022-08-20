@@ -4,6 +4,9 @@ var allow_output := true
 var allow_debug  := true
 var trace_stack  := OS.is_debug_build()
 
+func timer(time: float) -> SceneTreeTimer:
+	return get_tree().create_timer(time, false)
+
 func push_stack(stack: Array):
 	if not trace_stack:
 		return

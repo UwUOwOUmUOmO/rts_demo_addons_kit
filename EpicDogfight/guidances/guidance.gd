@@ -28,7 +28,13 @@ var _cluster: ProcessorsCluster = null
 var _damage_zone: Area = null
 var _green_light := false
 var _arm_time := 0.3
-var _armed := false
+var _armed := false setget set_armed
+var _autofree_projectile := true
+
+func set_armed(a: bool):
+	_armed = a
+	if a:
+		emit_signal("__armmament_armed")
 
 func _process(delta):
 	if not _use_physics_process and _green_light:
@@ -46,13 +52,15 @@ func _start(move := true):
 		global_translate(_barrel - global_transform.origin)
 	look_at(_direction, Vector3.UP)
 	_projectile = _weapon_base_config.projectile.instance()
-	add_child(_projectile)
-	_projectile.owner = self
+	LevelManager.template.add_peripheral(_projectile)
+	yield(get_tree(), "idle_frame")
+	# add_child(_projectile)
+	# _projectile.owner = self
 	_projectile.translation = Vector3.ZERO
 	_projectile.look_at(global_transform.origin + _direction, Vector3.UP)
 	_signals_init()
 	_initialize()
-	_armed = true
+	set_armed(true)
 	_green_light = true
 	_boot_subsys()
 
@@ -90,7 +98,8 @@ func _finalize():
 	_clean()
 
 func _clean():
-	queue_free()
+	if _autofree_projectile:
+		queue_free()
 
 func _exit_tree():
 	if is_instance_valid(_computer):

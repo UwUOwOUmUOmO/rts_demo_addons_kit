@@ -65,7 +65,7 @@ func _activate_radar():
 	while not terminated:
 		if radar_activated and green_light:
 			_radar_ping()
-		yield(tree.create_timer(radar_cycle, false), "timeout")
+		yield(Out.timer(radar_cycle), "timeout")
 
 func _radar_ping():
 	detect_aircraft()

@@ -26,7 +26,7 @@ var inherited_speed := 0.0
 var self_destruct_time := 5.0
 var self_destruct_clock := 0.0
 var guided := false setget _set_guided, _get_guided
-var autofree_projectile := true
+
 
 var manual_control := false
 
@@ -106,8 +106,12 @@ func self_destruct_handler(delta: float):
 	else:
 		self_destruct_clock += delta
 
+func _finalize():
+	vtol._disabled = true
+	._finalize()
+
 func _clean():
-	if autofree_projectile:
+	if _autofree_projectile:
 		vtol.queue_free()
 	queue_free()
 

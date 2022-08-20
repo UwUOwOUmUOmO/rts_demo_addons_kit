@@ -13,6 +13,7 @@ const HARD_STARBOARD		= -HARD_PORT
 export(NodePath) var navigation_agent := ""
 
 # Settings
+var _disabled := false setget set_disabled
 var _trackable := true
 var _use_navagent := true
 var _controller = null
@@ -41,6 +42,11 @@ func _ready():
 		nav_agent = na
 	else:
 		Out.print_error("Assigned Node is not a NavigationAgent", get_stack())
+
+func set_disabled(d: bool):
+	_disabled = d
+	set_process(not d and not _use_physics_process)
+	set_physics_process(not d and _use_physics_process)
 
 func set_config(cfg):
 	_vehicle_config = cfg

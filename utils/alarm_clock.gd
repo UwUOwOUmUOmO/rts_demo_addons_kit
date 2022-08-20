@@ -7,6 +7,6 @@ func setup(tree: SceneTree, timeout: float,\
 	if timeout <= 0.0:
 		yield(tree, "idle_frame")
 	else:
-		yield(tree.create_timer(timeout, false), "timeout")
+		yield(Out.timer(timeout), "timeout")
 	var ref := funcref(base_class, method)
 	ref.call_funcv(params)
