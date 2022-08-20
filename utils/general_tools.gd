@@ -110,3 +110,54 @@ class SignalTools extends Reference:
 			for connection in connection_list:
 				if connection["target"] == to:
 					from.disconnect(sig_name, to, connection["method"])
+
+class TrialTools extends Reference:
+
+	static func default_fallback_evaluation(target, property_name: String, is_function := false):
+		if not target is Object or not is_instance_valid(target):
+			return false
+		if  (not property_name in target and not is_function)  or \
+			(not target.has_method(property_name) and is_function):
+				return false
+		return true
+
+	static func try_set(target: Object, prop: String, value):
+		var path: Array = PathTools.slice_path(prop, ['.'])
+		var final_prop = path.pop_back()
+		var final_path := PathTools.join_path(path, '.')
+		var final_instance = try_get(target, final_path)
+		if default_fallback_evaluation(final_instance, final_prop):
+			final_instance.set(final_prop, value)
+
+	static func try_get(target: Object, prop: String, next_to_final := false):
+		var instance := target
+		var path: Array = PathTools.slice_path(prop, ['.'])
+		if next_to_final:
+			path.pop_back()
+		var curr_prop = path.pop_front()
+		while curr_prop != null and instance is Object:
+			if curr_prop in instance:
+				instance = instance.get(curr_prop)
+			else:
+				instance = null
+			curr_prop = path.pop_front()
+		return instance
+
+	static func try_append(target: Object, prop: String, value):
+		var instance = try_get(target, prop)
+		if instance is Array:
+			instance.append(value)
+
+	static func try_call(target: Object, fname: String, args := []):
+		var path: Array = PathTools.slice_path(fname, ['.'])
+		var final_fname: String = path.pop_back()
+		var final_path := PathTools.join_path(path, '.')
+		var final_instance = try_get(target, final_path)
+		if default_fallback_evaluation(final_instance, final_fname, true):
+			var fref := funcref(final_instance, final_fname)
+			return fref.call_funcv(args)
+		return null
+
+	static func try_singleton_call(target: String, property: String, args := []):
+		var service = SingletonManager.fetch(target)
+		return try_call(service, property, args)

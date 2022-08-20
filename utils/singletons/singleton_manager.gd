@@ -61,6 +61,7 @@ func add_static(singleton: Node):
 		Out.print_error("Singleton already has a parent", get_stack())
 		return
 	call_deferred("add_child", singleton)
+	singleton.set_deferred("owner", self)
 	static_services[singleton.name] = singleton
 
 func add_static_from_script(script_loc: String, s_name: String):
@@ -73,4 +74,5 @@ func add_static_from_script(script_loc: String, s_name: String):
 	new_node.name = s_name
 	new_node.set_script(s_script)
 	call_deferred("add_child", new_node)
+	new_node.set_deferred("owner", self)
 	static_services[s_name] = new_node

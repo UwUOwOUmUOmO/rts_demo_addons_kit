@@ -79,15 +79,19 @@ func _init():
 
 func set_config(cfg: AircraftConfiguration):
 	if _vehicle_config != null:
-		_vehicle_config.disconnect("__out_of_hp", self, "no_hp_passthrough")
+		_vehicle_config.hullProfile.disconnect("__out_of_hp", self, "no_hp_passthrough")
 	_vehicle_config = cfg
-	_vehicle_config.connect("__out_of_hp", self, "no_hp_passthrough")
+	_vehicle_config.hullProfile.connect("__out_of_hp", self, "no_hp_passthrough")
+
+func no_hp_passthrough():
+	emit_signal("__combatant_out_of_hp", self)
 
 func _ready():
 	._ready()
 	ref_handler()
 	rudder = Spatial.new()
 	add_child(rudder)
+	rudder.owner = self
 	rudder.translation = Vector3(0.0, 0.0, -50.0)
 	hardpoints_handler()
 

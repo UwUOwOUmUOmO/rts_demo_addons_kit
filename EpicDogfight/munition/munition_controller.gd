@@ -4,12 +4,10 @@ class_name MunitionController
 
 export(NodePath) var warhead := "" setget set_whh
 export(NodePath) var particles_holder := "" setget set_phh
+export(Resource)var damage_modifier = null
 
 var warhead_ref: WarheadController = null setget set_warhead
 var ph_ref: Spatial = null setget set_ph
-
-var base_dmg := 0.0
-var damage_mod: DamageModifiersConfiguration = null
 
 var is_ready := false
 var last_pos := Vector3.ZERO
@@ -28,7 +26,7 @@ func set_whh(wh: String):
 	var c := get_node_or_null(path)
 	if c == null:
 		return
-	if not c is Area:
+	if not c is WarheadController:
 		Out.print_error("Referenced node must be of type: Area", get_stack())
 	set_warhead(c)
 
@@ -46,8 +44,14 @@ func set_phh(ph: String):
 
 # Main set/get
 func set_warhead(wh: WarheadController):
-	var old_warhead := warhead
+	var old_warhead := warhead_ref
+	if old_warhead != null:
+		var collider = old_warhead.wc_ref
+		if collider != null:
+			collider.disconnect("body_entered", self, "premature_detonation_handler")
 	warhead_ref = wh
+	if warhead_ref.wc_ref != null:
+		warhead_ref.wc_ref.connect("body_entered", self, "premature_detonation_handler")
 
 func set_ph(ph: Spatial):
 	ph_ref = ph
@@ -82,7 +86,7 @@ func arm_arrived(g: WeaponGuidance):
 	_finalize()
 
 func premature_detonation_handler():
-	pass
+	arm_arrived(guidance)
 
 func _start():
 	pass
@@ -93,8 +97,7 @@ func _finalize():
 		ph_ref.remove_child(p)
 		ppool.add_peripheral(p, p.lifetime)
 	warhead_ref.safety = false
-	warhead_ref.base_dmg = base_dmg
-	warhead_ref.damage_mod = damage_mod
+	warhead_ref.damage_modifier = damage_modifier
 	warhead_ref.last_speed = last_speed
 	warhead_ref.last_position = last_pos
 	warhead_ref.last_fwd_vec = last_fwd_vec

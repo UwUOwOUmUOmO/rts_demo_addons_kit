@@ -334,6 +334,7 @@ func _ready() -> void:
 	_wire_mat.params_line_width = 10.0
 	_wire_obj.material_override = _wire_mat
 	add_child(_wire_obj)
+	_wire_obj.owner = self
 	
 	set_as_toplevel(true)
 	global_transform = Transform()

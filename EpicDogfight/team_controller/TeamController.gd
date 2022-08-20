@@ -40,6 +40,7 @@ func spawn_squadron(squad_name: String, _type = SquadronController):
 	sc_curr_id += 1
 	sc_lock.unlock()
 	call_deferred("add_child", new_squad)
+	new_squad.set_deferred("owner", self)
 	emit_signal("__new_squadron_created", new_squad)
 	return new_squad
 

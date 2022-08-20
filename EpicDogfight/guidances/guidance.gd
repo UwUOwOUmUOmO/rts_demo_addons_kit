@@ -47,6 +47,7 @@ func _start(move := true):
 	look_at(_direction, Vector3.UP)
 	_projectile = _weapon_base_config.projectile.instance()
 	add_child(_projectile)
+	_projectile.owner = self
 	_projectile.translation = Vector3.ZERO
 	_projectile.look_at(global_transform.origin + _direction, Vector3.UP)
 	_signals_init()

@@ -2,10 +2,6 @@ extends Configuration
 
 class_name DamageModifiersConfiguration
 
-const MINIMUM_EFFICIENCY := 0.001
-const DEFAULT_EFFICIENCY := 1.0
-const MAXIMUM_EFFICIENCY := 60.0
-
 enum WARHEAD_TYPE {
 	GENERAL				 = 0,
 	PRESSURIZED			 = 1,

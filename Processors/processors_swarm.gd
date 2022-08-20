@@ -5,6 +5,7 @@ func add_cluster(cluster_name := "") -> ProcessorsCluster:
 	if not cluster_name.empty():
 		new_cluster.name = cluster_name
 	call_deferred("add_child", new_cluster)
+	new_cluster.set_deferred("owner", self)
 	return new_cluster
 
 func fetch(cluster_name: String) -> ProcessorsCluster:

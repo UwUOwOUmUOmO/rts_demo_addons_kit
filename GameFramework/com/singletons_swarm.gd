@@ -9,6 +9,7 @@ func add_singleton(s_name: String, path: String):
 		new_node.name = s_name
 	new_node.set_script(s_script)
 	call_deferred("add_child", new_node)
+	new_node.set_deferred("owner", self)
 	services[s_name] = new_node
 
 func add_instanced_singleton(singleton: Node):
@@ -16,6 +17,7 @@ func add_instanced_singleton(singleton: Node):
 		Out.print_error("Singleton already has a parent", get_stack())
 		return
 	call_deferred("add_child", singleton)
+	singleton.set_deferred("owner", self)
 	services[singleton.name] = singleton
 
 func remove_singleton(s_name: String):

@@ -31,6 +31,9 @@ material = SubResource( 2 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 
+[node name="Unpaused" type="Node" parent="."]
+pause_mode = 2
+
 [node name="ControllersSwarm" type="Node" parent="."]
 script = ExtResource( 1 )
 

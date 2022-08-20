@@ -158,10 +158,12 @@ func _set_weapon(w: WeaponConfiguration, cat := "PRIMARY"):
 	if is_instance_valid(assigned_combatant):
 		setup_hardpoints()
 	call_deferred("add_child", new_handler)
+	new_handler.set_deferred("owner", self)
 
 func _set_weapon_manual(w: WeaponHandler, cat := "PRIMARY"):
 	weapons[cat] = w
 	call_deferred("add_child", w)
+	w.set_deferred("owner", self)
 
 func auto_ready_check():
 	if auto_ready:

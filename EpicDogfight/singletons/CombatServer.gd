@@ -79,6 +79,8 @@ class TC_AssistClass extends Reference:
 		team2.team_relationship["hostiles"].erase(entry2)
 
 class CombatMiddleman extends Reference:
+	static func test_call():
+		print("HelloWorld")
 	# Support functions
 	static func resistant_calculate(res: PoolRealArray, mixture: int) -> float:
 		var total_match := 0
@@ -132,12 +134,12 @@ class CombatMiddleman extends Reference:
 	static func add_hull_effector(target, eff: Effector):
 		# To be implemented
 		if target is Combatant:
-			DataBridge.try_append(target, "_vehicle_config.hullProfile.effector_pool", eff)
+			Toolkits.TrialTools.try_append(target, "_vehicle_config.hullProfile.effector_pool", eff)
 		elif target is HullProfile:
 			(target as HullProfile).effector_pool
 
 	static func damage(request: DamageRequest):
-		var hull_profile: HullProfile = DataBridge.try_get(request.damage_target, \
+		var hull_profile: HullProfile = Toolkits.TrialTools.try_get(request.damage_target, \
 			"_vehicle_config.hullProfile")
 		
 		if hull_profile == null:
@@ -157,6 +159,7 @@ func _ready():
 	tc_entry.name = "SquaCon_entry"
 	# Singletons are allowed to directly do this
 	add_child(tc_entry)
+	tc_entry.owner = self
 
 func spawn_team(team_name: String) -> TeamController:
 	if not clearance:
@@ -172,6 +175,7 @@ func spawn_team(team_name: String) -> TeamController:
 	team_count += 1
 	tc_lock.unlock()
 	tc_entry.call_deferred("add_child", new_team)
+	new_team.set_deferred("owner", self)
 	emit_signal("__new_team_created", new_team)
 	return new_team
 

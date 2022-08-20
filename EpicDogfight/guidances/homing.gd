@@ -13,7 +13,6 @@ signal __loose_lock(source, tar)
 var handler = null
 var vtol: VTOLFighterBrain = null
 var target: Spatial = null
-var rudder_control: Spatial = null
 
 var proximity_mode: int = WeaponConfiguration.PROXIMITY_MODE.SPATIAL
 var projectile_type: int = AirCombatant.PROJECTILE_TYPE.AAM
@@ -148,11 +147,9 @@ func _start(move := true):
 	vtol.overdriveThrottle = 1.0
 	vtol.look_at(vtol.translation + _direction, Vector3.UP)
 	_projectile = _weapon_base_config.projectile.instance()
-	rudder_control = Spatial.new()
 	vtol.add_child(_projectile)
-	vtol.add_child(rudder_control)
+	_projectile.owner = vtol
 	_projectile.translation = Vector3.ZERO
-	rudder_control.translation = Vector3(0.0, 0.0, -100.0)
 	vtol.connect("__combatant_out_of_hp", self, "no_hp_handler")
 	_signals_init()
 	_initialize()

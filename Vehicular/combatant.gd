@@ -45,9 +45,6 @@ func _ready():
 func set_config(cfg):
 	_vehicle_config = cfg
 
-func no_hp_passthrough():
-	emit_signal("__combatant_out_of_hp", self)
-
 # Outdated
 func _process(delta):
 	pass

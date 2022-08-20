@@ -6,6 +6,7 @@ func clean_defered(con: Node, duration: float):
 
 func add_peripheral(con: Node, auto_clean := -1.0):
 	call_deferred("add_child", con)
+	con.set_deferred("owner", self)
 	if auto_clean > 0.0:
 		clean_defered(con, auto_clean)
 	while not is_instance_valid(con.get_parent()):

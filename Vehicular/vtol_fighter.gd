@@ -6,6 +6,7 @@ onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 			.fixed_delta
 
 # Volatile
+var accbs: AirComCBS = null
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
 var slowingRange := 0.0
@@ -25,6 +26,9 @@ func _ready():
 	._ready()
 	previousYaw = global_transform.basis.get_euler().y
 	_heat_signature = _vehicle_config.heatSignature
+	accbs = AirComCBS.new(self)
+	add_child(accbs)
+	accbs.owner = self
 	set_physics_process(_use_physics_process)
 	set_process(not _use_physics_process)
 
@@ -208,7 +212,8 @@ func _rollProcess(weigh = 0.05):
 	currentRoll = lerp(currentRoll, targetRoll, weigh)
 	var ch = get_children()
 	for c in ch:
-		c.rotation.z = currentRoll
+		if c is Spatial:
+			c.rotation.z = currentRoll
 
 func _bakeDestination(d: Vector3):
 	useRudder = false
