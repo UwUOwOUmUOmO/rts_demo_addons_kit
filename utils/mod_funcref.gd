@@ -1,4 +1,4 @@
-extends Configuration
+extends Serializable
 
 class_name ModifiedFuncRef
 
@@ -41,7 +41,7 @@ func deserialize(config: Dictionary):
 	.deserialize(config)
 	instance_script_object()
 
-func copy(from: Configuration) -> bool:
+func copy(from: Serializable) -> bool:
 	var re := .copy(from)
 	instance_script_object()
 	return re

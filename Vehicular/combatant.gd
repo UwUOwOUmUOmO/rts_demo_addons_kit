@@ -19,7 +19,7 @@ var _use_navagent := true
 var _controller = null
 var _trackedBy = null
 var _ref: InRef = null
-var _vehicle_config: Configuration = null setget set_config
+var _vehicle_config: CombatantConfiguration = null setget set_config
 var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 
 # Data

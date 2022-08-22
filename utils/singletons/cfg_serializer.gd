@@ -2,7 +2,7 @@ extends Node
 
 const CFG_VER := PoolIntArray([1, 3, 0])
 const ALLOWED_INHERITANCE: PoolStringArray = PoolStringArray([
-	"Configuration",
+	"Serializable",
 ])
 
 var allowed_serializable := {} setget set_forbidden, get_forbidden
@@ -20,12 +20,12 @@ func set_serializable():
 			allowed_serializable[c["class"]] = c["path"]
 
 class Serializer_AssistClass extends Reference:
-	var original_cfg: Configuration = null
+	var original_cfg: Serializable = null
 	var final := {}
 	var allowed_serializable := {}
 	var id := 0
 
-	func _init(cfg: Configuration, allowed: Dictionary):
+	func _init(cfg: Serializable, allowed: Dictionary):
 		original_cfg = cfg
 		allowed_serializable = allowed
 
@@ -110,7 +110,7 @@ class Serializer_AssistClass extends Reference:
 			re["__res_class"] = res.get_class()
 		return re
 
-	func serializer_worker(curr_cfg: Configuration) -> Dictionary:
+	func serializer_worker(curr_cfg: Serializable) -> Dictionary:
 		var re := {}
 		var id := get_id()
 		var pointer := {"__entry": id}
@@ -170,7 +170,7 @@ class Deserializer_AssistClass extends Reference:
 		var curr_verr := CFG_VER
 		for iter in range(0, max_sub_ver):
 			if ver[iter] > curr_verr[iter]:
-				Out.print_error("Current CFG_VER is lower than given Configuration's", get_stack())
+				Out.print_error("Current CFG_VER is lower than given Serializable's", get_stack())
 				return false
 		return true
 
@@ -275,7 +275,7 @@ func _ready():
 #	for k in allowed_serializable:
 #		print("{class}: {path}".format({"class": k, "path": allowed_serializable[k]}))
 
-func serialize(cfg: Configuration) -> Dictionary:
+func serialize(cfg: Serializable) -> Dictionary:
 	var assist := Serializer_AssistClass.new(cfg, allowed_serializable)
 	assist.serialize()
 	return assist.final

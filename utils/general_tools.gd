@@ -77,7 +77,8 @@ class SignalTools extends Reference:
 			check := false, prompt := true) -> void:
 		if not is_instance_valid(from) or not is_instance_valid(to):
 			if prompt:
-				Out.print_error("Invalid connection", get_stack())
+				Out.print_error("Invalid connection from {f} to {t}" \
+					.format({"f": str(from), "t": str(to)}), get_stack())
 			return
 		for sig in table:
 			var handler: String = table[sig]
@@ -96,20 +97,21 @@ class SignalTools extends Reference:
 			return
 		if not is_instance_valid(from) or not is_instance_valid(to):
 			if prompt:
-				Out.print_error("Invalid connection", get_stack())
+				Out.print_error("Invalid connection from {f} to {t}" \
+					.format({"f": str(from), "t": str(to)}), get_stack())
 			return
 		for sig in table:
 			var handler: String = table[sig]
 			from.disconnect(sig, to, handler)
 
-	static func disconnect_all(from: Object, to: Object):
+	static func disconnect_all(from: Object, to: Object = null):
 		var all_signals := from.get_signal_list()
 		for sig in all_signals:
 			var sig_name: String = sig["name"]
 			var connection_list := from.get_signal_connection_list(sig_name)
 			for connection in connection_list:
-				if connection["target"] == to:
-					from.disconnect(sig_name, to, connection["method"])
+				if to == null or connection["target"] == to:
+					from.disconnect(sig_name, connection["target"], connection["method"])
 
 class TrialTools extends Reference:
 
@@ -184,7 +186,7 @@ class TrialTools extends Reference:
 			return re
 		return try_dict_index(instance, index)
 
-	static func try_call(target: Object, fname: String, args := []):
+	static func try_call(target: Object, fname: String, args := [], default = null):
 		var path: Array = PathTools.slice_path(fname, ['.'])
 		var final_fname: String = path.pop_back()
 		var final_path := PathTools.join_path(path, '.')
@@ -192,7 +194,7 @@ class TrialTools extends Reference:
 		if default_fallback_evaluation(final_instance, final_fname, true):
 			var fref := funcref(final_instance, final_fname)
 			return fref.call_funcv(args)
-		return null
+		return default
 
 	static func try_singleton_call(target: String, property: String, args := []):
 		var service = SingletonManager.fetch(target)

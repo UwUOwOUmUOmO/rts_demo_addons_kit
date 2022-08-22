@@ -144,8 +144,11 @@ class CombatMiddleman extends Reference:
 		
 		if hull_profile == null:
 			return
-		var hull_resistant_mod := resistant_calculate(hull_profile.resistant, request.damage_mod.warhead_type)
-		var warhead_dmg_mod := warhead_dmg_calculate(request.damage_mod)
+		var hull_resistant_mod := 1.0
+		var warhead_dmg_mod := 1.0
+		if request.damage_mod != null:
+			hull_resistant_mod = resistant_calculate(hull_profile.resistant, request.damage_mod.warhead_type)
+			warhead_dmg_mod = warhead_dmg_calculate(request.damage_mod)
 		var effectors_mod := effector_calculate(hull_profile.effector_pool)
 		var computed_damage := request.base_damage * \
 			(hull_resistant_mod * warhead_dmg_mod * effectors_mod)

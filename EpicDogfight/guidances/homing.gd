@@ -117,9 +117,8 @@ func _clean():
 
 func _initialize():
 	._initialize()
-	if not is_instance_valid(target):
-		return
-	if not target is Combatant:
+	var target_controller = Toolkits.TrialTools.try_get(target, "_controller")
+	if target_controller == null:
 		return
 	Toolkits.SignalTools.connect_from(self, target._controller,
 		CONTROLLER_DEFAULT_SIGNALS)

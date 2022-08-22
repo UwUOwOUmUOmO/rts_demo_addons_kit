@@ -1,4 +1,4 @@
-extends Configuration
+extends CombatantConfiguration
 
 class_name AircraftConfiguration
 
@@ -17,7 +17,7 @@ var turnRate			:= 0.05
 var maxTurnRate			:= 0.05
 var slowingAt			:= 0.3
 var orbitError			:= 0.01
-var deadzone			:= 1.0
+var deadzone			:= 1.5
 var switchDesZonePerc	:= 0.1
 
 # Min/max switchDesZone squared
@@ -30,10 +30,6 @@ var heatSignature		:= 10.0
 var weight				:= 10.0
 var speedLossMod		:= 15.0
 
-# Special config classes
-var hullProfile			:= HullProfile.new()
-
 func _init():
-	
 	name = "AircraftConfiguration"
 	return self

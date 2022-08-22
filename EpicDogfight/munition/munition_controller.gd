@@ -5,6 +5,10 @@ class_name MunitionController
 const WC_DEFAULT_SIGNALS := {
 	"area_entered": "premature_detonation_handler"
 }
+const WH_DEFAULT_SIGNALS := {
+	"__warhead_finalized": "_clean"
+}
+const AUTO_FREE_INTERVAL := 1.0 * 60.0
 
 export(NodePath) var warhead := "" setget set_whh
 export(NodePath) var particles_holder := "" setget set_phh
@@ -50,14 +54,14 @@ func set_phh(ph: String):
 func set_warhead(wh: WarheadController):
 	var old_warhead := warhead_ref
 	if old_warhead != null:
+		Toolkits.SignalTools.disconnect_from(warhead_ref, self, WH_DEFAULT_SIGNALS)
 		var collider = old_warhead.wc_ref
-		if collider != null:
-			Toolkits.SignalTools.disconnect_from(collider, self , \
-				WC_DEFAULT_SIGNALS)
+		Toolkits.SignalTools.disconnect_from(collider, self , \
+			WC_DEFAULT_SIGNALS, false)
 	warhead_ref = wh
-	if warhead_ref.wc_ref != null:
-		Toolkits.SignalTools.connect_from(warhead_ref.wc_ref, self , \
-			WC_DEFAULT_SIGNALS)
+	Toolkits.SignalTools.connect_from(warhead_ref, self, WH_DEFAULT_SIGNALS)
+	Toolkits.SignalTools.connect_from(warhead_ref.wc_ref, self , \
+		WC_DEFAULT_SIGNALS, false, false)
 
 func set_ph(ph: Spatial):
 	ph_ref = ph
@@ -70,15 +74,14 @@ func set_ph(ph: Spatial):
 				max_lifetime = c.lifetime
 		continue
 
-# Main functions
 func _ready():
 	is_ready = true
 	_ref = InRef.new(self)
 	_ref.add_to("munition_controllers")
 	set_whh(warhead)
-	if warhead_ref:
-		 max_lifetime = \
-		 	max(warhead_ref.delay_time, warhead_ref.explosion_lifetime)
+	# if warhead_ref:
+	# 	 max_lifetime = \
+	# 	 	max(warhead_ref.delay_time, warhead_ref.explosion_lifetime)
 	set_phh(particles_holder)
 
 func __is_projectile():
@@ -104,6 +107,8 @@ func set_particle_emit(a: bool):
 func _start():
 	guidance._armed = true
 
+var autofree_timer: SceneTreeTimer = null
+
 func _finalize():
 	detonated = true
 	max_lifetime += Toolkits.TrialTools.try_get(warhead_ref, "delay_time", 0.0)
@@ -114,7 +119,24 @@ func _finalize():
 			continue
 		child.visible = false
 	set_particle_emit(false)
-	Toolkits.TrialTools.try_call(warhead_ref, "play")
-	yield(Out.timer(max_lifetime + 1.0), "timeout")
+	var exp_lifetime := max_lifetime
+	if warhead_ref != null:
+		warhead_ref.play()
+		exp_lifetime = warhead_ref.explosion_lifetime
+	yield(Out.timer(exp_lifetime + 0.0), "timeout")
+	Toolkits.TrialTools.try_call(ph_ref, "queue_free")
+	autofree_timer = Out.timer(AUTO_FREE_INTERVAL)
+	yield(autofree_timer, "timeout")
+	autofree_timer = null
+	_clean()
+	# Toolkits.TrialTools.try_call(deliver, "queue_free")
+	# queue_free()
+
+func _clean():
+	while not Toolkits.TrialTools.try_call(ph_ref, "is_queued_for_deletion", \
+		[], true):
+			yield(get_tree(), "idle_frame")
+	if autofree_timer != null:
+		Toolkits.SignalTools.disconnect_all(autofree_timer)
 	Toolkits.TrialTools.try_call(deliver, "queue_free")
 	queue_free()

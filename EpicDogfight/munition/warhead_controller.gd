@@ -2,6 +2,8 @@ extends Spatial
 
 class_name WarheadController
 
+signal __warhead_finalized()
+
 export(NodePath) var explosion: NodePath = ""
 export(NodePath) var aoe_collider: NodePath = ""
 export(NodePath) var warhead_collider: NodePath = ""
@@ -41,14 +43,12 @@ func on_peripherals_pool_entered(_ppool):
 func play():
 	if delay_time > 0.0:
 		yield(Out.timer(delay_time), "timeout")
+	Toolkits.TrialTools.try_set(explosion_ref, "animation_lifetime", \
+		explosion_lifetime)
+	Toolkits.TrialTools.try_call(explosion_ref, "make_kaboom")
 	if not inert and allow_damage:
 		distribute_damage()
-	if explosion_ref == null:
-		return
-	if "animation_lifetime" in explosion_ref:
-		explosion_ref.animation_lifetime = explosion_lifetime
-	if explosion_ref.has_method("make_kaboom"):
-		explosion_ref.make_kaboom()
+	_finalize()
 
 func get_effectors() -> Array:
 	var re := []
@@ -62,10 +62,13 @@ func get_effectors() -> Array:
 
 func distribute_damage():
 	var effector_list := get_effectors()
-	var bodies := aoec_ref.get_overlapping_bodies()
+	var bodies: Array = Toolkits.TrialTools.try_call(aoec_ref, "get_overlapping_bodies", \
+		[], [])
 	for b in bodies:
 		if b is Combatant:
 			var request := DamageRequest.new(b, base_damage, damage_mod, \
 				effector_list)
 			CombatServer.CombatMiddleman.damage(request)
-			
+
+func _finalize():
+	emit_signal("__warhead_finalized")

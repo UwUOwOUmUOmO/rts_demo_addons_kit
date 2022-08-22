@@ -2,6 +2,7 @@ extends Control
 
 onready var output: Label = $out
 
+export(bool) var use_physics_process := false
 export(int) var output_limit := -1
 export(int, 1, 200) var separator_character_count := 1 setget set_scc
 export(String, "Dash", "Asterisk") var separator_character := "Dash" setget set_sc
@@ -55,4 +56,9 @@ func update_output():
 	output.text = make_text()
 
 func _process(_delta):
-	update_output()
+	if not use_physics_process:
+		update_output()
+
+func _physics_process(_delta):
+	if use_physics_process:
+		update_output()

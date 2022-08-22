@@ -11,7 +11,7 @@ var pilot_config = null setget set_pilot
 func set_pilot(pilot):
 	if not pilot is Object:
 		return
-	elif not pilot.has_method("__is_config"):
+	elif not pilot.has_method("__is_serializable"):
 		return
 	elif not "PilotConfiguration" in pilot.name:
 		return

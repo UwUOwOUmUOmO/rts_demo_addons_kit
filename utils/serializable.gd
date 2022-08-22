@@ -1,12 +1,12 @@
 extends Resource
 
-class_name Configuration
+class_name Serializable
 
 const CONFIG_VERSION := "1.2.3"
 
 var prop_mutex := Mutex.new()
 
-var name := "Configuration"
+var name := "Serializable"
 var property_list: PoolStringArray = []
 var exclusion_list: PoolStringArray = []
 var no_deep_scan: PoolStringArray = []
@@ -54,7 +54,7 @@ func _data_correction() -> bool:
 	# Check for variables correctness
 	return true
 
-func __is_config():
+func __is_serializable():
 	# Dumb way to get by cyclic reference
 	return true
 
@@ -73,7 +73,7 @@ func cleanse_property_list(list: Array) -> PoolStringArray:
 			clear = true
 	return new_list
 
-func copy(from: Configuration) -> bool:
+func copy(from: Serializable) -> bool:
 	var full_completion := true
 	for component in property_list:
 		if not component in from:
@@ -83,7 +83,7 @@ func copy(from: Configuration) -> bool:
 		set(component, from.get(component))
 	return full_completion and _data_correction()
 
-func config_duplicate() -> Configuration:
+func config_duplicate() -> Serializable:
 	var dup_res = Resource.new()
 	dup_res.set_script(get_script())
 	dup_res.copy(self)

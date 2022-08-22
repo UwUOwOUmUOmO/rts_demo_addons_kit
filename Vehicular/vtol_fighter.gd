@@ -2,6 +2,9 @@ extends AirCombatant
 
 class_name VTOLFighterBrain
 
+const AUTO_STOP_THRESHOLD := 0.0001
+const STARTUP_GRACE_PERIOD := 1.0
+
 onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 			.fixed_delta
 
@@ -187,10 +190,9 @@ func _setMovement():
 		set_moving(false)
 		if currentSpeed < _vehicle_config.speedSnapping\
 				and throttle <= _vehicle_config.minThrottle:
-			set_moving(false)
 			return
 		if distance_squared <= o_s:
-			set_moving(false)
+			pass
 		if currentSpeed < _vehicle_config.speedSnapping\
 				and throttle <= _vehicle_config.minThrottle:
 			# set_moving(false)
@@ -201,6 +203,8 @@ func _setMovement():
 			global_translate(current_destination - global_transform.origin)
 	elif slowingRange_squared >= distance_squared:
 		throttle = 0.0
+#	elif currentSpeed < AUTO_STOP_THRESHOLD:
+#		set_moving(false)
 	else:
 		if throttle != 1.0:
 			throttle = 1.0
@@ -268,10 +272,23 @@ func set_multides(des: PoolVector3Array) -> void:
 	if not chart_course():
 		set_moving(false)
 
+func engine_check():
+	if not device & PROJECTILE_TYPE.AIRCRAFT:
+		return
+	yield(Out.timer(STARTUP_GRACE_PERIOD), "timeout")
+	while isMoving:
+		if not _use_physics_process:
+			yield(get_tree(), "idle_frame")
+		else:
+			yield(get_tree(), "physics_frame")
+		if currentSpeed <= AUTO_STOP_THRESHOLD:
+			set_moving(false)
+
 func set_moving(m: bool):
 	if not m:
 		emit_signal("__destination_arrived", self)
 	else:
+		engine_check()
 		emit_signal("__started_moving", self)
 	isMoving = m
 	# Reset all variable

@@ -1,4 +1,4 @@
-extends Configuration
+extends Serializable
 
 class_name LevelConfiguration, "icons/level_res_icon.png"
 

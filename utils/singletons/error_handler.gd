@@ -1,5 +1,6 @@
 extends Node
 
+onready var scene_tree := get_tree()
 var allow_output := true
 var allow_debug  := true
 var trace_stack  := OS.is_debug_build()

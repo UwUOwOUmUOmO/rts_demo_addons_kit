@@ -1,4 +1,4 @@
-extends Configuration
+extends Serializable
 
 class_name Processor
 
