@@ -6,6 +6,7 @@ const USE_LEAD_METHOD := 2
 
 var target: Spatial = null setget set_target, get_target
 var use_physics_process := false
+var speedometer_interval := 0.05
 var leading := 1.0
 var use_advanced := true
 var dead_stop_threshold := -120.0
@@ -23,13 +24,13 @@ func set_target(t: Spatial):
 func get_target():
 	return target
 
-func _process(delta):
-	if not use_physics_process:
-		_compute(delta)
+func _ready():
+	interval_machine()
 
-func _physics_process(delta):
-	if use_physics_process:
-		_compute(delta)
+func interval_machine():
+	while not is_queued_for_deletion():
+		yield(Out.timer(speedometer_interval), "timeout")
+		_compute(speedometer_interval)
 
 func _clean_all() -> void:
 	last_location = Vector3.ZERO

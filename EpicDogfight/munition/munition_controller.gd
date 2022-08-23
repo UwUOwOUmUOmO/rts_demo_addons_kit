@@ -12,7 +12,7 @@ const AUTO_FREE_INTERVAL := 1.0 * 60.0
 
 export(NodePath) var warhead := "" setget set_whh
 export(NodePath) var particles_holder := "" setget set_phh
-export(Resource)var damage_modifier = null
+export(NodePath) var main_mesh := ""
 
 var warhead_ref: WarheadController = null setget set_warhead
 var ph_ref: Spatial = null setget set_ph
@@ -98,6 +98,8 @@ func arm_arrived(_g: WeaponGuidance):
 	_finalize()
 
 func premature_detonation_handler(_area):
+	var speed: float = Toolkits.TrialTools.try_get(deliver, "currentSpeed", 0.0)
+	Toolkits.TrialTools.try_call(warhead_ref, "projectile_crash", [speed])
 	guidance._finalize()
 
 func set_particle_emit(a: bool):
@@ -113,16 +115,12 @@ func _finalize():
 	detonated = true
 	max_lifetime += Toolkits.TrialTools.try_get(warhead_ref, "delay_time", 0.0)
 	Toolkits.TrialTools.try_set(warhead_ref, "wc_ref.monitoring", false, true)
-	var children := get_children()
-	for child in children:
-		if child == warhead_ref or child == ph_ref:
-			continue
-		child.visible = false
+	Toolkits.TrialTools.try_set(get_node_or_null(main_mesh), "visible", false)
 	set_particle_emit(false)
 	var exp_lifetime := max_lifetime
 	if warhead_ref != null:
-		warhead_ref.play()
 		exp_lifetime = warhead_ref.explosion_lifetime
+		warhead_ref.play()
 	yield(Out.timer(exp_lifetime + 0.0), "timeout")
 	Toolkits.TrialTools.try_call(ph_ref, "queue_free")
 	autofree_timer = Out.timer(AUTO_FREE_INTERVAL)

@@ -8,6 +8,9 @@ const STARTUP_GRACE_PERIOD := 1.0
 onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 			.fixed_delta
 
+# Persistent
+var use_accbs := true
+
 # Volatile
 var accbs: AirComCBS = null
 var startingPoint := Vector3()
@@ -30,10 +33,18 @@ func _ready():
 	previousYaw = global_transform.basis.get_euler().y
 	_heat_signature = _vehicle_config.heatSignature
 	accbs = AirComCBS.new(self)
+	if not device & PROJECTILE_TYPE.AIRCRAFT:
+		accbs.disabled = true
 	add_child(accbs)
 	accbs.owner = self
-	set_physics_process(_use_physics_process)
-	set_process(not _use_physics_process)
+	process_switch()
+
+func set_device(d: int):
+	.set_device(d)
+	if d & PROJECTILE_TYPE.AIRCRAFT:
+		use_accbs = true
+	else:
+		use_accbs = false
 
 func _process(delta):
 	._process(delta)
@@ -124,7 +135,10 @@ func _prepare():
 		speedPercentage = 0.0
 	_calculateTurnRate()
 	_setMovement()
-	_turn(current_destination)
+	if not use_accbs:
+		_turn(current_destination)
+	else:
+		_turn(global_transform.origin + (accbs.suggested_direction * 1.0))
 	return {"allowedSpeed": allowedSpeed,\
 			"currentYaw": currentYaw}
 
@@ -286,9 +300,13 @@ func engine_check():
 
 func set_moving(m: bool):
 	if not m:
+		accbs.disabled = true
 		emit_signal("__destination_arrived", self)
 	else:
 		engine_check()
+		if device & PROJECTILE_TYPE.AIRCRAFT:
+			accbs.disabled = false
+			accbs.interval_machine()
 		emit_signal("__started_moving", self)
 	isMoving = m
 	# Reset all variable

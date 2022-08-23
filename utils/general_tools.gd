@@ -138,6 +138,8 @@ class TrialTools extends Reference:
 				.format({"path": prop, "obj": str(target)}), get_stack())
 
 	static func try_get(target: Object, prop: String, default = null):
+		if prop.empty():
+			return target
 		var instance = target
 		var path: Array = PathTools.slice_path(prop, ['.'])
 		var curr_prop = path.pop_front()
@@ -199,3 +201,14 @@ class TrialTools extends Reference:
 	static func try_singleton_call(target: String, property: String, args := []):
 		var service = SingletonManager.fetch(target)
 		return try_call(service, property, args)
+	
+	static func try_cast(obj: Object, to, default = null):
+		if obj is to:
+			return obj
+		else:
+			return default
+
+	static func try_divide(divisor: float, dividend: float) -> float:
+		if dividend != 0.0:
+			return divisor / dividend
+		return 0.0

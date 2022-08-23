@@ -35,7 +35,7 @@ var trackingTarget: Spatial = null setget set_tracking_target
 var isMoving := false setget set_moving
 var overdriveThrottle := -1.0
 var inheritedSpeed := 0.0
-var device: int = PROJECTILE_TYPE.AIRCRAFT
+var device: int = PROJECTILE_TYPE.AIRCRAFT setget set_device
 
 # Volatile
 var rudder: Spatial = null
@@ -76,6 +76,9 @@ func _enter_tree():
 
 func _init():
 	set_config(AircraftConfiguration.new())
+
+func set_device(d: int):
+	device = d
 
 func set_config(cfg: AircraftConfiguration):
 	if _vehicle_config != null:

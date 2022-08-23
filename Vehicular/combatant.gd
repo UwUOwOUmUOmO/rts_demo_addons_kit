@@ -20,7 +20,8 @@ var _controller = null
 var _trackedBy = null
 var _ref: InRef = null
 var _vehicle_config: CombatantConfiguration = null setget set_config
-var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
+var _use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process \
+	setget set_pp
 
 # Data
 var _heat_signature := 10.0
@@ -43,10 +44,17 @@ func _ready():
 	else:
 		Out.print_error("Assigned Node is not a NavigationAgent", get_stack())
 
+func process_switch():
+	set_process(not _disabled and not _use_physics_process)
+	set_physics_process(not _disabled and _use_physics_process)
+
 func set_disabled(d: bool):
 	_disabled = d
-	set_process(not d and not _use_physics_process)
-	set_physics_process(not d and _use_physics_process)
+	process_switch()
+
+func set_pp(pp: bool):
+	_use_physics_process = pp
+	process_switch()
 
 func set_config(cfg):
 	_vehicle_config = cfg
