@@ -7,7 +7,7 @@ const MIN_THRESHOLD := 0.0
 const MAX_THRESHOLD := 0.99999
 const LENGTH_THRESHOLD := pow(0.12, 2.0)
 const ONE_SIXTH_PI := deg2rad(30.0)
-const INTERVAL := 0.05
+const INTERVAL := 0.01
 
 enum RAYS_MODE {
 	FOUR_SURROUND,
@@ -83,7 +83,6 @@ func set_host(h: AirCombatant):
 
 func cast(base_loc: Vector3, fwd_ray: Vector3, to: Vector3) -> Vector3:
 	var pdss := get_viewport().world.direct_space_state
-	var angle_delta := TAU / float(ray_count)
 	var current_ray := fwd_ray
 	var final_direction := Vector3.ZERO
 	var avg_ray_length := 0.0
@@ -105,7 +104,7 @@ func cast(base_loc: Vector3, fwd_ray: Vector3, to: Vector3) -> Vector3:
 		else:
 			dangers[iter] = 0.0
 		# Finalize
-		interests[iter] = clamp(current_ray.dot(to), 0.0, 1.0) + 1.0
+		interests[iter] = clamp(current_ray.dot(to), 0.0, 1.0)
 		var ray_delta := (current_ray * interests[iter]) \
 			- current_ray * dangers[iter]
 		avg_ray_length += ray_delta.length()

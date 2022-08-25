@@ -114,6 +114,8 @@ class SignalTools extends Reference:
 					from.disconnect(sig_name, connection["target"], connection["method"])
 
 class TrialTools extends Reference:
+	
+	const allow_output := false
 
 	static func default_fallback_evaluation(target, property_name: String, is_function := false):
 		if not target is Object or not is_instance_valid(target):
@@ -133,7 +135,7 @@ class TrialTools extends Reference:
 				final_instance.set(final_prop, value)
 			else:
 				final_instance.set_deferred(final_prop, value)
-		else:
+		elif allow_output:
 			Out.print_error("Failed to set value {path} on base {obj}"\
 				.format({"path": prop, "obj": str(target)}), get_stack())
 
@@ -163,7 +165,7 @@ class TrialTools extends Reference:
 		var instance = try_get(target, prop)
 		if instance is Array:
 			instance.append(value)
-		else:
+		elif allow_output:
 			Out.print_error("Failed to append to [{obj}].{path}"\
 				.format({"obj": target, "path": prop}), get_stack())
 

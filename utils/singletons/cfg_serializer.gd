@@ -268,6 +268,7 @@ class Deserializer_AssistClass extends Reference:
 					final_instance = d_arr(final_instance)
 			deserialized.set(var_name, final_instance)
 		full_completion = full_completion and deserialized._data_correction()
+		Toolkits.TrialTools.try_call(deserialized, "_object_deserialized")
 		return deserialized
 
 func _ready():

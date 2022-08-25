@@ -35,6 +35,7 @@ func _ready():
 	accbs = AirComCBS.new(self)
 	if not device & PROJECTILE_TYPE.AIRCRAFT:
 		accbs.disabled = true
+		use_accbs = false
 	add_child(accbs)
 	accbs.owner = self
 	process_switch()
@@ -45,6 +46,8 @@ func set_device(d: int):
 		use_accbs = true
 	else:
 		use_accbs = false
+		if isReady:
+			accbs.disabled = true
 
 func _process(delta):
 	._process(delta)

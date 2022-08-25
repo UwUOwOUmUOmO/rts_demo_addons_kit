@@ -70,15 +70,12 @@ func _signals_init():
 
 func _boot_subsys():
 	_cluster = processors_swarm.add_cluster(name + "_proc_cluster")
+	_cluster.host = self
 	var required_cluster := false
 	if is_instance_valid(_computer) and not _computer.enforcer_assigned:
-		_computer.enforcer_assigned = true
-		_computer.host = self
 		required_cluster = true
 		_cluster.add_nopr(_computer)
 	if is_instance_valid(_instrument) and not _instrument.enforcer_assigned:
-		_instrument.enforcer_assigned = true
-		_instrument.host = self
 		required_cluster = true
 		_cluster.add_nopr(_instrument)
 	if not required_cluster:
@@ -102,7 +99,6 @@ func _clean():
 		queue_free()
 
 func _exit_tree():
-	if is_instance_valid(_computer):
-		_computer.enforcer_assigned = false
-	if is_instance_valid(_instrument):
-		_instrument.enforcer_assigned = false
+	Toolkits.TrialTools.try_call(_cluster,   "decommission")
+	Toolkits.TrialTools.try_set(_computer,   "terminated", true)
+	Toolkits.TrialTools.try_set(_instrument, "terminated", true)

@@ -3,10 +3,11 @@ extends Node
 class_name ProcessorsCluster
 
 var is_ready			:= false
-var is_commissioned     := false
+var is_commissioned     := false setget set_commissioned
 var auto_remove         := true
 var _ref: InRef          = null
 
+var host = null
 var cluster := []
 
 var boot_mutex			:= Mutex.new()
@@ -17,15 +18,21 @@ func _ready():
 	_ref.add_to("processor_swarm")
 	is_ready = true
 
+func set_commissioned(c: bool):
+	if c:
+		commission()
+	else:
+		decommission()
+
 func add_processor(proc: Processor):
 	if is_commissioned:
 		boot_mutex.lock()
 	cluster_mutex.lock()
 	if not proc.enforcer_assigned:
 		cluster.append(proc)
-		proc.enforcer_assigned = true
 		if is_commissioned:
-			proc.host = self
+			proc.host = host
+			proc.enforcer = self
 			proc._boot()
 	cluster_mutex.unlock()
 	if is_commissioned:
@@ -35,7 +42,8 @@ func add_nopr(proc: Processor):
 	cluster_mutex.lock()
 	if not proc.enforcer_assigned:
 		cluster.append(proc)
-		proc.enforcer_assigned = true
+		proc.host = host
+		proc.enforcer = self
 	cluster_mutex.unlock()
 
 func decommission():
@@ -51,7 +59,6 @@ func decommission():
 func commission():
 	boot_mutex.lock()
 	for proc in cluster:
-		proc.host = self
 		proc._boot()
 	boot_mutex.unlock()
 	is_commissioned = true

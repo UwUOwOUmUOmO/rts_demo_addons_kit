@@ -1,5 +1,7 @@
 extends Node
 
+class_name ProcessorsSwarm
+
 func add_cluster(cluster_name := "") -> ProcessorsCluster:
 	var new_cluster := ProcessorsCluster.new()
 	if not cluster_name.empty():

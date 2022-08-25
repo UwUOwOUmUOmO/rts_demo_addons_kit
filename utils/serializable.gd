@@ -27,6 +27,9 @@ func _to_string():
 	var serialized := serialize()
 	return str(serialized)
 
+func _object_deserialized():
+	pass
+
 func remove_property(what: String):
 	prop_mutex.lock()
 	# var size := property_list.size()

@@ -54,9 +54,14 @@ func distribute_damage():
 		[], [])
 	for b in bodies:
 		if b is Combatant:
+			if b._controller is WeaponGuidance:
+				b._controller._finalize()
+				continue
 			var request := DamageRequest.new(b, base_damage, damage_modifier, \
 				effector_list)
 			CombatServer.CombatMiddleman.damage(request)
 
 func _finalize():
+	if explosion_lifetime > 0.0:
+		yield(Out.timer(explosion_lifetime), "timeout")
 	emit_signal("__warhead_finalized")

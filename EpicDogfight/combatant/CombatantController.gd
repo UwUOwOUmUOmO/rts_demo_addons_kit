@@ -60,6 +60,7 @@ func _ready():
 	_ref = InRef.new(self)
 	_ref.add_to("combatant_controllers")
 	cluster = processors_swarm.add_cluster(name + "_proc_cluster")
+	cluster.host = self
 
 func _set_operation(fl := true):
 	if fl and not green_light:
