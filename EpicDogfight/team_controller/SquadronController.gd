@@ -21,10 +21,16 @@ var detected_bogeys := []
 var vehicles := {}
 var _ref: InRef = null
 
+var gp_cluster: ProcessorsCluster = null
+var edicts_pool: EdictsStateMachine = null
+
 func _ready():
 	_ref = InRef.new(self)
 	IRM.add(_ref, ["squadron_controllers", ref_team_name])
 	connect("__enemy_squadron_changed", self, "enemy_change_handler")
+	edicts_pool = EdictsStateMachine.new()
+	gp_cluster.add_processor(edicts_pool)
+	edicts_pool.host = self
 	is_ready = true
 
 func add_vehicle(v_name: String, v: Spatial):

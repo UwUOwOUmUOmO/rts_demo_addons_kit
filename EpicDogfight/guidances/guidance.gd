@@ -74,10 +74,10 @@ func _boot_subsys():
 	var required_cluster := false
 	if is_instance_valid(_computer) and not _computer.enforcer_assigned:
 		required_cluster = true
-		_cluster.add_nopr(_computer)
+		_cluster.add_processor_no_boot(_computer)
 	if is_instance_valid(_instrument) and not _instrument.enforcer_assigned:
 		required_cluster = true
-		_cluster.add_nopr(_instrument)
+		_cluster.add_processor_no_boot(_instrument)
 	if not required_cluster:
 		_cluster.queue_free()
 	else:

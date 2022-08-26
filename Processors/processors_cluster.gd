@@ -9,14 +9,20 @@ var _ref: InRef          = null
 
 var host = null
 var cluster := []
+var auto_commission := false
 
 var boot_mutex			:= Mutex.new()
 var cluster_mutex		:= Mutex.new()
+
+func _init(auto := false):
+	auto_commission = auto
 
 func _ready():
 	_ref = InRef.new(self)
 	_ref.add_to("processor_swarm")
 	is_ready = true
+	if auto_commission:
+		set_commissioned(true)
 
 func set_commissioned(c: bool):
 	if c:
@@ -38,7 +44,7 @@ func add_processor(proc: Processor):
 	if is_commissioned:
 		boot_mutex.unlock()
 
-func add_nopr(proc: Processor):
+func add_processor_no_boot(proc: Processor):
 	cluster_mutex.lock()
 	if not proc.enforcer_assigned:
 		cluster.append(proc)

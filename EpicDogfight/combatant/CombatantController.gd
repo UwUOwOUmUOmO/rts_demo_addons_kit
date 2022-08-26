@@ -119,7 +119,7 @@ func _set_computer(com):
 		if green_light:
 			cluster.add_processor(computer)
 		else:
-			cluster.add_nopr(computer)
+			cluster.add_processor_no_boot(computer)
 		auto_ready_check()
 
 func _set_instrument(sen):
@@ -139,7 +139,7 @@ func _set_instrument(sen):
 		if green_light:
 			cluster.add_processor(instrument)
 		else:
-			cluster.add_nopr(instrument)
+			cluster.add_processor_no_boot(instrument)
 		auto_ready_check()
 
 func setup_hardpoints():

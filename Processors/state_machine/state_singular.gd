@@ -16,11 +16,21 @@ var current_machine = null
 var next_state = null setget , _get_next_state
 
 func _init():
+	name = "StateSingular"
 	remove_properties(["next_state", "current_machine"])
 
 func _get_next_state():
 	if not exclusive:
 		return next_state
+	return null
+
+func blackboard_set(index: String, value):
+	if current_machine:
+		current_machine.blackboard_set(index, value)
+
+func blackboard_get(index: String):
+	if current_machine:
+		return current_machine.blackboard_get(index)
 	return null
 
 func state_machine_pushed_handler(machine, _name, s_ref):
@@ -36,7 +46,8 @@ func state_machine_popped_handler(machine, _name, s_ref):
 		_finalize()
 
 func pop():
-	Toolkits.TrialTools.try_call(current_machine, "remove_state", [state_name])
+	Toolkits.TrialTools.try_call(current_machine, "remove_state_by_name", \
+		[state_name])
 
 func _boot():
 	pass

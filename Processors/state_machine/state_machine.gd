@@ -10,16 +10,20 @@ signal __state_removed(machine, state_name, state_reference)
 # Persistent
 var states_pool := {}
 var yield_pool := {}
+var blackboard := {}
 var current_size := 0
 var is_paused := false
 
 # Volatile
 var sp_mutex := Mutex.new()
+var bb_mutex := Mutex.new()
 var first_state: StateSingular = null
+var last_state: StateSingular  = null
 var processing_state: StateSingular = null
 
 func _init():
-	remove_properties(["sp_mutex", "first_state"])
+	name = "StateMachine"
+	remove_properties(["sp_mutex", "bb_mutex", "first_state"])
 
 func _object_deserialized():
 	sp_mutex.lock()
@@ -39,7 +43,7 @@ func state_check(s: StateSingular):
 	return not s_name in states_pool and \
 		not s_name.empty() and s.current_machine == null
 
-func add_state(s: StateSingular):
+func add_state(s: StateSingular) -> void:
 	var s_name := s.state_name
 	sp_mutex.lock()
 	if state_check(s):
@@ -51,9 +55,37 @@ func add_state(s: StateSingular):
 		elif current_size > 1:
 			var prev = states_pool[states_pool.keys()[current_size - 2]]
 			prev.next_state = s
+		last_state = s
 		Toolkits.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
 		emit_signal("__state_added", self, s_name, s)
 	sp_mutex.unlock()
+
+func add_state_prioritized(s: StateSingular):
+	var s_name := s.state_name
+	sp_mutex.lock()
+	if current_size == 0:
+		sp_mutex.unlock()
+		return add_state(s)
+	if state_check(s):
+		var new_states_pool := {s_name: s}
+		var new_yield_pool 	:= {s_name: null}
+		new_states_pool.merge(states_pool)
+		new_yield_pool.merge(yield_pool)
+		states_pool = new_states_pool
+		yield_pool = new_yield_pool
+		current_size += 1
+		var old_first_state := first_state
+		first_state = s
+		s.next_state = old_first_state
+		last_state = states_pool[states_pool.keys().back()]
+		Toolkits.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
+		emit_signal("__state_added", self, s_name, s)
+	sp_mutex.unlock()
+
+func get_state_priority(s: StateSingular) -> int:
+	if not state_check(s):
+		return -1
+	return states_pool.keys().find(s.state_name)
 
 func insert_state(s: StateSingular, after: String):
 	var s_name := s.state_name
@@ -74,6 +106,7 @@ func insert_state(s: StateSingular, after: String):
 	states_pool = new_states_pool
 	yield_pool = new_yield_pool
 	current_size += 1
+	last_state = states_pool[states_pool.keys().back()]
 	Toolkits.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
 	emit_signal("__state_added", self, s_name, s)
 	sp_mutex.unlock()
@@ -83,6 +116,7 @@ func clear_states_pool():
 	states_pool = {}
 	yield_pool = {}
 	first_state = null
+	last_state = null
 	processing_state = null
 	current_size = 0
 	sp_mutex.unlock()
@@ -109,6 +143,10 @@ func remove_state_by_id(id: int):
 			after_state = states_pool[states_pool.keys()[removed_id]]
 		before_state.next_state = after_state
 	# --------------------------------------------------
+	if current_size > 0:
+		last_state = states_pool[states_pool.keys().back()]
+	else:
+		last_state = null
 	emit_signal("__state_removed", self, s_name, state_ref)
 	sp_mutex.unlock()
 
@@ -137,8 +175,10 @@ func pop_front():
 	if states_pool.empty():
 		first_state = null
 		processing_state = null
+		last_state = null
 	else:
 		first_state = states_pool.keys().front()
+		last_state = states_pool[states_pool.keys().back()]
 	sp_mutex.unlock()
 
 func pop_back():
@@ -153,7 +193,22 @@ func pop_back():
 		processing_state = null
 	else:
 		states_pool[states_pool.keys().back()].next_state = null
+		last_state = states_pool[states_pool.keys().back()]
 	sp_mutex.unlock()
+
+func get_front() -> StateSingular:
+	return first_state
+
+func get_back() -> StateSingular:
+	return last_state
+
+func blackboard_set(index: String, value):
+	bb_mutex.lock()
+	blackboard[index] = value
+	bb_mutex.unlock()
+
+func blackboard_get(index: String):
+	blackboard.get(index)
 
 func _compute(delta: float):
 	var stack_count := 0
@@ -177,4 +232,6 @@ func _compute(delta: float):
 		sp_mutex.unlock()
 		stack_count += 1
 	if processing_state == null:
+		sp_mutex.lock()
 		processing_state = first_state
+		sp_mutex.unlock()

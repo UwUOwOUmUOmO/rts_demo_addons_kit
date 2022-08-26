@@ -2,8 +2,8 @@ extends Node
 
 class_name ProcessorsSwarm
 
-func add_cluster(cluster_name := "") -> ProcessorsCluster:
-	var new_cluster := ProcessorsCluster.new()
+func add_cluster(cluster_name := "", auto_commission := false) -> ProcessorsCluster:
+	var new_cluster := ProcessorsCluster.new(auto_commission)
 	if not cluster_name.empty():
 		new_cluster.name = cluster_name
 	call_deferred("add_child", new_cluster)

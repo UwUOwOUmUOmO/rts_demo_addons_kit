@@ -15,6 +15,8 @@ var tc_curr_id := TC_UID_START_NUM
 var tc_binary := 1
 var tc_lock := Mutex.new()
 
+var teams_cluster: ProcessorsCluster = null
+
 class TC_AssistClass extends Reference:
 	enum RELATIONSHIP {
 		ALLIES		= 1,
@@ -154,7 +156,6 @@ class CombatMiddleman extends Reference:
 			(hull_resistant_mod * warhead_dmg_mod * effectors_mod)
 		hull_profile.damage(computed_damage)
 
-
 func _ready():
 	connect("__new_team_created", self, "new_team_handler")
 	# Setup squad controllers entry
@@ -163,6 +164,8 @@ func _ready():
 	# Singletons are allowed to directly do this
 	add_child(tc_entry)
 	tc_entry.owner = self
+	teams_cluster = SingletonManager.fetch("ProcessorsSwarm")\
+		.add_cluster("TeamConGPCluster", true)
 
 func spawn_team(team_name: String) -> TeamController:
 	if not clearance:
@@ -173,6 +176,7 @@ func spawn_team(team_name: String) -> TeamController:
 	tc_lock.lock()
 	new_team.team_uid = tc_curr_id
 	new_team.team_bicode = tc_binary
+	new_team.gp_cluster = teams_cluster
 	tc_binary *= 2
 	tc_curr_id += 1
 	team_count += 1
@@ -184,11 +188,11 @@ func spawn_team(team_name: String) -> TeamController:
 
 func decommision_team(team_name: String):
 	var team := tc_entry.get_node_or_null(team_name)
-	if not is_instance_valid(team):
-		Out.print_error("Team not exist/is queuing for deletion: " + team_name, \
-			get_stack())
-		return
-	team.queue_free()
+	# if not is_instance_valid(team):
+	# 	Out.print_error("Team not exist/is queuing for deletion: " + team_name, \
+	# 		get_stack())
+	# 	return
+	Toolkits.TrialTools.try_call(team, "queue_free")
 
 func get_team_by_name(team_name: String):
 	var children := tc_entry.get_children()
