@@ -65,7 +65,7 @@ func _start(move := true):
 	_boot_subsys()
 
 func _signals_init():
-	Toolkits.SignalTools.connect_from(self, _projectile, \
+	Utilities.SignalTools.connect_from(self, _projectile, \
 		PROJECTILE_DEFAULT_SIGNALS, true)
 
 func _boot_subsys():
@@ -99,6 +99,6 @@ func _clean():
 		queue_free()
 
 func _exit_tree():
-	Toolkits.TrialTools.try_call(_cluster,   "decommission")
-	Toolkits.TrialTools.try_set(_computer,   "terminated", true)
-	Toolkits.TrialTools.try_set(_instrument, "terminated", true)
+	Utilities.TrialTools.try_call(_cluster,   "decommission")
+	Utilities.TrialTools.try_set(_computer,   "terminated", true)
+	Utilities.TrialTools.try_set(_instrument, "terminated", true)

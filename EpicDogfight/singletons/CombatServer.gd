@@ -136,12 +136,12 @@ class CombatMiddleman extends Reference:
 	static func add_hull_effector(target, eff: Effector):
 		# To be implemented
 		if target is Combatant:
-			Toolkits.TrialTools.try_append(target, "_vehicle_config.hullProfile.effector_pool", eff)
+			Utilities.TrialTools.try_append(target, "_vehicle_config.hullProfile.effector_pool", eff)
 		elif target is HullProfile:
 			(target as HullProfile).effector_pool
 
 	static func damage(request: DamageRequest):
-		var hull_profile: HullProfile = Toolkits.TrialTools.try_get(request.damage_target, \
+		var hull_profile: HullProfile = Utilities.TrialTools.try_get(request.damage_target, \
 			"_vehicle_config.hullProfile")
 		
 		if hull_profile == null:
@@ -192,7 +192,7 @@ func decommision_team(team_name: String):
 	# 	Out.print_error("Team not exist/is queuing for deletion: " + team_name, \
 	# 		get_stack())
 	# 	return
-	Toolkits.TrialTools.try_call(team, "queue_free")
+	Utilities.TrialTools.try_call(team, "queue_free")
 
 func get_team_by_name(team_name: String):
 	var children := tc_entry.get_children()

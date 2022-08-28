@@ -56,7 +56,7 @@ func add_state(s: StateSingular) -> void:
 			var prev = states_pool[states_pool.keys()[current_size - 2]]
 			prev.next_state = s
 		last_state = s
-		Toolkits.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
+		Utilities.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
 		emit_signal("__state_added", self, s_name, s)
 	sp_mutex.unlock()
 
@@ -78,7 +78,7 @@ func add_state_prioritized(s: StateSingular):
 		first_state = s
 		s.next_state = old_first_state
 		last_state = states_pool[states_pool.keys().back()]
-		Toolkits.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
+		Utilities.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
 		emit_signal("__state_added", self, s_name, s)
 	sp_mutex.unlock()
 
@@ -107,7 +107,7 @@ func insert_state(s: StateSingular, after: String):
 	yield_pool = new_yield_pool
 	current_size += 1
 	last_state = states_pool[states_pool.keys().back()]
-	Toolkits.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
+	Utilities.SignalTools.connect_from(self, s, StateSingular.STATE_SINGULAR_SIGNALS)
 	emit_signal("__state_added", self, s_name, s)
 	sp_mutex.unlock()
 

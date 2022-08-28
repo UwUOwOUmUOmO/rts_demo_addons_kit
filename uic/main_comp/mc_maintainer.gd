@@ -59,7 +59,7 @@ func _setup():
 			all_states[c.name] = c
 			c.visible = false
 			c.uicm = self
-			Toolkits.SignalTools.connect_from(self, c, MAINTAINER_DEFAULT_SIGNALS)
+			Utilities.SignalTools.connect_from(self, c, MAINTAINER_DEFAULT_SIGNALS)
 	failed_handler()
 	visible = false
 

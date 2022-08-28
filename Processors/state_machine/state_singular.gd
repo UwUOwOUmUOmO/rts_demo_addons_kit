@@ -41,12 +41,12 @@ func state_machine_pushed_handler(machine, _name, s_ref):
 func state_machine_popped_handler(machine, _name, s_ref):
 	if s_ref == self:
 		next_state = null
-		Toolkits.SignalTools.disconnect_from(machine, self, \
+		Utilities.SignalTools.disconnect_from(machine, self, \
 			STATE_SINGULAR_SIGNALS)
 		_finalize()
 
 func pop():
-	Toolkits.TrialTools.try_call(current_machine, "remove_state_by_name", \
+	Utilities.TrialTools.try_call(current_machine, "remove_state_by_name", \
 		[state_name])
 
 func _boot():

@@ -31,9 +31,9 @@ func projectile_crash(speed: float):
 func play():
 	if delay_time > 0.0:
 		yield(Out.timer(delay_time), "timeout")
-	Toolkits.TrialTools.try_set(explosion_ref, "animation_lifetime", \
+	Utilities.TrialTools.try_set(explosion_ref, "animation_lifetime", \
 		explosion_lifetime)
-	Toolkits.TrialTools.try_call(explosion_ref, "make_kaboom")
+	Utilities.TrialTools.try_call(explosion_ref, "make_kaboom")
 	if not inert and allow_damage:
 		distribute_damage()
 	_finalize()
@@ -50,7 +50,7 @@ func get_effectors() -> Array:
 
 func distribute_damage():
 	var effector_list := get_effectors()
-	var bodies: Array = Toolkits.TrialTools.try_call(aoec_ref, "get_overlapping_bodies", \
+	var bodies: Array = Utilities.TrialTools.try_call(aoec_ref, "get_overlapping_bodies", \
 		[], [])
 	for b in bodies:
 		if b is Combatant:

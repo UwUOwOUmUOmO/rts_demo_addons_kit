@@ -78,7 +78,7 @@ class AFB_Logic extends Reference:
 		var slowingTime: float = vehicle_config.slowingTime
 		host.slowingRange = (host.currentSpeed * slowingTime) + (0.5 * accel * slowingTime)
 		host.slowingRange_squared = host.slowingRange * host.slowingRange
-		host.speedPercentage = Toolkits.TrialTools.try_divide(\
+		host.speedPercentage = Utilities.TrialTools.try_divide(\
 			host.currentSpeed, allowed_speed)
 		compute_turn_rate()
 		set_throttle()

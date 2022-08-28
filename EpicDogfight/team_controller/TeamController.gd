@@ -60,4 +60,4 @@ func remove_squadron(squad_name: String):
 	# 	Out.print_error("Squad not exists/is queuing for deletion: " + squad_name, \
 	# 		get_stack())
 	# 	return
-	Toolkits.TrialTools.try_call(squad, "queue_free")
+	Utilities.TrialTools.try_call(squad, "queue_free")

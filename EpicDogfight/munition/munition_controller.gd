@@ -54,13 +54,13 @@ func set_phh(ph: String):
 func set_warhead(wh: WarheadController):
 	var old_warhead := warhead_ref
 	if old_warhead != null:
-		Toolkits.SignalTools.disconnect_from(warhead_ref, self, WH_DEFAULT_SIGNALS)
+		Utilities.SignalTools.disconnect_from(warhead_ref, self, WH_DEFAULT_SIGNALS)
 		var collider = old_warhead.wc_ref
-		Toolkits.SignalTools.disconnect_from(collider, self , \
+		Utilities.SignalTools.disconnect_from(collider, self , \
 			WC_DEFAULT_SIGNALS, false)
 	warhead_ref = wh
-	Toolkits.SignalTools.connect_from(warhead_ref, self, WH_DEFAULT_SIGNALS)
-	Toolkits.SignalTools.connect_from(warhead_ref.wc_ref, self , \
+	Utilities.SignalTools.connect_from(warhead_ref, self, WH_DEFAULT_SIGNALS)
+	Utilities.SignalTools.connect_from(warhead_ref.wc_ref, self , \
 		WC_DEFAULT_SIGNALS, false, false)
 
 func set_ph(ph: Spatial):
@@ -98,8 +98,8 @@ func arm_arrived(_g: WeaponGuidance):
 	_finalize()
 
 func premature_detonation_handler(_area):
-	var speed: float = Toolkits.TrialTools.try_get(deliver, "currentSpeed", 0.0)
-	Toolkits.TrialTools.try_call(warhead_ref, "projectile_crash", [speed])
+	var speed: float = Utilities.TrialTools.try_get(deliver, "currentSpeed", 0.0)
+	Utilities.TrialTools.try_call(warhead_ref, "projectile_crash", [speed])
 	guidance._finalize()
 
 func set_particle_emit(a: bool):
@@ -113,28 +113,28 @@ var autofree_timer: SceneTreeTimer = null
 
 func _finalize():
 	detonated = true
-	max_lifetime += Toolkits.TrialTools.try_get(warhead_ref, "delay_time", 0.0)
-	Toolkits.TrialTools.try_set(warhead_ref, "wc_ref.monitoring", false, true)
-	Toolkits.TrialTools.try_set(get_node_or_null(main_mesh), "visible", false)
+	max_lifetime += Utilities.TrialTools.try_get(warhead_ref, "delay_time", 0.0)
+	Utilities.TrialTools.try_set(warhead_ref, "wc_ref.monitoring", false, true)
+	Utilities.TrialTools.try_set(get_node_or_null(main_mesh), "visible", false)
 	set_particle_emit(false)
 	var exp_lifetime := max_lifetime
 	if warhead_ref != null:
 		exp_lifetime = warhead_ref.explosion_lifetime
 		warhead_ref.play()
 	yield(Out.timer(exp_lifetime + 0.0), "timeout")
-	Toolkits.TrialTools.try_call(ph_ref, "queue_free")
+	Utilities.TrialTools.try_call(ph_ref, "queue_free")
 	autofree_timer = Out.timer(AUTO_FREE_INTERVAL)
 	yield(autofree_timer, "timeout")
 	autofree_timer = null
 	_clean()
-	# Toolkits.TrialTools.try_call(deliver, "queue_free")
+	# Utilities.TrialTools.try_call(deliver, "queue_free")
 	# queue_free()
 
 func _clean():
-	while not Toolkits.TrialTools.try_call(ph_ref, "is_queued_for_deletion", \
+	while not Utilities.TrialTools.try_call(ph_ref, "is_queued_for_deletion", \
 		[], true):
 			yield(get_tree(), "idle_frame")
 	if autofree_timer != null:
-		Toolkits.SignalTools.disconnect_all(autofree_timer)
-	Toolkits.TrialTools.try_call(deliver, "queue_free")
+		Utilities.SignalTools.disconnect_all(autofree_timer)
+	Utilities.TrialTools.try_call(deliver, "queue_free")
 	queue_free()

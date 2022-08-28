@@ -76,11 +76,11 @@ func _set_combatant(com):
 	if com == assigned_combatant:
 		return
 	if is_instance_valid(assigned_combatant):
-		Toolkits.SignalTools(assigned_combatant, self, \
+		Utilities.SignalTools(assigned_combatant, self, \
 			COMBATANT_DEFAULT_SIGNALS)
 	if com is Combatant:
 		assigned_combatant = com
-		Toolkits.SignalTools.connect_from(assigned_combatant, self, \
+		Utilities.SignalTools.connect_from(assigned_combatant, self, \
 			COMBATANT_DEFAULT_SIGNALS)
 		emit_signal("__combatant_changed", com)
 		auto_ready_check()
@@ -89,12 +89,12 @@ func _set_target(tar):
 	if tar == target:
 		return
 	if is_instance_valid(target):
-		Toolkits.SignalTools(target, self, \
+		Utilities.SignalTools(target, self, \
 			TARGET_S_DEFAULT_SIGNALS)
 	if tar is Combatant:
 		target = tar
 		target._controller = self
-		Toolkits.SignalTools.connect_from(target, self, \
+		Utilities.SignalTools.connect_from(target, self, \
 			TARGET_S_DEFAULT_SIGNALS)
 		emit_signal("__target_changed", tar)
 		auto_ready_check()
@@ -103,12 +103,12 @@ func _set_computer(com):
 	if com == computer:
 		return
 	if is_instance_valid(computer):
-		Toolkits.SignalTools(self, computer, \
+		Utilities.SignalTools(self, computer, \
 			COMPUTER_DEFAULT_SIGNALS)
 	if com is CombatComputer:
 		computer = com
 		computer.controller = self
-		Toolkits.SignalTools.connect_from(self, computer, \
+		Utilities.SignalTools.connect_from(self, computer, \
 			COMPUTER_DEFAULT_SIGNALS)
 		# Emit the signal before connecting it to the new computer
 		# so the old computer could clean itself up
@@ -126,11 +126,11 @@ func _set_instrument(sen):
 	if sen == instrument:
 		return
 	if is_instance_valid(instrument):
-		Toolkits.SignalTools(self, instrument, \
+		Utilities.SignalTools(self, instrument, \
 			INSTRUMENT_DEFAULT_SIGNALS)
 	if sen is CombatInstrument:
 		instrument = sen
-		Toolkits.SignalTools.connect_from(self, instrument, \
+		Utilities.SignalTools.connect_from(self, instrument, \
 			INSTRUMENT_DEFAULT_SIGNALS)
 
 		emit_signal("__instrument_changed", self, instrument)

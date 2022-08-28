@@ -5,7 +5,7 @@ class_name DataBridge
 var host: Object = null
 var pname := ""
 var fallback_value = null
-var fallback_method := funcref(Toolkits.TrialTools, "default_fallback_evaluation")
+var fallback_method := funcref(Utilities.TrialTools, "default_fallback_evaluation")
 
 func _init(default_fallback = null, target: Object = null, property_name := ""):
 	fallback_value = default_fallback

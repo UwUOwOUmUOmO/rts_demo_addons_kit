@@ -117,10 +117,10 @@ func _clean():
 
 func _initialize():
 	._initialize()
-	var target_controller = Toolkits.TrialTools.try_get(target, "_controller")
+	var target_controller = Utilities.TrialTools.try_get(target, "_controller")
 	if target_controller == null:
 		return
-	Toolkits.SignalTools.connect_from(self, target._controller,
+	Utilities.SignalTools.connect_from(self, target._controller,
 		CONTROLLER_DEFAULT_SIGNALS)
 
 func self_setup():

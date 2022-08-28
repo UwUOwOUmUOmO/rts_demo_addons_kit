@@ -1,6 +1,6 @@
 extends Reference
 
-class_name Toolkits
+class_name Utilities
 
 class PathTools extends Reference:
 
