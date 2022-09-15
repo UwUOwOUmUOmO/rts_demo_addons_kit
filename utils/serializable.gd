@@ -86,10 +86,11 @@ func copy(from: Serializable) -> bool:
 		set(component, from.get(component))
 	return full_completion and _data_correction()
 
-func config_duplicate() -> Serializable:
+func config_duplicate(duplicate_properties := true) -> Serializable:
 	var dup_res = Resource.new()
 	dup_res.set_script(get_script())
-	dup_res.copy(self)
+	if duplicate_properties:
+		dup_res.copy(self)
 	return dup_res
 
 func version_greater(target: String):

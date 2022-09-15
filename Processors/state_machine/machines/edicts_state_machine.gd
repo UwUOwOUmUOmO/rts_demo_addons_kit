@@ -1,8 +1,21 @@
 extends StateMachine
 
+# This is an abstract class, please do not use this unironically
+# Ok maybe please do
 class_name EdictsStateMachine
 
+const ESM_SIGNALS := {
+	"__edict_issued": "edict_addition_handler",
+	"__edict_removed": "edict_removal_handler",
+	"__edicts_refetch": "edicts_refetch_handler",
+}
+
+signal __edict_issued(machine, edict_name, edict)
+signal __edict_removed(machine, edict_name, edict)
 signal __edicts_refetch(edict)
+
+# Persistent
+var grade := 0
 
 # Volatile
 var director = null setget set_director
@@ -10,22 +23,47 @@ var director = null setget set_director
 func _init():
 	name = "EdictsStateMachine"
 	remove_properties(["director"])
-	is_paused = true
+	add_state(EdictIdle.new())
+	# is_paused = true
 
 func set_director(d):
+	if director != null:
+		Utilities.SignalTools.disconnect_from(director, self, \
+			ESM_SIGNALS, false)
 	director = d
+	# Utilities.SignalTools.connect_from(director, self, \
+	# 	WSM_SIGNALS, true, false)
 	Utilities.SignalTools.connect_from(director, self, \
-		WorkerStateMachine.WSM_SIGNALS, true, false)
+		ESM_SIGNALS, true, false)
 
-func edicts_refetch_handler(e):
-	emit_signal("__edicts_refetch", e)
+func edicts_refetch_handler(_e):
+	# emit_signal("__edicts_refetch", e)
+	pass
 
-func get_edicts_chain() -> Dictionary:
-	var my_edict := states_pool
-	var upper_edicts: Dictionary = Utilities.TrialTools.try_call(director, \
-		"get_edicts_chain", [], {})
-	upper_edicts.merge(my_edict)
-	return upper_edicts
+func issue_edict(edict: Edicts):
+	emit_signal("__edict_issued", self, edict, edict.state_name)
+
+func remove_edict(edict: Edicts):
+	emit_signal("__edict_removed", self, edict, edict.state_name)
+
+func edict_addition_handler(machine, _edict_name, edict: Edicts):
+	if not machine == director:
+		return
+	var approval := true
+	for e in states_pool:
+		approval = approval and e.edict_approve(edict)
+		if not approval:
+			return
+	var edict_dup = config_duplicate(false)
+	if edict.prioritized:
+		insert_state(edict_dup, "Idle")
+	else:
+		add_state(edict_dup)
+
+func edict_removal_handler(machine, edict_name: String, _edict):
+	if not machine == director:
+		return
+	remove_state_by_name(edict_name)
 
 func add_state(s: StateSingular):
 	if s is Edicts:
@@ -42,40 +80,5 @@ func insert_state(s: StateSingular, after: String):
 		if s.force_edicts_refetch: emit_signal("__edicts_refetch", s)
 		.insert_state(s, after)
 
-# func clear_states_pool():
-# 	sp_mutex.lock()
-# 	states_pool = {first_state.state_name: first_state}
-# 	yield_pool  = {first_state.state_name: null}
-# 	last_state  = first_state
-# 	processing_state = null
-# 	current_size = 1
-# 	sp_mutex.unlock()
-
-# func remove_state_by_id(id: int):
-# 	if id == 0:
-# 		return
-# 	.remove_state_by_id(id)
-
-# func pop_front():
-# 	sp_mutex.lock()
-# 	if current_size > 1:
-# 		states_pool.erase(states_pool.keys()[1])
-# 		yield_pool.erase(yield_pool.keys()[1])
-# 		current_size -= 1
-# 		last_state = states_pool[states_pool.keys().back()]
-# 	sp_mutex.unlock()
-
-# func pop_back():
-# 	if current_size <= 1:
-# 		return
-# 	sp_mutex.lock()
-# 	states_pool.erase(states_pool.keys().back())
-# 	yield_pool.erase(yield_pool.keys().back())
-# 	current_size -= 1
-# 	if states_pool.empty():
-# 		first_state = null
-# 		processing_state = null
-# 	else:
-# 		states_pool[states_pool.keys().back()].next_state = null
-# 	last_state = states_pool[states_pool.keys().back()]
-# 	sp_mutex.unlock()
+# func _compute(_delta):
+# 	return null

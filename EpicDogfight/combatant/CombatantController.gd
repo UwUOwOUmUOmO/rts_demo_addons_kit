@@ -7,28 +7,34 @@ const DEFAULT_WEAPONS := {
 	"SECONDARY": null,
 }
 const COMPUTER_DEFAULT_SIGNALS		:= {
-	"__target_changed":			"_target_change_handler",
-	"__target_defeated":		"_target_defeated_handler", 
-	"__combatant_changed":		"_vessel_change_handler",
-	"__lock_on_detected":		"_lock_on_handler",
-	"__projectile_loose_lock":	"_loose_lock_handler",
-	"__combatant_defeated":		"_vessel_defeated_handler",
+	"__target_changed":				"_target_change_handler",
+	"__target_defeated":			"_target_defeated_handler", 
+	"__combatant_changed":			"_vessel_change_handler",
+	"__lock_on_detected":			"_lock_on_handler",
+	"__target_loose_lock_handler":	"_loose_lock_handler",
+	"__combatant_defeated":			"_vessel_defeated_handler",
+	"__hostile_detected":			"_hostile_handler"
 }
 const INSTRUMENT_DEFAULT_SIGNALS	:= {
-	"__lock_on_detected":		"_lock_on_handler",
-	"__projectile_loose_lock":	"_loose_lock_handler",
-	"__combatant_defeated":		"_vessel_defeated_handler",
+	"__combatant_defeated":			"_vessel_defeated_handler",
+}
+const INSTRUMENT_S_DEFAULT_SIGNALS	:= {
+	"__bogey_detected":				"bogey_detected_handler",
+	"__lock_on_detected":			"lock_on_handler",
+	"__projectile_detected":		"inbound_projectile_handler",
 }
 const COMBATANT_DEFAULT_SIGNALS		:= {
-	"__combatant_out_of_hp":	"combatant_defeated_handler"
+	"__combatant_out_of_hp":		"combatant_defeated_handler"
 }
 const TARGET_S_DEFAULT_SIGNALS		:= {
-	"__combatant_out_of_hp":	"target_defeated_handler"
+	"__combatant_out_of_hp":		"target_defeated_handler"
 }
 
-# Bridge signals
-signal __lock_on_detected(source)
-signal __projectile_loose_lock(source)
+# Relay signals
+signal __lock_on_detected(combatant, source)
+signal __target_loose_lock_handler(source)
+signal __hostile_detected(combatant, target)
+signal __inbound_projectile(combatant, projectile)
 
 # Main signals
 signal __target_defeated(controller)
@@ -55,10 +61,10 @@ var weapons: Dictionary				= DEFAULT_WEAPONS
 
 func _init():
 	connect("__combatant_changed", self, "combatant_change_handler")
-
-func _ready():
 	_ref = InRef.new(self)
 	_ref.add_to("combatant_controllers")
+
+func _ready():
 	cluster = processors_swarm.add_cluster(name + "_proc_cluster")
 	cluster.host = self
 
@@ -126,13 +132,16 @@ func _set_instrument(sen):
 	if sen == instrument:
 		return
 	if is_instance_valid(instrument):
-		Utilities.SignalTools(self, instrument, \
+		Utilities.SignalTools.disconnect_from(self, instrument, \
 			INSTRUMENT_DEFAULT_SIGNALS)
+		Utilities.SignalTools.disconnect_from(instrument, self, \
+			INSTRUMENT_S_DEFAULT_SIGNALS)
 	if sen is CombatInstrument:
 		instrument = sen
 		Utilities.SignalTools.connect_from(self, instrument, \
 			INSTRUMENT_DEFAULT_SIGNALS)
-
+		Utilities.SignalTools.connect_from(instrument, self, \
+			INSTRUMENT_S_DEFAULT_SIGNALS)
 		emit_signal("__instrument_changed", self, instrument)
 		connect("__instrument_changed", instrument,\
 			"_controller_instrument_changed", [], CONNECT_ONESHOT)
@@ -182,11 +191,17 @@ func combatant_change_handler(_comb):
 	# weapons = DEFAULT_WEAPONS
 	setup_hardpoints()
 
+func boogey_detected_handler(bogey):
+	emit_signal("__hostile_detected", self, bogey)
+
+func inbound_projectile_handler(projectile):
+	emit_signal("__inbound_projectile", self, projectile)
+
 func lock_on_handler(source, _tar):
-	emit_signal("__lock_on_detected", source)
+	emit_signal("__lock_on_detected", self, source)
 
 func loose_lock_handler(source, _tar):
-	emit_signal("__projectile_loose_lock", source)
+	emit_signal("__target_loose_lock_handler", source)
 
 func target_defeated_handler(_tar):
 	emit_signal("__target_defeated", self)

@@ -25,7 +25,7 @@ func _controller_instrument_changed(controller, new_instrument):
 func _vessel_defeated_handler(_con):
 	set_terminated(true)
 
-func _lock_on_handler(target):
+func _lock_on_handler(_com, target):
 	pass
 
 func _loose_lock_handler(_tar):

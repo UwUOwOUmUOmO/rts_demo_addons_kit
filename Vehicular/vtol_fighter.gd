@@ -126,7 +126,8 @@ func _rudderControl() -> Vector3:
 
 func _prepare():
 	var currentYaw = global_transform.basis.get_euler().y
-	distance_squared = global_transform.origin.distance_squared_to(current_destination)
+	# distance_squared = global_transform.origin.distance_squared_to(current_destination)
+	distance_squared = get_distance_squared()
 	var accel: float = _vehicle_config.deccelaration
 	var slowingTime: float = _vehicle_config.slowingTime
 	slowingRange = (currentSpeed * slowingTime) + (0.5 * accel * slowingTime)
@@ -179,12 +180,12 @@ func _calculateTurnRate():
 
 # TODO: clean up
 func _turn(to: Vector3, turningSpeed := allowedTurn):
-	var global_pos = global_transform.origin
-	var target_pos = to
+	var global_pos := global_transform.origin
+	var target_pos := to
 	var rotation_speed = turningSpeed
-	var wtransform = global_transform.\
+	var wtransform := global_transform.\
 		looking_at(Vector3(target_pos.x,global_pos.y,target_pos.z),Vector3.UP)
-	var wrotation = Quat(global_transform.basis).slerp(Quat(wtransform.basis),\
+	var wrotation := Quat(global_transform.basis).slerp(Quat(wtransform.basis),\
 		rotation_speed)
 
 	global_transform = Transform(Basis(wrotation), global_transform.origin)

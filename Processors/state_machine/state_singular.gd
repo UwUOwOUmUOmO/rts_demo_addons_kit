@@ -10,6 +10,7 @@ const STATE_SINGULAR_SIGNALS := {
 # Persistent
 var state_name := ""
 var exclusive := false
+var suspended := false
 
 # Volatile
 var current_machine = null
@@ -40,10 +41,11 @@ func state_machine_pushed_handler(machine, _name, s_ref):
 
 func state_machine_popped_handler(machine, _name, s_ref):
 	if s_ref == self:
-		next_state = null
 		Utilities.SignalTools.disconnect_from(machine, self, \
 			STATE_SINGULAR_SIGNALS)
 		_finalize()
+		next_state = null
+		current_machine = null
 
 func pop():
 	Utilities.TrialTools.try_call(current_machine, "remove_state_by_name", \

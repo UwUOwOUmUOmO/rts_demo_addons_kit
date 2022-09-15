@@ -35,6 +35,7 @@ func _ready():
 	edicts_pool = EdictsStateMachine.new()
 	gp_cluster.add_processor(edicts_pool)
 	edicts_pool.host = self
+	edicts_pool.grade = 0
 	squadrons_cluster = SingletonManager.fetch("ProcessorsSwarm")\
 		.add_cluster("SquaConGPCluster", true)
 	is_ready = true
@@ -46,6 +47,7 @@ func spawn_squadron(squad_name: String, _type = SquadronController):
 	sc_lock.lock()
 	new_squad.squad_uid = sc_curr_id
 	new_squad.gp_cluster = squadrons_cluster
+	new_squad.edicts_pool.director = self
 	squadrons[sc_curr_id] = new_squad
 	sc_curr_id += 1
 	sc_lock.unlock()

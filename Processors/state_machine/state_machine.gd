@@ -43,6 +43,10 @@ func state_check(s: StateSingular):
 	return not s_name in states_pool and \
 		not s_name.empty() and s.current_machine == null
 
+func mass_push(states: Array):
+	for s in states:
+		add_state(s)
+
 func add_state(s: StateSingular) -> void:
 	var s_name := s.state_name
 	sp_mutex.lock()
@@ -217,13 +221,14 @@ func _compute(delta: float):
 			processing_state = first_state
 			break
 		var last_yield = yield_pool.get(processing_state.state_name)
-		var re
+		var re = null
 		if last_yield is GDScriptFunctionState:
 			if last_yield.is_valid():
-				re = last_yield.resume()
+				# Function is suspended, do not proceed further
+				re = last_yield
 			else:
-				re = processing_state._compute(delta)
-		else:
+				re = null
+		elif not processing_state.suspended:
 			re = processing_state._compute(delta)
 		sp_mutex.lock()
 		if yield_pool.has(processing_state.state_name):

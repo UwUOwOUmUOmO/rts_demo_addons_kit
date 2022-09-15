@@ -1,4 +1,4 @@
-extends Node
+extends Spatial
 
 class_name WeaponHandler
 
@@ -28,7 +28,7 @@ var reserve := 0
 var loading_time := 1.0
 var charge_rate := 0.0
 var last_hardpoint := -1
-var inherite_carrier_speed := true
+var inherit_carrier_speed := true
 var guided := true
 
 var timer := 0.0
@@ -127,7 +127,7 @@ func spawn_projectile(no: int):
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.PRECISION:
 			guidance = PrecisionGuidance.new()
 			guidance.site = pgm_target
-		if inherite_carrier_speed and "currentSpeed" in carrier:
+		if inherit_carrier_speed and "currentSpeed" in carrier:
 			guidance.inherited_speed = carrier.currentSpeed
 		guidance.target = target
 		guidance.handler = self
@@ -202,7 +202,16 @@ func setup():
 	compensator.profile.projectile_speed = profile.travelSpeed
 	LevelManager.template.add_peripheral(compensator)
 
+func reset_hardpoints_info():
+	var children := get_children()
+	if children == []:
+		set_hardpoints([self])
+	else:
+		set_hardpoints(children)
+
 func _ready():
+	reset_hardpoints_info()
+	carrier = get_parent()
 	if compensator_autosetup:
 		setup()
 

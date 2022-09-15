@@ -45,8 +45,11 @@ func _target_change_handler(new_target):
 func _target_defeated_handler(_con):
 	target = null
 
-func _lock_on_handler(_tar):
+func _lock_on_handler(_com, _tar):
 	pass
 
 func _loose_lock_handler(_tar):
+	pass
+
+func _hostile_handler(_com, hostile):
 	pass

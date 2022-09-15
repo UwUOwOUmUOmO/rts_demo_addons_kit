@@ -10,6 +10,7 @@ const HARD_PORT				= PI / 2.0
 const HARD_STARBOARD		= -HARD_PORT
 
 # Exports
+export(NodePath) var fire_control := ""
 export(NodePath) var navigation_agent := ""
 
 # Settings
@@ -35,6 +36,9 @@ var hardpoints := {
 	"SECONDARY":	[],
 }
 
+func _init():
+	process_switch()
+
 func _ready():
 	var na := get_node_or_null(navigation_agent)
 	if na == null:
@@ -43,6 +47,14 @@ func _ready():
 		nav_agent = na
 	else:
 		Out.print_error("Assigned Node is not a NavigationAgent", get_stack())
+
+func get_fire_control():
+	var fc = get_node_or_null(fire_control)
+#	if fc is WeaponHandler:
+#		return fc
+#	else:
+#		return null
+	return fc
 
 func process_switch():
 	set_process(not _disabled and not _use_physics_process)

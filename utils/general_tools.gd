@@ -2,6 +2,93 @@ extends Reference
 
 class_name Utilities
 
+class BitMask extends Reference:
+
+	const BIT_0					:= 0
+	const BIT_1					:= 1
+	const BIT_2					:= 2
+	const BIT_3					:= 4
+	const BIT_4					:= 8
+	const BIT_5					:= 16
+	const BIT_6					:= 32
+	const BIT_7					:= 64
+	const BIT_8					:= 128
+	const BIT_9					:= 256
+	const BIT_10				:= 512
+	const BIT_11				:= 1024
+	const BIT_12				:= 2048
+	const BIT_13				:= 4096
+	const BIT_14				:= 8192
+	const BIT_15				:= 16384
+	const BIT_16				:= 32768
+	const BIT_17				:= 65536
+	const BIT_18				:= 131072
+	const BIT_19				:= 262144
+	const BIT_20				:= 524288
+	const BIT_21				:= 1048576
+	const BIT_22				:= 2097152
+	const BIT_23				:= 4194304
+	const BIT_24				:= 8388608
+	const BIT_25				:= 16777216
+	const BIT_26				:= 33554432
+	const BIT_27				:= 67108864
+	const BIT_28				:= 134217728
+	const BIT_29				:= 268435456
+	const BIT_30				:= 536870912
+	const BIT_31				:= 1073741824
+	const BIT_32				:= 2147483648
+
+	const BITMASK_1ST_WORD		:= 15
+	const BITMASK_2ND_WORD		:= 240
+	const BITMASK_3RD_WORD		:= 3480
+	const BITMASK_4TH_WORD		:= 61440
+	const BITMASK_5TH_WORD		:= 983040
+	const BITMASK_6TH_WORD		:= 15728640
+	const BITMASK_7TH_WORD		:= 251658240
+	const BITMASK_8TH_WORD		:= 4026531840
+	const BITMASK_32BITS_ALL	:= 4294967295
+	const BITMASK_48BITS_ALL	:= 281474976710655
+
+	const MAX_PROCESSABLE_BITMASK_SINGLE := 48
+	const MAX_PROCESSABLE_BITMASK_WORD := 8
+
+	static func bitmask_join_single(block: PoolIntArray) -> int:
+		var mask := 0
+		if block.size() > MAX_PROCESSABLE_BITMASK_SINGLE:
+			block.resize(MAX_PROCESSABLE_BITMASK_SINGLE)
+		for iter in range(0, block.size()):
+			if block[iter]:
+				mask += pow(2, iter + 1)
+		return mask
+
+	static func bitmask_join_word(block: PoolIntArray) -> int:
+		var mask := 0
+		if block.size() > MAX_PROCESSABLE_BITMASK_WORD:
+			block.resize(MAX_PROCESSABLE_BITMASK_WORD)
+		for iter in range(0, block.size()):
+			if block[iter]:
+				match iter:
+					0:
+						mask += BITMASK_1ST_WORD
+					1:
+						mask += BITMASK_2ND_WORD
+					2:
+						mask += BITMASK_3RD_WORD
+					3:
+						mask += BITMASK_4TH_WORD
+					4:
+						mask += BITMASK_5TH_WORD
+					5:
+						mask += BITMASK_6TH_WORD
+					6:
+						mask += BITMASK_7TH_WORD
+					7:
+						mask += BITMASK_8TH_WORD
+			# ------------------------
+			iter += 1
+		return mask
+
+
 class PathTools extends Reference:
 
 	static func append_path(origin: String, derived: String) -> String:

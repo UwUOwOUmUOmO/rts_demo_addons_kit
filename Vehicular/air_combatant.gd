@@ -20,8 +20,8 @@ signal __loss_track_of_target(brain)
 signal __destination_arrived(brain)
 
 # Exports
-export(NodePath) var hardpoints_holder_primary := ""
-export(NodePath) var hardpoints_holder_secondary := ""
+# export(NodePath) var hardpoints_holder_primary := ""
+# export(NodePath) var hardpoints_holder_secondary := ""
 
 # Settings
 var useBuiltinTranslator := true
@@ -42,7 +42,7 @@ var rudder: Spatial = null
 var throttle := 0.0
 var speedPercentage := 0.0
 var distance := 0.0 setget , get_distance
-var distance_squared := 0.0
+var distance_squared := 0.0 setget , get_distance_squared
 
 # Special
 var _dl_mutex := Mutex.new()
@@ -61,20 +61,21 @@ func ref_handler():
 			g.push_back("sam_missiles")
 	IRM.add(_ref, g)
 
-func hardpoints_handler():
-	if device & PROJECTILE_TYPE.AIRCRAFT:
-		var holder_primary := get_node_or_null(hardpoints_holder_primary)
-		if is_instance_valid(holder_primary):
-			hardpoints["PRIMARY"] = holder_primary.get_children()
-		var holder_secondary := get_node_or_null(hardpoints_holder_secondary)
-		if is_instance_valid(holder_secondary) and \
-			not (hardpoints_holder_primary == hardpoints_holder_secondary):
-				hardpoints["SECONDARY"] = holder_secondary.get_children()
+# func hardpoints_handler():
+# 	if device & PROJECTILE_TYPE.AIRCRAFT:
+# 		var holder_primary := get_node_or_null(hardpoints_holder_primary)
+# 		if is_instance_valid(holder_primary):
+# 			hardpoints["PRIMARY"] = holder_primary.get_children()
+# 		var holder_secondary := get_node_or_null(hardpoints_holder_secondary)
+# 		if is_instance_valid(holder_secondary) and \
+# 			not (hardpoints_holder_primary == hardpoints_holder_secondary):
+# 				hardpoints["SECONDARY"] = holder_secondary.get_children()
 
 func _enter_tree():
 	_ref = InRef.new(self)
 
 func _init():
+	._init()
 	set_config(AircraftConfiguration.new())
 
 func set_device(d: int):
@@ -96,7 +97,7 @@ func _ready():
 	add_child(rudder)
 	rudder.owner = self
 	rudder.translation = Vector3(0.0, 0.0, -50.0)
-	hardpoints_handler()
+	# hardpoints_handler()
 
 func set_course(des: Vector3) -> void:
 	pass
@@ -122,3 +123,7 @@ func get_distance() -> float:
 	if distance_squared == null:
 		return 0.0
 	return sqrt(distance_squared)
+
+func get_distance_squared() -> float:
+	# distance_squared = global_transform.origin.distance_squared_to(current_destination)
+	return global_transform.origin.distance_squared_to(current_destination)
