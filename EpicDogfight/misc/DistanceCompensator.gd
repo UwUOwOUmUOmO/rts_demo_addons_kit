@@ -16,6 +16,7 @@ var last_location := Vector3.ZERO
 var last_velocity := 0.0
 var last_direction := Vector3.ZERO
 var acceleration := 0.0
+var max_accel := 0.0
 
 func set_target(t: Spatial):
 	target = t
@@ -94,6 +95,10 @@ func _advanced_leading(delta: float) -> void:
 			acceleration = 0.0
 	else:
 		acceleration = 0.0
+	if max_accel != 0.0:
+		max_accel = max(max_accel, acceleration)
+	else:
+		max_accel = 0.001
 	var predicted_distance := 0.0
 	predicted_distance  = (velocity * leading) + (0.5 * acceleration * leading)
 #	predicted_distance = velocity * leading

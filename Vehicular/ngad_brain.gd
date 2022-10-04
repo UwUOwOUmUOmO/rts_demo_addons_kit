@@ -30,7 +30,7 @@ extends Combatant
 # func _ready():
 # 	_vehicle_config = {
 # 		"acceleration":			2.0,
-# 		"deccelaration": 		-2.0,
+# 		"decceleration": 		-2.0,
 # 		"minThrottle":			0.2,
 # 		"maxThrottle":			1.0,
 # 		"maxSpeed": 			100,
@@ -130,7 +130,7 @@ extends Combatant
 # 		currentSpeed = clamp(currentSpeed + _vehicle_config["acceleration"],\
 # 				0.0, allowedSpeed)
 # 	elif currentSpeed > allowedSpeed:
-# 		currentSpeed = clamp(currentSpeed + _vehicle_config["deccelaration"],\
+# 		currentSpeed = clamp(currentSpeed + _vehicle_config["decceleration"],\
 # 				allowedSpeed, _vehicle_config["maxSpeed"])
 
 # func _enforce_movement() -> void:
@@ -185,9 +185,9 @@ extends Combatant
 # 		var ac_dis = get_distance(_vehicle_config["maxSpeed"]\
 # 			, 0.0, _vehicle_config["acceleration"])
 # 		var da_time = get_time(0.0\
-# 			, _vehicle_config["maxSpeed"], _vehicle_config["deccelaration"])
+# 			, _vehicle_config["maxSpeed"], _vehicle_config["decceleration"])
 # 		var da_dis = get_distance(0.0\
-# 			, _vehicle_config["maxSpeed"], _vehicle_config["deccelaration"])
+# 			, _vehicle_config["maxSpeed"], _vehicle_config["decceleration"])
 # 		var mid: float = distance - da_dis - ac_dis
 # 		var mid_time: float = mid / _vehicle_config["maxSpeed"]
 # 		timer1 = 0.0

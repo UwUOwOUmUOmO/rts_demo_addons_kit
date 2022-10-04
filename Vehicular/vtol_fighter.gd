@@ -128,7 +128,7 @@ func _prepare():
 	var currentYaw = global_transform.basis.get_euler().y
 	# distance_squared = global_transform.origin.distance_squared_to(current_destination)
 	distance_squared = get_distance_squared()
-	var accel: float = _vehicle_config.deccelaration
+	var accel: float = _vehicle_config.decceleration
 	var slowingTime: float = _vehicle_config.slowingTime
 	slowingRange = (currentSpeed * slowingTime) + (0.5 * accel * slowingTime)
 	slowingRange_squared = slowingRange * slowingRange
@@ -158,9 +158,9 @@ func _calculateSpeed(allowedSpeed: float):
 		speedMod = _vehicle_config.acceleration
 		clampMin = 0.0
 	elif currentSpeed > allowedSpeed:
-		speedMod = _vehicle_config.deccelaration
+		speedMod = _vehicle_config.decceleration
 		clampMin = allowedSpeed
-	realSpeedLoss = abs(_vehicle_config.deccelaration * speedLoss)
+	realSpeedLoss = abs(_vehicle_config.decceleration * speedLoss)
 	currentSpeed = clamp(clamp(currentSpeed + speedMod,\
 		clampMin, _vehicle_config.maxSpeed) - realSpeedLoss, 0.0, _vehicle_config.maxSpeed)
 
@@ -244,12 +244,12 @@ func _bakeDestination(d: Vector3):
 	current_destination = d
 	lookAtVec = startingPoint.direction_to(current_destination)
 	distance_squared = global_transform.origin.distance_squared_to(current_destination)
-	var sdzp: float= _vehicle_config.switchDesZonePerc
+	var sdzp: float = _vehicle_config.switchDesZonePerc
 	sdzp *= sdzp
 	switchDesZone_squared = clamp(distance_squared * sdzp, \
 		_vehicle_config.minSDZS, _vehicle_config.maxSDZS)
 	if currentSpeed == 0.0:
-		currentSpeed = clamp(inheritedSpeed, 0.0, _vehicle_config.maxSpeed)
+		currentSpeed = inheritedSpeed
 		inheritedSpeed = 0.0
 
 func set_tracking_target(target: Spatial):

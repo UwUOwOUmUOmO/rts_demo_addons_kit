@@ -9,7 +9,7 @@ const STATE_SINGULAR_SIGNALS := {
 
 # Persistent
 var state_name := ""
-var exclusive := false
+var exclusive := false setget set_exclusive
 var suspended := false
 
 # Volatile
@@ -20,17 +20,23 @@ func _init():
 	name = "StateSingular"
 	remove_properties(["next_state", "current_machine"])
 
+func set_exclusive(ex: bool):
+	exclusive = ex
+	# Out.print_debug("Exclusivity set: " + str(ex))
+
 func _get_next_state():
 	if not exclusive:
 		return next_state
 	return null
 
 func blackboard_set(index: String, value):
-	if current_machine:
+	if current_machine != null:
 		current_machine.blackboard_set(index, value)
+	else:
+		Out.print_warning("Cannot set blackboard as there is no StateMachine", get_stack())
 
 func blackboard_get(index: String):
-	if current_machine:
+	if current_machine != null:
 		return current_machine.blackboard_get(index)
 	return null
 

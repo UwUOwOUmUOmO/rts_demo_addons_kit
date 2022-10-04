@@ -114,7 +114,7 @@ func set_tracking_target(target: Spatial) -> void:
 	pass
 
 func set_moving(m: bool) -> void:
-	pass
+	isMoving = m
 
 func set_distance(_d) -> void:
 	pass

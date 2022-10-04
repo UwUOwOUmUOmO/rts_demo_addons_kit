@@ -3,6 +3,7 @@ extends Processor
 class_name StateMachine
 
 const MAX_STACK := 64
+const DEFAULT_MAX_ALLOWED_EXECUTION_TIME := 1000.0
 
 signal __state_added(machine, state_name, state_reference)
 signal __state_removed(machine, state_name, state_reference)
@@ -12,6 +13,7 @@ var states_pool := {}
 var yield_pool := {}
 var blackboard := {}
 var current_size := 0
+var max_alloted_time := DEFAULT_MAX_ALLOWED_EXECUTION_TIME
 var is_paused := false
 
 # Volatile
@@ -212,10 +214,12 @@ func blackboard_set(index: String, value):
 	bb_mutex.unlock()
 
 func blackboard_get(index: String):
-	blackboard.get(index)
+	return blackboard.get(index)
 
 func _compute(delta: float):
 	var stack_count := 0
+	var epoch := Time.get_ticks_usec()
+	var delta_time := 0.0
 	while processing_state != null and not terminated and not is_paused:
 		if stack_count >= MAX_STACK:
 			processing_state = first_state
@@ -236,6 +240,11 @@ func _compute(delta: float):
 		processing_state = processing_state.next_state
 		sp_mutex.unlock()
 		stack_count += 1
+		# -------------------------------------------
+		var next_epoch := Time.get_ticks_usec()
+		delta_time = next_epoch - epoch
+		if delta_time > max_alloted_time:
+			break
 	if processing_state == null:
 		sp_mutex.lock()
 		processing_state = first_state

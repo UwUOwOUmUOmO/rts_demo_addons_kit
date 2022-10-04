@@ -301,3 +301,19 @@ class TrialTools extends Reference:
 		if dividend != 0.0:
 			return divisor / dividend
 		return 0.0
+
+	static func try_propagate(from, method: String, args := []) -> void:
+		if from is Array:
+			for component in from:
+				if component is Array or component is Dictionary:
+					try_propagate(component, method, args)
+				elif component is Object:
+					try_call(component, method, args)
+		elif from is Dictionary:
+			for key in from:
+				var component = from[key]
+				if component is Array or component is Dictionary:
+					try_propagate(component, method, args)
+				elif component is Object:
+					try_call(component, method, args)
+		return
