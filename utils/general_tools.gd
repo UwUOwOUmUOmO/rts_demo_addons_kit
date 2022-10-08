@@ -88,7 +88,6 @@ class BitMask extends Reference:
 			iter += 1
 		return mask
 
-
 class PathTools extends Reference:
 
 	static func append_path(origin: String, derived: String) -> String:
@@ -317,3 +316,15 @@ class TrialTools extends Reference:
 				elif component is Object:
 					try_call(component, method, args)
 		return
+
+class ProfilingTools extends Reference:
+	static func benchmark(function: FuncRef, args := [], auto_output := false) -> int:
+		var start := Time.get_ticks_usec()
+		var re = function.call_funcv(args)
+		var end := Time.get_ticks_usec()
+		var perf := end - start
+		if not auto_output:
+			return perf
+		Out.print_debug("Benchmark result for {fname}: {result}"\
+			.format({"fname": function.function, "result": perf}))
+		return perf

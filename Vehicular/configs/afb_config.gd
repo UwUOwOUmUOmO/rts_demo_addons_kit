@@ -8,26 +8,92 @@ const GRAPH_SIGNALS := {
 }
 
 # Persistent
-export(float, 0.1, 20.0) var max_accel_time		:= 5.0
-export(float, 0.1, 20.0) var max_deccel_time	:= 5.0
-export(int, 10, 1000) var graph_bake_resolution	:= 200 setget set_gbr
-export(bool) var use_integral_sampling			:= false
-export(Curve) var accel_graph					:= preload("res://addons/Vehicular/configs/stdafb_accel.res")\
+export(float, 0.1, 20.0)	var max_accel_time			:= 5.0
+export(float, 0.1, 20.0)	var max_deccel_time			:= 5.0
+export(int, 10, 1000)		var graph_bake_resolution	:= 200 setget set_gbr
+export(bool) 				var use_integral_sampling	:= false
+export(bool)				var allow_benchmark			:= false
+export(Curve)				var accel_graph				:= preload("res://addons/Vehicular/configs/stdafb_accel.res")\
 	setget set_ag
-export(Curve) var deccel_graph					:= preload("res://addons/Vehicular/configs/stdafb_deccel.res")\
+export(Curve)				var deccel_graph			:= preload("res://addons/Vehicular/configs/stdafb_deccel.res")\
 	setget set_dg
 
 # Volatile
-var agg_baked_data: PoolRealArray = []
-var dgg_baked_data: PoolRealArray = []
-var is_dirty_cache := true
-var cache_mutex := Mutex.new()
+var agg_baked_data	: PoolRealArray = []
+var dgg_baked_data	: PoolRealArray = []
+var is_dirty_cache	:= true
+var cache_mutex		:= Mutex.new()
 
 func _init():
 	name = "AFBConfiguration"
 	remove_properties(["agg_baked_data", "dgg_baked_data", "is_dirty_cache", "cache_mutex"])
 	Utilities.SignalTools.connect_from(accel_graph,  self, GRAPH_SIGNALS, true, false)
 	Utilities.SignalTools.connect_from(deccel_graph, self, GRAPH_SIGNALS, true, false)
+
+# func _get(property):
+# 	match property:
+# 		"max_accel_time":
+# 			return rom.get_exclusive("max_accel_time", max_accel_time)
+# 		"max_deccel_time":
+# 			return rom.get_exclusive("max_deccel_time", max_deccel_time)
+# 		"graph_bake_resolution":
+# 			return rom.get_exclusive("graph_bake_resolution", graph_bake_resolution)
+# 		"use_integral_sampling":
+# 			return rom.get_exclusive("use_integral_sampling", use_integral_sampling)
+# 		"allow_benchmark":
+# 			return rom.get_exclusive("allow_benchmark", allow_benchmark)
+# 		"accel_graph":
+# 			return rom.get_exclusive("accel_graph", accel_graph)
+# 		"deccel_graph":
+# 			return rom.get_exclusive("deccel_graph", deccel_graph)
+# 		"agg_baked_data":
+# 			return rom.get_exclusive("agg_baked_data", agg_baked_data)
+# 		"dgg_baked_data":
+# 			return rom.get_exclusive("dgg_baked_data", dgg_baked_data)
+# 		"is_dirty_cache":
+# 			return rom.get_exclusive("is_dirty_cache", is_dirty_cache)
+# 		"cache_mutex":
+# 			return rom.get_exclusive("cache_mutex", cache_mutex)
+# 		_:
+# 			return ._get(property)
+
+# func _set(property, value):
+# 	match property:
+# 		"max_accel_time":
+# 			if rom.set_exclusive("max_accel_time", value):
+# 				max_accel_time = value
+# 		"max_deccel_time":
+# 			if rom.set_exclusive("max_deccel_time", value):
+# 				max_deccel_time = value
+# 		"graph_bake_resolution":
+# 			if rom.set_exclusive("graph_bake_resolution", value):
+# 				graph_bake_resolution = value
+# 		"use_integral_sampling":
+# 			if rom.set_exclusive("use_integral_sampling", value):
+# 				use_integral_sampling = value
+# 		"allow_benchmark":
+# 			if rom.set_exclusive("allow_benchmark", value):
+# 				allow_benchmark = value
+# 		"accel_graph":
+# 			if rom.set_exclusive("accel_graph", value):
+# 				accel_graph = value
+# 		"deccel_graph":
+# 			if rom.set_exclusive("deccel_graph", value):
+# 				deccel_graph = value
+# 		"agg_baked_data":
+# 			if rom.set_exclusive("agg_baked_data", value):
+# 				agg_baked_data = value
+# 		"dgg_baked_data":
+# 			if rom.set_exclusive("dgg_baked_data", value):
+# 				dgg_baked_data = value
+# 		"is_dirty_cache":
+# 			if rom.set_exclusive("is_dirty_cache", value):
+# 				is_dirty_cache = value
+# 		"cache_mutex":
+# 			if rom.set_exclusive("cache_mutex", value):
+# 				cache_mutex = value
+# 		_:
+# 			._set(property, value)
 
 func set_gbr(res: int):
 	graph_bake_resolution = res
@@ -123,6 +189,7 @@ func get_area(from: float, to: float, max_sample: int, type: int, integral_sampl
 	#   --TYPES:
 	# 0: Acceleration
 	# 1: Decceleration
+	var start := Time.get_ticks_usec()
 	var pfrom := 0.0
 	var pto := 0.0
 	var graph := accel_graph
@@ -167,19 +234,24 @@ func get_area(from: float, to: float, max_sample: int, type: int, integral_sampl
 	if pfrom == pto:
 		return area
 	if not integral_sampling:
-		return fetch_graph_area(from, to, type) + area
-	var delta  := (pto - pfrom) / max_sample
-	var real_value_delta := (to - from) / max_sample
-	var seeker := pfrom
-	# ------------ SAMPLE ------------
-	var iter := 0
-	while true:
-		area += graph.interpolate_baked(seeker) * real_value_delta
-		seeker += delta
-		iter += 1
-		if not (iter < max_sample - 1):
-			break
-	# --------------------------------
+		area += fetch_graph_area(from, to, type)
+	else:
+		var delta  := (pto - pfrom) / max_sample
+		var real_value_delta := (to - from) / max_sample
+		var seeker := pfrom
+		# ------------ SAMPLE ------------
+		var iter := 0
+		while true:
+			area += graph.interpolate_baked(seeker) * real_value_delta
+			seeker += delta
+			iter += 1
+			if not (iter < max_sample - 1):
+				break
+		# --------------------------------
+	if allow_benchmark:
+		var end := Time.get_ticks_usec()
+		Out.print_debug("Integral performance: {t} usec(s) | Integral sampling: {is}"\
+			.format({"t": end - start, "is": integral_sampling}))
 	return area
 
 func sample_accel(time_stamp: float) -> float:

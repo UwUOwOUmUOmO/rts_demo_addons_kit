@@ -151,6 +151,98 @@ func get_template(reset := false) -> LevelTemplate:
 	# 	return null
 	return template
 
+func level2package(which: Node) -> PackedScene:
+	get_tree().paused = true
+	var package := PackedScene.new()
+	package.pack(which)
+	get_tree().paused = false
+	return package
+
+func serialize_level(which := template) -> String:
+	var serialized := var2str(level2package(which))
+	return serialized
+
+func save_level(path: String):
+	var SAVE_FILE_PASSWORD := "%SFPWD_V0001%"
+	var password := ""
+	if SAVE_FILE_PASSWORD[0] != "%" and SAVE_FILE_PASSWORD.right(0) != "%":
+		password = SAVE_FILE_PASSWORD
+	var packed := serialize_level()
+	var f := File.new()
+	f.open_encrypted_with_pass(path, File.WRITE, password)
+	f.store_var(packed)
+	f.close()
+
+func deserialize_level(path: String):
+	var SAVE_FILE_PASSWORD := "%SFPWD_V0001%"
+	var password := ""
+	if SAVE_FILE_PASSWORD[0] != "%" and SAVE_FILE_PASSWORD.right(0) != "%":
+		password = SAVE_FILE_PASSWORD
+	var f := File.new()
+	f.open_encrypted_with_pass(path, File.READ, password)
+	var packed: String = f.get_var()
+	f.close()
+	var package: PackedScene = str2var(packed)
+	set_level_defered(package)
+
+func deserialize_level_debug(packed: String):
+	var package: PackedScene = str2var(packed)
+	set_level_defered(package)
+
+func set_level_defered(level: PackedScene):
+	get_tree().change_scene_to(level)
+	# var new_level: Node = level.instance()
+	# get_tree().root.call_deferred("add_child", new_level)
+	# get_tree().set_deferred("current_level", new_level)
+	emit_signal("__changing_to_scene", level)
+	var tem := template
+	while tem == get_tree().current_scene:
+		yield(get_tree(), "idle_frame")
+	emit_signal("__template_changed")
+	if is_instance_valid(tem):
+		tem.free()
+	template = get_tree().current_scene
+	# get_tree().paused = true
+	# yield(get_tree(), "idle_frame")
+	# # -----------------------------------------------
+	# var instanced = level.instance()
+	# var old_stuff = template.singletons_pool
+	# var new_stuff = instanced.singletons_pool
+	# instanced.remove_child(new_stuff)
+	# template.call_deferred("remove_child", old_stuff)
+	# template.call_deferred("add_child", instanced.singletons_pool)
+	# # -----------------------------------------------
+	# old_stuff.queue_free()
+	# old_stuff = template.peripherals_pool
+	# new_stuff = instanced.peripherals_pool
+	# instanced.remove_child(new_stuff)
+	# template.call_deferred("remove_child", old_stuff)
+	# template.call_deferred("add_child", instanced.peripherals_pool)
+	# # -----------------------------------------------
+	# old_stuff.queue_free()
+	# old_stuff = template.scenes_holder
+	# new_stuff = instanced.scenes_holder
+	# instanced.remove_child(new_stuff)
+	# template.call_deferred("remove_child", old_stuff)
+	# template.call_deferred("add_child", instanced.scenes_holder)
+	# # -----------------------------------------------
+	# old_stuff.queue_free()
+	# old_stuff = template.unpaused_pool
+	# new_stuff = instanced.unpaused_pool
+	# instanced.remove_child(new_stuff)
+	# template.call_deferred("remove_child", old_stuff)
+	# template.call_deferred("add_child", instanced.unpaused_pool)
+	# # -----------------------------------------------
+	# instanced.queue_free()
+	# get_tree().paused = false
+
+# func set_level_defered_debug(level: PackedScene):
+# 	var instanced: Node = level.instance()
+# 	var old_holder := template.scenes_holder
+# 	template.call_deferred("remove_child", old_holder)
+# 	template.call_deferred("add_child", instanced)
+# 	old_holder.queue_free()
+
 func load_level(cfg: LevelConfiguration, wait := false, no_temp := false) -> bool:
 	if no_temp:
 		setup_template()

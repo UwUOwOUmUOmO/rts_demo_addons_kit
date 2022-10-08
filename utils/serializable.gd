@@ -7,6 +7,7 @@ const CONFIG_VERSION := "1.2.3"
 var prop_mutex := Mutex.new()
 
 var name := "Serializable"
+var irid := 0 setget set_irid
 var property_list: PoolStringArray = []
 var exclusion_list: PoolStringArray = []
 var no_deep_scan: PoolStringArray = []
@@ -15,7 +16,7 @@ func _init():
 	# Create a property list, inheritance can edit exclusion_list
 	# to omit volatile variables
 	property_list = cleanse_property_list(get_property_list())
-	remove_properties(["name", "property_list", "exclusion_list", "no_deep_scan",\
+	remove_properties(["name", "irid", "property_list", "exclusion_list", "no_deep_scan",\
 		 "prop_mutex"])
 	# OPTIONAL: reset volatile variables
 	_reset_volatile()
@@ -23,9 +24,34 @@ func _init():
 #	name = cfg_server.get_name_from_path(get_script().resource_path)
 	return self
 
+# func _get(property):
+# 	# match property:
+# 	# 	"name":
+# 	# 		return name
+# 	# 	"irid":
+# 	# 		return irid
+# 	# 	"property_list":
+# 	# 		return property_list
+# 	# 	"exclusion_list":
+# 	# 		return exclusion_list
+# 	# 	"no_deep_scan":
+# 	# 		return no_deep_scan
+# 	return get(property)
+
+func _set(property, value):
+	set(property, value)
+	emit_changed()
+	return true
+
+func set_irid(id: int):
+	irid = id
+
 func _to_string():
 	var serialized := serialize()
 	return str(serialized)
+
+func _serialize_notifier(in_progress: bool):
+	pass
 
 func _object_deserialized():
 	pass
