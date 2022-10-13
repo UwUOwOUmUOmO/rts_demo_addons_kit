@@ -14,6 +14,10 @@ var local_singletons_swarm: Node = null
 var services := {} setget set_services, get_services
 var static_services := {}
 
+# func _exit_tree():
+# 	print("\tSTRAY NODES")
+# 	print_stray_nodes()
+
 func _ready():
 	var size = DEFAULT_AUTOLOAD.size()
 	var iter := 0

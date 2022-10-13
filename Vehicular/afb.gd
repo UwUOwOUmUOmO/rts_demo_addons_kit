@@ -4,9 +4,6 @@ class_name AdvancedFighterBrain
 
 const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbcfg.tres")
 
-onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
-			.fixed_delta
-
 # Persistent
 var states_auto_init := true
 var is_halted := false
@@ -18,6 +15,20 @@ var states := {}
 var drag := 0.0
 var downward_speed := 0.0
 
+class AFBSM_TestState extends StateSingular:
+	
+	var host
+	var cfg
+
+	func _init():
+		name = "AFBSM_TestState"
+		state_name = name
+
+	func _boot():
+		return
+#		host = current_machine.host
+		# cfg = host._vehicle_config
+
 class AFBSM_Planner extends StateSingular:
 
 	const ZONE_PADDING_SQUARED := 7.0
@@ -25,12 +36,14 @@ class AFBSM_Planner extends StateSingular:
 	signal destination_arrived(brain)
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 
 	var deadzone_squared := 0.0
 	var sd_est_sq := 0.0001		# Slow down estimation
 	var cta_sq := 0.0			# Cut throttle at squared
 	var oe_sq := 0.0			# Orbit error
+	var displacable_speed := 0.0
+	var ds_squared := 0.0
 	var control_locked := false
 
 	func _init():
@@ -39,6 +52,8 @@ class AFBSM_Planner extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		displacable_speed = afb_cfg.get_area_deccel(0.0, afb_cfg.max_deccel_time)
+		ds_squared = displacable_speed * displacable_speed
 
 	func reset_status():
 		var d_s: float = afb_cfg.deadzone
@@ -80,15 +95,10 @@ class AFBSM_Planner extends StateSingular:
 		if exclusive or control_locked:
 			return null
 		var d_squared: float = afb.distance_squared
-		var slowing_time: float = afb_cfg.slowingTime
-		var accel: float = (afb_cfg.decceleration)
-		var velocity: float = afb.currentSpeed
-		cta_sq = (velocity * slowing_time) + (0.5 * accel * slowing_time * slowing_time)
-		cta_sq = clamp(cta_sq, 0.0, INF)
-		cta_sq *= cta_sq
-		if d_squared <= deadzone_squared:
-			cut_throttle()
-		if d_squared <= cta_sq:
+		var cs_squared: float = afb.currentSpeed
+		cs_squared *= cs_squared
+		if d_squared <= deadzone_squared or \
+			d_squared < min(ds_squared, cs_squared):
 			cut_throttle()
 		else:
 			afb.throttle = 1.0
@@ -99,10 +109,9 @@ class AFBSM_Engine extends StateSingular:
 	const ACCEL_ACCU_LOST_RATE := 0.4
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 	var accel_timer := 0.0
 	var deccel_total := 0.0
-	var curr_st := 0.0
 
 	func _init():
 		name = "AFBSM_Engine"
@@ -110,11 +119,6 @@ class AFBSM_Engine extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
-		bake_deccel_time()
-
-	func bake_deccel_time():
-		curr_st = afb_cfg.slowingTime
-		deccel_total = afb_cfg.get_area_deccel(0.0, curr_st)
 
 	func _boot():
 		afb = current_machine.host
@@ -132,21 +136,27 @@ class AFBSM_Engine extends StateSingular:
 		# var equalized: float = afb_cfg.decceleration * delta
 		var curr: float = afb.currentSpeed
 		curr = clamp(curr + equalized, 0.0, INF)
-		afb.currentSpeed = curr
+		# afb.currentSpeed = curr
 		return curr
 
 	func _compute(delta: float):
 		var accel_update: bool = blackboard_get("accel_update")
-		var curr := equalize_speed(delta)
+		var raw_ssize := AFBSM_Throttle.INTEGRAL_SAMPLES_PER_SECONDS * delta
+		var samples: int = max(1, int(raw_ssize))
+		var curr := 0.0
+		curr = afb.currentSpeed
+		var speed_change := 0.0
 		if accel_update:
 			# accel_timer = clamp(accel_timer - (accel_timer * ACCEL_ACCU_LOST_RATE * delta), \
 			# 	0.0, INF)
 			accel_timer = 0.0
-			curr = afb.currentSpeed
-		else:
+		elif curr > 0.0:
 			accel_timer += delta
+			speed_change = afb_cfg.get_area_deccel(accel_timer - delta, accel_timer, samples)
+			curr = clamp(curr - speed_change, 0.0, INF)
 		var fwd_vec: Vector3 = -afb.global_transform.basis.z
 		var movement := fwd_vec * curr
+		afb.currentSpeed = curr
 		afb.move_and_slide(movement)
 
 class AFBSM_Throttle extends StateSingular:
@@ -156,7 +166,7 @@ class AFBSM_Throttle extends StateSingular:
 	const INTEGRAL_SAMPLES_PER_SECONDS := 120.0
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 	var allowed_speed := 0.0
 	var theoretical_speed := 0.0
 	var accel_timer := 0.0
@@ -214,12 +224,11 @@ class AFBSM_Throttle extends StateSingular:
 		accel_timer += delta
 		# var speed_mod: float = afb_cfg.acceleration
 		# var speed_change := speed_mod * accel_timer
-		var cfg: AFBConfiguration = afb_cfg
 		var raw_ssize := INTEGRAL_SAMPLES_PER_SECONDS * delta
 		var samples: int = max(1, int(raw_ssize))
 		# var speed_change: float = cfg.sample_accel(accel_timer)
 		# speed_change -= cfg.sample_accel(accel_timer - delta)
-		var speed_change := cfg.get_area_accel(accel_timer - delta, accel_timer, samples)
+		var speed_change: float = afb_cfg.get_area_accel(accel_timer - delta, accel_timer, samples)
 		var speed_delta: float = abs(curr - allowed_speed)
 		theoretical_speed = clamp(curr + min(speed_change, speed_delta), 0.0, INF)
 
@@ -250,7 +259,7 @@ class AFBSM_Gravity extends StateSingular:
 	const GRAVITATIONAL_CONSTANT = 9.8
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 
 	func _init():
 		name = "AFBSM_Gravity"
@@ -272,7 +281,7 @@ class AFBSM_Gravity extends StateSingular:
 class AFBSM_Climb extends StateSingular:
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 
 	func _init():
 		name = "AFBSM_Climb"
@@ -295,7 +304,7 @@ class AFBSM_Steer extends StateSingular:
 	const MINIMUM_DRAG							:= 0.000001
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 	var allowed := 0.0
 	var called := 0
 	var physics_call := 0
@@ -330,9 +339,8 @@ class AFBSM_Steer extends StateSingular:
 		var rotation_speed := amount
 		var wtransform: Transform = afb.global_transform.\
 			looking_at(Vector3(target_pos.x,global_pos.y,target_pos.z),Vector3.UP)
-		var wrotation := Quat(afb.global_transform.basis).slerp(Quat(wtransform.basis),\
+		var wrotation: Quat = afb.global_transform.basis.get_rotation_quat().slerp(Quat(wtransform.basis),\
 			rotation_speed)
-
 		afb.global_transform = Transform(Basis(wrotation), afb.global_transform.origin)
 
 	func pfps_test():
@@ -355,7 +363,7 @@ class AFBSM_Steer extends StateSingular:
 class AFBSM_Roll extends StateSingular:
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 	var last_yaw := 0.0
 
 	func _init():
@@ -375,10 +383,8 @@ class AFBSM_Roll extends StateSingular:
 		update()
 
 	static func children_roll(target: Node, amount: float):
-		var children := target.get_children()
-		for child in children:
-			if child is Spatial:
-				child.rotation.z = amount
+		if target is Spatial:
+			target.rotation.z = clamp(amount, -PI, PI)
 
 	func _compute(delta: float):
 		var current_yaw := get_yaw()
@@ -395,7 +401,7 @@ class AFBSM_Roll extends StateSingular:
 class AFBSM_RollNormalize extends StateSingular:
 
 	var afb = null
-	var afb_cfg: AFBConfiguration = null
+	var afb_cfg = null
 	var last_yaw := 0.0
 
 	func _init():
@@ -416,14 +422,22 @@ class AFBSM_RollNormalize extends StateSingular:
 func _init():
 	._init()
 	set_config(DEFAULT_AFBCFG)
-	state_machine = StateMachine.new()
-	state_machine.host = self
-	state_machine.enforcer = self
+	# set_pp(false)
 
 func _ready():
 	._ready()
+	sm_init()
 	if states_auto_init:
 		init_states()
+
+func _exit_tree():
+	state_machine.terminated = true
+	state_machine = null
+
+func sm_init():
+	state_machine = StateMachine.new()
+	state_machine.host = self
+	state_machine.enforcer = self
 
 func update_states():
 	Utilities.TrialTools.try_propagate(states, "update")
@@ -450,6 +464,7 @@ func init_states():
 		st.state_name: st,
 		ro.state_name: ro,
 	}
+	# state_machine.add_state(AFBSM_TestState.new())
 	state_machine.mass_push(states.values())
 	pl.connect("destination_arrived", self, "des_arrived_handler")
 

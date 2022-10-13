@@ -8,7 +8,7 @@
 script = ExtResource( 1 )
 max_accel_time = 5.0
 max_deccel_time = 5.0
-graph_bake_resolution = 200
+graph_bake_resolution = 600
 use_integral_sampling = false
 allow_benchmark = false
 accel_graph = ExtResource( 2 )

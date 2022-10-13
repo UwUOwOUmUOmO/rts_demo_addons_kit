@@ -16,7 +16,7 @@ func _init():
 func set_host(h: Serializable):
 	if is_instance_valid(host):
 		Utilities.SignalTools.disconnect_from(host, self, SERIALIZABLE_SIGNALS, false)
-	host = h
+	.set_host(h)
 	Utilities.SignalTools.connect_from(host, self, SERIALIZABLE_SIGNALS, false)
 
 func auto_snap():

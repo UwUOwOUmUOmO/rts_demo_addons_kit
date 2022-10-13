@@ -1,25 +1,318 @@
 extends Node
 
-const CFG_VER := PoolIntArray([1, 3, 0])
+class_name SerializationServer
+
 const ALLOWED_INHERITANCE: PoolStringArray = PoolStringArray([
 	"Serializable",
 ])
 
-var allowed_serializable := {} setget set_forbidden, get_forbidden
+var allowed_serializable := {} setget set_forbidden, get_allowed
 
 func set_forbidden(f):
 	pass
 
-func get_forbidden():
+func get_allowed():
+	if OS.is_debug_build():
+		return allowed_serializable.duplicate()
 	return null
 
-func set_serializable():
+func explore_tree(parental_tree: Dictionary, find_what: String) -> Array:
+	var found := []
+	var iter := 0
+	var size := parental_tree.size()
+	var keys := parental_tree.keys()
+	var values := parental_tree.values()
+	while iter < size:
+		var result := values.find(find_what, iter)
+		if result == -1:
+			break
+		iter = result + 1
+		found.append(keys[result])
+	if not found.empty():
+		for res in found:
+			parental_tree.erase(res)
+#		for res in found:
+			found.append_array(explore_tree(parental_tree, res))
+	return found
+
+func find_dup(arr: Array) -> Array:
+	var dup_list := []
+	for iter in range(arr.size()):
+		var value = arr[iter]
+		if iter == arr.size() - 1:
+			break
+		var find_result := arr.find(value, iter + 1)
+		if find_result > -1:
+			dup_list.append(value)
+	return dup_list
+
+func set_serializable_worker():
 	var all_classes: Array = ProjectSettings.get_setting("_global_script_classes")
+	var address_record := {}
+	var parental_record := {}
 	for c in all_classes:
-		if c["base"] in ALLOWED_INHERITANCE or c["class"] in ALLOWED_INHERITANCE:
-			allowed_serializable[c["class"]] = c["path"]
+		address_record[c["class"]] = c["path"]
+		parental_record[c["class"]] = c["base"]
+	var allowed := Array(ALLOWED_INHERITANCE)
+	for initial in ALLOWED_INHERITANCE:
+		allowed.append_array(explore_tree(parental_record, initial))
+	# Out.print_debug("Duplicated entries: {dup}".format({"dup": find_dup(allowed)}), get_stack())
+	for cname in allowed:
+		allowed_serializable[cname] = address_record[cname]
+
+func set_serializable():
+	# Utilities.ProfilingTools.benchmark(funcref(self, "set_serializable_worker"), \
+	# 	[], true)
+	set_serializable_worker()
+	pass
+
+class Serrializer_V2 extends Reference:
+
+	# Controlled Environment Full-Object Serializer
+
+	const SAFE_CHECK := true
+	const SERIALIZER_V2_VER := PoolIntArray([2, 4, 1])
+	const MULTITHREADED := false
+	enum INSTANCE_TYPE {
+		GENERAL_OBJECT,
+		NODE,
+		RESOURCE,
+		SERIALIZABLE,
+		CONTAINER,
+		DIRECT_VALUE, 
+	}
+
+	var original_cfg: Serializable = null
+	var final := {}
+	var router := {}
+	var object_db := {}
+	var container_db := {}
+	var unserializable_db := {}
+	var allowed_serializable := {}
+
+	var iterating: Object = null
+
+	func _init(cfg: Serializable, allowed: Dictionary):
+		original_cfg = cfg
+		allowed_serializable = allowed
+	
+	func get_id(curr: Object = null) -> int:
+		if curr == null:
+			return iterating.get_instance_id()
+		return curr.get_instance_id()
+
+	func serialize() -> Dictionary:
+		var address := serialize_worker(original_cfg)
+		final = {
+			"^__serializer_version": SERIALIZER_V2_VER,
+			"^__entrance_id": address["^__routed_to"],
+			"^__router": router,
+			"^__objects": object_db,
+			"^__containers": container_db,
+			"^__unserializables": unserializable_db,
+		}
+		return final
+
+	func get_pointer(type := 0, id := 0) -> Dictionary:
+		return {
+			"^__type": type,
+			"^__holder": id,
+			"^__dflag": false,
+		}
+
+	func get_route(id: int) -> Dictionary:
+		return {
+			"^__routed_to": id,
+		}
+
+	func container_check(obj) -> bool:
+		return  obj is Array || obj is Dictionary ||\
+				obj is PoolByteArray || obj is PoolColorArray || obj is PoolIntArray ||\
+				obj is PoolRealArray || obj is PoolStringArray || obj is PoolVector2Array || obj is PoolVector3Array
+
+	func general_serialization(item):
+		if item is Serializable:
+			return serialize_worker(item)
+		elif item is Resource:
+			return s_res(item)
+		elif container_check(item):
+			return s_container(item)
+		else:
+			return item
+
+	func s_node(ref: Node) -> Dictionary:
+		var obj_id := get_id(ref)
+		if obj_id in router:
+			return get_route(obj_id)
+		var pointer := get_pointer(INSTANCE_TYPE.NODE, obj_id)
+		var value := {
+			"^__node_name": ref.name,
+			"^__node_base_class": ref.get_class(),
+			"^__node_path": ref.get_path(),
+		}
+		router[obj_id] = pointer
+		unserializable_db[obj_id] = value
+		return get_route(obj_id)
+
+	func s_container(con) -> Dictionary:
+		if con is Dictionary:
+			return s_dict(con)
+		return s_pool(con)
+
+	func s_dict(obj: Dictionary) -> Dictionary:
+		var id := -obj.hash()
+		if id in router:
+			return get_route(id)
+		var pointer := get_pointer(INSTANCE_TYPE.CONTAINER, id)
+		pointer["^__container_type"] = "hash_map"
+		var re = {}
+		for key in obj:
+			var value = obj[key]
+			re[key] = general_serialization(value)
+		container_db[id] = re
+		router[id] = pointer
+		return get_route(id)
+
+	func s_pool(obj) -> Dictionary:
+		var copy: Array
+		if not obj is Array:
+			copy = Array(obj)
+		else:
+			copy = obj
+		var id := -copy.hash()
+		if id in router:
+			return get_route(id)
+		var pointer := get_pointer(INSTANCE_TYPE.CONTAINER, id)
+		pointer["^__container_type"] = "pooled"
+		var re = []
+		if not obj is Array:
+			re = obj
+		else:
+			for item in obj:
+				re.append(general_serialization(item))
+		container_db[id] = re
+		router[id] = pointer
+		return get_route(id)
+
+	func s_res(obj: Resource) -> Dictionary:
+		var id := obj.get_instance_id()
+		if id in router:
+			return get_route(id)
+		var res_loc := obj.resource_path
+		var res_class := obj.get_class()
+		var pointer := get_pointer(INSTANCE_TYPE.RESOURCE, id)
+		if obj.get_script() != null or res_loc.empty():
+			res_loc = ""
+			res_class = ""
+		var re := {}
+		re["^__res_loc"] = res_loc
+		re["^__res_class"] = obj.get_class()
+		unserializable_db[id] = re
+		router[id] = pointer
+		return get_route(id)
+
+	# func s_ser(obj: Serializable) -> Dictionary:
+	# 	var new_instance := self_instance(obj)
+	# 	var new_record: Dictionary = new_instance.serialize()
+	# 	router.merge(new_record["^__router"])
+	# 	object_db.merge(new_record["^__objects"])
+	# 	container_db.merge(new_record["^__containers"])
+	# 	unserializable_db.merge(new_record["^__unserializables"])
+	# 	return router[new_record["^__entrance_id"]]
+
+	func serialize_worker(curr_cfg: Serializable) -> Dictionary:
+		var obj_id := get_id(curr_cfg)
+		if obj_id in router:
+			return get_route(obj_id)
+		if not MULTITHREADED:
+			iterating = curr_cfg
+		var pointer := get_pointer(INSTANCE_TYPE.SERIALIZABLE, obj_id)
+		var real_value := {}
+		var cfg_class_name := ""
+		if SAFE_CHECK:
+			var script_index := allowed_serializable.values().\
+				find(curr_cfg.get_script().resource_path)
+			if script_index == -1:
+				Serializer_AssistClass.prompt_not_allowed(curr_cfg.name)
+				return pointer
+			cfg_class_name = allowed_serializable.keys()[script_index]
+		else:
+			cfg_class_name = curr_cfg.name
+		pointer["^__ser_base_class"] = curr_cfg.get_class()
+		pointer["^__ser_class_name"] = cfg_class_name
+		router[obj_id] = pointer
+		var re := {}
+		for var_name in curr_cfg.property_list:
+			var value = curr_cfg.get(var_name)
+			re[var_name] = general_serialization(value)
+		object_db[obj_id] = re
+		return get_route(obj_id)
+
+class Deserializer_V2 extends Reference:
+
+	var original_ser := {}
+	var final = null
+	var entry := {}
+	var router := {}
+	var object_db := {}
+	var container_db := {}
+	var unserializable_db := {}
+	var deserialized := {
+		"object_db": {},
+		"container_db": {},
+		"unserializable_db": {},
+	}
+
+	var allowed_serializable := {}
+
+	func _init(cfg: Dictionary, allowed: Dictionary):
+		original_ser = cfg
+		allowed_serializable = allowed
+
+	func reverse_id(id: int):
+		
+		pass
+
+	func get_pointer(id: int) -> Dictionary:
+		return router.get(id, {})
+
+	func deserialize():
+		var entrance =		original_ser["^__entrance_id"]
+		router =			original_ser["^__router"]
+		object_db =			original_ser["^__objects"]
+		container_db =		original_ser["^__containers"]
+		unserializable_db =	original_ser["^__unserializables"]
+		entry = reverse_id(entrance)
+		final = deserialize_worker(entry)
+		return final
+
+	func general_deserialization(id: int):
+		var pointer := get_pointer(id)
+		match pointer["^__type"]:
+			Serrializer_V2.INSTANCE_TYPE.GENERAL_OBJECT:
+				var de = unserializable_db[id]
+				deserialized["unserializable_db"][id] = de
+				return de
+			Serrializer_V2.INSTANCE_TYPE.NODE:
+				pass
+			Serrializer_V2.INSTANCE_TYPE.RESOURCE:
+				pass
+			Serrializer_V2.INSTANCE_TYPE.SERIALIZABLE:
+				pass
+			Serrializer_V2.INSTANCE_TYPE.CONTAINER:
+				pass
+			Serrializer_V2.INSTANCE_TYPE.DIRECT_VALUE:
+				pass
+			_:
+				return {}
+
+	func deserialize_worker(curr: Dictionary):
+		pass
 
 class Serializer_AssistClass extends Reference:
+
+	const CFG_VER := PoolIntArray([1, 3, 0])
+
 	var original_cfg: Serializable = null
 	var final := {}
 	var allowed_serializable := {}
@@ -40,7 +333,7 @@ class Serializer_AssistClass extends Reference:
 		}
 		serializer_worker(original_cfg)
 
-	func prompt_not_allowed(c_name: String):
+	static func prompt_not_allowed(c_name: String):
 		Out.print_error("Serialization of class {cname} is not allowed"\
 			.format({"cname": c_name}), get_stack())
 
@@ -167,7 +460,7 @@ class Deserializer_AssistClass extends Reference:
 
 	func version_check(ver: PoolIntArray) -> bool:
 		var max_sub_ver := 3
-		var curr_verr := CFG_VER
+		var curr_verr := Serializer_AssistClass.CFG_VER
 		for iter in range(0, max_sub_ver):
 			if ver[iter] > curr_verr[iter]:
 				Out.print_error("Current CFG_VER is lower than given Serializable's", get_stack())
@@ -276,10 +569,17 @@ func _ready():
 #	for k in allowed_serializable:
 #		print("{class}: {path}".format({"class": k, "path": allowed_serializable[k]}))
 
-func serialize(cfg: Serializable) -> Dictionary:
-	var assist := Serializer_AssistClass.new(cfg, allowed_serializable)
-	assist.serialize()
-	return assist.final
+func serialize(cfg: Serializable, method := 0) -> Dictionary:
+	match method:
+		0:
+			var assist := Serializer_AssistClass.new(cfg, allowed_serializable)
+			assist.serialize()
+			return assist.final
+		1:
+			var assist := Serrializer_V2.new(cfg, allowed_serializable)
+			return assist.serialize()
+		_:
+			return {}
 
 func deserialize(ser: Dictionary):
 	var assist := Deserializer_AssistClass.new(ser, allowed_serializable)

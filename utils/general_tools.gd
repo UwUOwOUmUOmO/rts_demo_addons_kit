@@ -290,12 +290,6 @@ class TrialTools extends Reference:
 		var service = SingletonManager.fetch(target)
 		return try_call(service, property, args)
 	
-	static func try_cast(obj: Object, to, default = null):
-		if obj is to:
-			return obj
-		else:
-			return default
-
 	static func try_divide(divisor: float, dividend: float) -> float:
 		if dividend != 0.0:
 			return divisor / dividend
@@ -318,6 +312,7 @@ class TrialTools extends Reference:
 		return
 
 class ProfilingTools extends Reference:
+
 	static func benchmark(function: FuncRef, args := [], auto_output := false) -> int:
 		var start := Time.get_ticks_usec()
 		var re = function.call_funcv(args)
@@ -325,6 +320,6 @@ class ProfilingTools extends Reference:
 		var perf := end - start
 		if not auto_output:
 			return perf
-		Out.print_debug("Benchmark result for {fname}: {result}"\
+		Out.print_debug("Benchmark result for {fname}: {result} microsecond(s)"\
 			.format({"fname": function.function, "result": perf}))
 		return perf

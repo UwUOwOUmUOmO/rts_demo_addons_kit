@@ -40,6 +40,17 @@ func _object_deserialized():
 		states_pool[keys_list[iter]].next_state = next
 	sp_mutex.unlock()
 
+func _termination_handler(_proc):
+	is_paused = true
+	sp_mutex = null
+	bb_mutex = null
+	states_pool = {}
+	yield_pool = {}
+	blackboard = {}
+	first_state = null
+	last_state = null
+	processing_state = null
+
 func state_check(s: StateSingular):
 	var s_name := s.state_name
 	return not s_name in states_pool and \

@@ -4,7 +4,7 @@ class_name ProcessorsCluster
 
 var is_ready			:= false
 var is_commissioned     := false setget set_commissioned
-var auto_remove         := true
+var auto_free_cluster         := true
 var _ref: InRef          = null
 
 var host = null
@@ -59,7 +59,7 @@ func decommission():
 		proc.terminated = true
 	cluster = []
 	cluster_mutex.unlock()
-	if auto_remove:
+	if auto_free_cluster:
 		queue_free()
 
 func commission():

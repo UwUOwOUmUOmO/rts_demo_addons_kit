@@ -31,7 +31,7 @@ var resistant: PoolRealArray = [
 	1.0, 1.0, 1.0,
 	1.0, 1.0, 1.0
 ]
-var effector_pool := []
+var effect_pool := []
 var no_hp_emitted := false
 
 # Volatile

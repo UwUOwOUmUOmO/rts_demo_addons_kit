@@ -13,9 +13,9 @@ export(float, 0.0, 1.0) var impact_speed_reduction := 0.3
 export(float, 0.0, 100.0) var delay_time := 0.0
 export(float, 0.0, 100.0) var explosion_lifetime := 0.0
 export var damage_modifier: Resource = null
-export var effector_1: Resource = null
-export var effector_2: Resource = null
-export var effector_3: Resource = null
+export var effect_1: Resource = null
+export var effect_2: Resource = null
+export var effect_3: Resource = null
 
 onready var allow_damage: bool = SingletonManager.static_services["UtilsSettings"].allow_damage
 onready var explosion_ref: Spatial = get_node_or_null(explosion)
@@ -38,18 +38,18 @@ func play():
 		distribute_damage()
 	_finalize()
 
-func get_effectors() -> Array:
+func get_effects() -> Array:
 	var re := []
-	if effector_1 != null:
-		re.append(effector_1)
-	if effector_2 != null:
-		re.append(effector_2)
-	if effector_3 != null:
-		re.append(effector_3)
+	if effect_1 != null:
+		re.append(effect_1)
+	if effect_2 != null:
+		re.append(effect_2)
+	if effect_3 != null:
+		re.append(effect_3)
 	return re
 
 func distribute_damage():
-	var effector_list := get_effectors()
+	var effect_list := get_effects()
 	var bodies: Array = Utilities.TrialTools.try_call(aoec_ref, "get_overlapping_bodies", \
 		[], [])
 	for b in bodies:
@@ -58,7 +58,7 @@ func distribute_damage():
 				b._controller._finalize()
 				continue
 			var request := DamageRequest.new(b, base_damage, damage_modifier, \
-				effector_list)
+				effect_list)
 			CombatServer.CombatMiddleman.damage(request)
 
 func _finalize():

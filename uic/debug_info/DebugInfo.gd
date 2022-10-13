@@ -2,6 +2,7 @@ extends Control
 
 onready var output: Label = $out
 
+export(bool) var pause_update := false
 export(bool) var use_physics_process := false
 export(int) var output_limit := -1
 export(int, 1, 200) var separator_character_count := 1 setget set_scc
@@ -56,9 +57,9 @@ func update_output():
 	output.text = make_text()
 
 func _process(_delta):
-	if not use_physics_process:
+	if not use_physics_process and not pause_update:
 		update_output()
 
 func _physics_process(_delta):
-	if use_physics_process:
+	if use_physics_process and not pause_update:
 		update_output()

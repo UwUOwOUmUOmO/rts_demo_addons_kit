@@ -7,10 +7,11 @@ const CONFIG_VERSION := "1.2.3"
 var prop_mutex := Mutex.new()
 
 var name := "Serializable"
-var irid := 0 setget set_irid
 var property_list: PoolStringArray = []
 var exclusion_list: PoolStringArray = []
 var no_deep_scan: PoolStringArray = []
+
+var debug_test_value = null
 
 func _init():
 	# Create a property list, inheritance can edit exclusion_list
@@ -42,9 +43,6 @@ func _set(property, value):
 	set(property, value)
 	emit_changed()
 	return true
-
-func set_irid(id: int):
-	irid = id
 
 func _to_string():
 	var serialized := serialize()

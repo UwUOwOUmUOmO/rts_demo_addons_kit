@@ -128,17 +128,17 @@ class CombatMiddleman extends Reference:
 			mixed *= mod.fort
 		return clamp(mixed, 0.0, INF)
 
-	static func effector_calculate(effector_list: Array) -> float:
-		# TODO: Implement Armor Effectors
+	static func effect_calculate(effect_list: Array) -> float:
+		# TODO: Implement Armor Effects
 		return 1.0
 
 	# Main functions
-	static func add_hull_effector(target, eff: Effector):
+	static func add_hull_effect(target, eff: Effect):
 		# To be implemented
 		if target is Combatant:
-			Utilities.TrialTools.try_append(target, "_vehicle_config.hullProfile.effector_pool", eff)
+			Utilities.TrialTools.try_append(target, "_vehicle_config.hullProfile.effect_pool", eff)
 		elif target is HullProfile:
-			(target as HullProfile).effector_pool
+			(target as HullProfile).effect_pool
 
 	static func damage(request: DamageRequest):
 		var hull_profile: HullProfile = Utilities.TrialTools.try_get(request.damage_target, \
@@ -151,9 +151,9 @@ class CombatMiddleman extends Reference:
 		if request.damage_mod != null:
 			hull_resistant_mod = resistant_calculate(hull_profile.resistant, request.damage_mod.warhead_type)
 			warhead_dmg_mod = warhead_dmg_calculate(request.damage_mod)
-		var effectors_mod := effector_calculate(hull_profile.effector_pool)
+		var effects_mod := effect_calculate(hull_profile.effect_pool)
 		var computed_damage := request.base_damage * \
-			(hull_resistant_mod * warhead_dmg_mod * effectors_mod)
+			(hull_resistant_mod * warhead_dmg_mod * effects_mod)
 		hull_profile.damage(computed_damage)
 
 func _ready():
