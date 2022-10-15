@@ -3,10 +3,13 @@ extends AirCombatant
 class_name AdvancedFighterBrain
 
 const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbcfg.tres")
+const USE_MULTITHREADS := false
 
 # Persistent
 var states_auto_init := true
 var is_halted := false
+var cluster_name := ""
+var cluster: ProcessorsCluster = null
 var state_machine: StateMachine = null
 var allow_gravity := false setget set_gravity
 var states := {}
@@ -14,6 +17,7 @@ var states := {}
 # Volatile
 var drag := 0.0
 var downward_speed := 0.0
+var roll_queue := 0.0
 
 class AFBSM_TestState extends StateSingular:
 	
@@ -66,7 +70,7 @@ class AFBSM_Planner extends StateSingular:
 		blackboard_set("skip_throttle", false)
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		update()
 		reset_status()
 
@@ -119,9 +123,10 @@ class AFBSM_Engine extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		blackboard_set("accel_update", false)
 		update()
 		# bake_deccel_time()
@@ -157,7 +162,7 @@ class AFBSM_Engine extends StateSingular:
 		var fwd_vec: Vector3 = -afb.global_transform.basis.z
 		var movement := fwd_vec * curr
 		afb.currentSpeed = curr
-		afb.move_and_slide(movement)
+		# afb.move_and_slide(movement)
 
 class AFBSM_Throttle extends StateSingular:
 
@@ -180,9 +185,10 @@ class AFBSM_Throttle extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		update()
 
 	func measurement_setup():
@@ -267,16 +273,17 @@ class AFBSM_Gravity extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		update()
 
 	func _compute(delta: float):
 		if not afb.allow_gravity:
 			return
 		afb.downward_speed += GRAVITATIONAL_CONSTANT * delta
-		afb.move_and_slide(Vector3(0.0, -afb.downward_speed, 0.0))
+		# afb.move_and_slide(Vector3(0.0, -afb.downward_speed, 0.0))
 
 class AFBSM_Climb extends StateSingular:
 
@@ -289,9 +296,10 @@ class AFBSM_Climb extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		update()
 
 	func _compute(_delta: float):
@@ -315,9 +323,10 @@ class AFBSM_Steer extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		update()
 		pfps_test()
 
@@ -372,23 +381,24 @@ class AFBSM_Roll extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func get_yaw() -> float:
 		return (afb.global_transform as Transform).\
 			basis.get_euler().y
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		last_yaw = get_yaw()
 		update()
 
 	static func children_roll(target: Node, amount: float):
 		if target is Spatial:
 			target.rotation.z = clamp(amount, -PI, PI)
+		# target.roll_queue += amount
 
 	func _compute(delta: float):
 		var current_yaw := get_yaw()
-
 		var yaw_delta := current_yaw - last_yaw
 		var roll_rps := yaw_delta / delta
 		var roll_justified: float = roll_rps * afb_cfg.rollAmplifier
@@ -410,9 +420,10 @@ class AFBSM_RollNormalize extends StateSingular:
 
 	func update():
 		afb_cfg = afb._vehicle_config
+		pass
 
 	func _boot():
-		afb = current_machine.host
+		# afb = current_machine.host
 		update()
 
 	func _compute(delta: float):
@@ -426,7 +437,19 @@ func _init():
 
 func _ready():
 	._ready()
-	sm_init()
+	if not USE_MULTITHREADS:
+		sm_init()
+	else:
+		var swarm: ProcessorsSwarm = SingletonManager.fetch("ProcessorsSwarm")
+		cluster = swarm.fetch("AFB_cluster")
+		while cluster == null:
+			cluster = swarm.fetch("AFB_cluster")
+			yield(get_tree(), "idle_frame")
+		# print("Yeet")
+#		cluster.host = self
+#		cluster.multithreading = true
+		state_machine = StateMachine.new()
+		cluster.add_processor(state_machine)
 	if states_auto_init:
 		init_states()
 
@@ -464,9 +487,13 @@ func init_states():
 		st.state_name: st,
 		ro.state_name: ro,
 	}
+	for s in states.values():
+		s.afb = self
 	# state_machine.add_state(AFBSM_TestState.new())
 	state_machine.mass_push(states.values())
 	pl.connect("destination_arrived", self, "des_arrived_handler")
+#	if USE_MULTITHREADS:
+#		cluster.commission()
 
 func des_arrived_handler(_b):
 	# change_machine_state(false)
@@ -491,13 +518,25 @@ func set_course(des: Vector3) -> void:
 
 func change_machine_state(s := true):
 	# state_machine.is_paused = s
+	if USE_MULTITHREADS:
+		if cluster == null:
+			yield(get_tree(), "idle_frame")
+		elif cluster.get_parent() == null:
+			yield(get_tree(), "idle_frame")
 	if s:
 		state_machine.states_pool["AFBSM_Planner"].bake_next_des()
 
 func compute(delta: float):
 	if is_halted:
 		return
-	state_machine._compute(delta)
+	roll_queue = 0.0
+	if not USE_MULTITHREADS:
+		state_machine._compute(delta)
+	var dir: Vector3 = -global_transform.basis.z
+	dir *= currentSpeed
+	dir += Vector3.DOWN * downward_speed
+	move_and_slide(dir, Vector3.UP)
+	# rotation.z = roll_queue
 
 func _physics_process(delta):
 	if _use_physics_process:
