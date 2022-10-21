@@ -2,10 +2,11 @@ extends AirCombatant
 
 class_name AdvancedFighterBrain
 
-const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbcfg.tres")
+const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbncfg.tres")
 const USE_MULTITHREADS := false
 
 # Persistent
+var USE_THREAD_DISPATCHER: bool = ProjectSettings.get_setting("game/use_threads_dispatcher")
 var states_auto_init := true
 var is_halted := false
 var cluster_name := ""
@@ -395,6 +396,9 @@ class AFBSM_Roll extends StateSingular:
 	static func children_roll(target: Node, amount: float):
 		if target is Spatial:
 			target.rotation.z = clamp(amount, -PI, PI)
+#			var new_rotation: Vector3 = target.rotation
+#			new_rotation.z = clamp(amount, -PI, PI)
+#			target.set_deferred("rotation", new_rotation)
 		# target.roll_queue += amount
 
 	func _compute(delta: float):
@@ -432,7 +436,7 @@ class AFBSM_RollNormalize extends StateSingular:
 
 func _init():
 	._init()
-	set_config(DEFAULT_AFBCFG)
+	set_config(DEFAULT_AFBCFG.config_duplicate())
 	# set_pp(false)
 
 func _ready():
@@ -452,6 +456,8 @@ func _ready():
 		cluster.add_processor(state_machine)
 	if states_auto_init:
 		init_states()
+	if USE_THREAD_DISPATCHER and not USE_MULTITHREADS:
+		NodeDispatcher.add_node(self)
 
 func _exit_tree():
 	state_machine.terminated = true
@@ -532,16 +538,26 @@ func compute(delta: float):
 	roll_queue = 0.0
 	if not USE_MULTITHREADS:
 		state_machine._compute(delta)
+
+func _physics_process(delta):
+	if _use_physics_process and not USE_THREAD_DISPATCHER:
+		compute(delta)
 	var dir: Vector3 = -global_transform.basis.z
 	dir *= currentSpeed
 	dir += Vector3.DOWN * downward_speed
+#	call_deferred("move_and_slide", dir, Vector3.UP)
+#	move_and_slide(dir, Vector3.UP)
 	move_and_slide(dir, Vector3.UP)
 	# rotation.z = roll_queue
 
-func _physics_process(delta):
-	if _use_physics_process:
+func _process(delta):
+	if not _use_physics_process and not USE_THREAD_DISPATCHER:
 		compute(delta)
 
-func _process(delta):
-	if not _use_physics_process:
-		compute(delta)
+func dispatched_physics():
+	if _use_physics_process and USE_THREAD_DISPATCHER:
+		compute(get_physics_process_delta_time())
+
+func dispatched_idle():
+	if not _use_physics_process and USE_THREAD_DISPATCHER:
+		compute(get_process_delta_time())

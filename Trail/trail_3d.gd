@@ -8,6 +8,7 @@ Description: Advanced 2D/3D Trail system.
 
 extends ImmediateGeometry
 
+var USE_THREAD_DISPATCHER: bool = ProjectSettings.get_setting("game/use_threads_dispatcher")
 
 export(bool) 			var emit := true
 export(float) 			var distance := 0.1
@@ -338,9 +339,10 @@ func _ready() -> void:
 	
 	set_as_toplevel(true)
 	global_transform = Transform()
+	if USE_THREAD_DISPATCHER:
+		NodeDispatcher.add_node(self)
 
-
-func _process(delta) -> void:
+func compute(delta: float):
 	if emit:
 		_emit(delta)
 		
@@ -348,3 +350,13 @@ func _process(delta) -> void:
 		# This is needed for alignment == view, so it can be updated every frame.
 		_render_geometry(points)
 
+func _process(delta) -> void:
+	if not USE_THREAD_DISPATCHER:
+		compute(delta)
+
+func dispatched_idle():
+	if USE_THREAD_DISPATCHER:
+		compute(get_process_delta_time())
+
+func dispatched_physics():
+	pass

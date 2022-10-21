@@ -1,0 +1,247 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/EpicDogfight/formations/squadron.gd.gd" type="Script" id=1]
+
+[node name="Squadron-Db80" type="Spatial"]
+script = ExtResource( 1 )
+
+[node name="Center" type="Spatial" parent="."]
+
+[node name="P0" type="Spatial" parent="Center"]
+
+[node name="P1" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -30 )
+
+[node name="P2" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, 0 )
+
+[node name="P3" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 0 )
+
+[node name="P4" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, 30 )
+
+[node name="P5" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, 30 )
+
+[node name="P6" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, 30 )
+
+[node name="P7" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, 30 )
+
+[node name="P8" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, 0 )
+
+[node name="P9" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, 0 )
+
+[node name="P10" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 112.922 )
+
+[node name="P11" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 82.9221 )
+
+[node name="P12" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, 112.922 )
+
+[node name="P13" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 112.922 )
+
+[node name="P14" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, 142.922 )
+
+[node name="P15" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, 142.922 )
+
+[node name="P16" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, 142.922 )
+
+[node name="P17" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, 142.922 )
+
+[node name="P18" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, 112.922 )
+
+[node name="P19" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, 112.922 )
+
+[node name="P20" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -173.886 )
+
+[node name="P21" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -203.886 )
+
+[node name="P22" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -173.886 )
+
+[node name="P23" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -173.886 )
+
+[node name="P24" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, -143.886 )
+
+[node name="P25" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -143.886 )
+
+[node name="P26" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -143.886 )
+
+[node name="P27" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, -143.886 )
+
+[node name="P28" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, -173.886 )
+
+[node name="P29" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -173.886 )
+
+[node name="P30" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -485.23 )
+
+[node name="P31" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -515.23 )
+
+[node name="P32" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -485.23 )
+
+[node name="P33" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -485.23 )
+
+[node name="P34" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, -455.23 )
+
+[node name="P35" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -455.23 )
+
+[node name="P36" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -455.23 )
+
+[node name="P37" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, -455.23 )
+
+[node name="P38" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, -485.23 )
+
+[node name="P39" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -485.23 )
+
+[node name="P40" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -784.784 )
+
+[node name="P41" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -814.784 )
+
+[node name="P42" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -784.784 )
+
+[node name="P43" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -784.784 )
+
+[node name="P44" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, -754.784 )
+
+[node name="P45" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -754.784 )
+
+[node name="P46" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -754.784 )
+
+[node name="P47" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, -754.784 )
+
+[node name="P48" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, -784.784 )
+
+[node name="P49" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -784.784 )
+
+[node name="P50" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -671.862 )
+
+[node name="P51" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -701.862 )
+
+[node name="P52" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -671.862 )
+
+[node name="P53" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -671.862 )
+
+[node name="P54" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, -641.862 )
+
+[node name="P55" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -641.862 )
+
+[node name="P56" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -641.862 )
+
+[node name="P57" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, -641.862 )
+
+[node name="P58" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, -671.862 )
+
+[node name="P59" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -671.862 )
+
+[node name="P60" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -958.67 )
+
+[node name="P61" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -988.67 )
+
+[node name="P62" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -958.67 )
+
+[node name="P63" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -958.67 )
+
+[node name="P64" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, -928.67 )
+
+[node name="P65" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -928.67 )
+
+[node name="P66" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -928.67 )
+
+[node name="P67" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, -928.67 )
+
+[node name="P68" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, -958.67 )
+
+[node name="P69" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -958.67 )
+
+[node name="P70" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1270.01 )
+
+[node name="P71" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1300.01 )
+
+[node name="P72" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, -1270.01 )
+
+[node name="P73" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -1270.01 )
+
+[node name="P74" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -45, 0, -1240.01 )
+
+[node name="P75" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -1240.01 )
+
+[node name="P76" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -1240.01 )
+
+[node name="P77" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 0, -1240.01 )
+
+[node name="P78" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -120, 0, -1270.01 )
+
+[node name="P79" type="Spatial" parent="Center"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, -1270.01 )

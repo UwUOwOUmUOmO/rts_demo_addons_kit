@@ -1,0 +1,7 @@
+[gd_resource type="AdvancedCurve" format=2]
+
+[resource]
+max_value = 800.0
+_data = [ Vector2( 0, 0 ), 0.0, 350.948, 0, 0, Vector2( 0.193122, 421.818 ), 733.091, 733.091, 0, 0, Vector2( 0.603175, 589.091 ), 1790.11, 1790.11, 0, 0, Vector2( 1, 560 ), 0.0, 0.0, 0, 0 ]
+bake_method = 1
+sample_resolution = 600

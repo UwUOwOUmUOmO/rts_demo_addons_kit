@@ -9,9 +9,12 @@ onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 			.fixed_delta
 
 # Persistent
+var USE_THREAD_DISPATCHER: bool = ProjectSettings.get_setting("game/use_threads_dispatcher")
 var use_accbs := true
 
 # Volatile
+var moveDistance = Vector3.ZERO
+
 var accbs: AirComCBS = null
 var startingPoint := Vector3()
 var lookAtVec := Vector3()
@@ -39,6 +42,8 @@ func _ready():
 	add_child(accbs)
 	accbs.owner = self
 	process_switch()
+	if USE_THREAD_DISPATCHER:
+		NodeDispatcher.add_node(self)
 
 func set_device(d: int):
 	.set_device(d)
@@ -49,18 +54,34 @@ func set_device(d: int):
 		if isReady:
 			accbs.disabled = true
 
+func dispatched_physics():
+	if _use_physics_process and USE_THREAD_DISPATCHER:
+		_compute(get_physics_process_delta_time())
+
+func dispatched_idle():
+	if not _use_physics_process and USE_THREAD_DISPATCHER:
+		_compute(get_process_delta_time())
+
 func _process(delta):
 	._process(delta)
-	if not _use_physics_process:
+	if not _use_physics_process and not USE_THREAD_DISPATCHER:
 		_compute(delta)
 
 func _physics_process(delta):
 #	._physics_process(delta)
-	if _use_physics_process:
+	if _use_physics_process and not USE_THREAD_DISPATCHER:
 		_compute(fixed_delta)
+	if enableGravity:
+		moveDistance += -global_transform.basis.y\
+			* (0.5 * GRAVITATIONAL_CONSTANT * _vehicle_config.weight)
+	if useBuiltinTranslator:
+		move_and_slide(moveDistance, Vector3.UP)
+	else:
+		global_translate(moveDistance * delta)
+	_rollProcess()
+	_setRoll(lerp(currentRoll, 0.0, 0.9995))
 
 func _compute(delta):
-	var moveDistance = Vector3.ZERO
 	# if useRudder:
 	# 	moveDistance = _rudderControl()
 	if useRudder:
@@ -94,16 +115,6 @@ func _compute(delta):
 			* (current_destination.y - global_transform.origin.y)\
 			* _vehicle_config.climbRate
 		previousYaw = currentYaw
-	if isReady:
-		if enableGravity:
-			moveDistance += -global_transform.basis.y\
-				* (0.5 * GRAVITATIONAL_CONSTANT * _vehicle_config.weight)
-		if useBuiltinTranslator:
-			move_and_slide(moveDistance, Vector3.UP)
-		else:
-			global_translate(moveDistance * delta)
-		_rollProcess()
-		_setRoll(lerp(currentRoll, 0.0, 0.9995))
 
 func rudderCheck():
 	rudder.rotation = Vector3(0.0, rudderAngle, 0.0)
