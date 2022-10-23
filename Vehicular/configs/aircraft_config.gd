@@ -8,7 +8,7 @@ var speedSnapping				:= 1.0
 var climbRate					:= 1.2
 var minThrottle					:= 0.2
 var maxThrottle					:= 1.0
-var maxSpeed					:= 100.0
+var max_speed					:= 100.0
 var rollAmplifier				:= 10.0
 var pitchAmplifier				:= 0.07
 var maxRollAngle				:= PI / 4.0
@@ -19,7 +19,7 @@ var slowingAt					:= 0.3
 var orbitError					:= 0.7
 var deadzone					:= 3.0
 var switchDesZonePerc			:= 0.1
-var rollNormalizationSpeed		:= deg2rad(10.0)
+var rollNormalizationSpeed		:= deg2rad(40.0)
 
 # Min/max switchDesZone squared
 var minSDZS						:= 625.0
@@ -45,8 +45,8 @@ var speedLossMod				:= 15.0
 # 			return rom.get_exclusive("minThrottle", minThrottle)
 # 		"maxThrottle":
 # 			return rom.get_exclusive("maxThrottle", maxThrottle)
-# 		"maxSpeed":
-# 			return rom.get_exclusive("maxSpeed", maxSpeed)
+# 		"max_speed":
+# 			return rom.get_exclusive("max_speed", max_speed)
 # 		"rollAmplifier":
 # 			return rom.get_exclusive("rollAmplifier", rollAmplifier)
 # 		"pitchAmplifier":
@@ -108,9 +108,9 @@ var speedLossMod				:= 15.0
 # 		"maxThrottle":
 # 			if rom.set_exclusive("maxThrottle", value):
 # 				maxThrottle = value
-# 		"maxSpeed":
-# 			if rom.set_exclusive("maxSpeed", value):
-# 				maxSpeed = value
+# 		"max_speed":
+# 			if rom.set_exclusive("max_speed", value):
+# 				max_speed = value
 # 		"rollAmplifier":
 # 			if rom.set_exclusive("rollAmplifier", value):
 # 				rollAmplifier = value

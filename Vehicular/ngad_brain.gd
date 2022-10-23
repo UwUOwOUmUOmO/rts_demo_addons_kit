@@ -33,7 +33,7 @@ extends Combatant
 # 		"decceleration": 		-2.0,
 # 		"minThrottle":			0.2,
 # 		"maxThrottle":			1.0,
-# 		"maxSpeed": 			100,
+# 		"max_speed": 			100,
 # 		"distanceChecking":		1.5,
 # 		"rotationSpeed":		5.0,
 # 		"marginError":			deg2rad(5.0),
@@ -66,8 +66,8 @@ extends Combatant
 
 # func _calculate_prequisites() -> Array:
 # 	var re := []
-# 	var allowedSpeed: float = throttle * _vehicle_config["maxSpeed"]
-# 	throttlePercentage = allowedSpeed / _vehicle_config["maxSpeed"]
+# 	var allowedSpeed: float = throttle * _vehicle_config["max_speed"]
+# 	throttlePercentage = allowedSpeed / _vehicle_config["max_speed"]
 # 	re.append(global_transform.basis.get_euler())
 # 	re.append(allowedSpeed)
 # 	return re
@@ -131,7 +131,7 @@ extends Combatant
 # 				0.0, allowedSpeed)
 # 	elif currentSpeed > allowedSpeed:
 # 		currentSpeed = clamp(currentSpeed + _vehicle_config["decceleration"],\
-# 				allowedSpeed, _vehicle_config["maxSpeed"])
+# 				allowedSpeed, _vehicle_config["max_speed"])
 
 # func _enforce_movement() -> void:
 # 	fwd_vec = -global_transform.basis.z
@@ -180,16 +180,16 @@ extends Combatant
 # 	lookAtVec = (destination - startingPoint).normalized()
 # 	if bake_timer:
 # 		scheduled_distance_check = false
-# 		var ac_time = get_time(_vehicle_config["maxSpeed"]\
+# 		var ac_time = get_time(_vehicle_config["max_speed"]\
 # 			, 0.0, _vehicle_config["acceleration"])
-# 		var ac_dis = get_distance(_vehicle_config["maxSpeed"]\
+# 		var ac_dis = get_distance(_vehicle_config["max_speed"]\
 # 			, 0.0, _vehicle_config["acceleration"])
 # 		var da_time = get_time(0.0\
-# 			, _vehicle_config["maxSpeed"], _vehicle_config["decceleration"])
+# 			, _vehicle_config["max_speed"], _vehicle_config["decceleration"])
 # 		var da_dis = get_distance(0.0\
-# 			, _vehicle_config["maxSpeed"], _vehicle_config["decceleration"])
+# 			, _vehicle_config["max_speed"], _vehicle_config["decceleration"])
 # 		var mid: float = distance - da_dis - ac_dis
-# 		var mid_time: float = mid / _vehicle_config["maxSpeed"]
+# 		var mid_time: float = mid / _vehicle_config["max_speed"]
 # 		timer1 = 0.0
 # 		timerReset1 = (ac_time + mid_time + da_time)\
 # 			- _vehicle_config["distanceChecking"]

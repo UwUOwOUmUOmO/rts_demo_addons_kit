@@ -1,10 +1,16 @@
-[gd_resource type="Resource" load_steps=4 format=2]
+[gd_resource type="Resource" load_steps=5 format=2]
 
 [ext_resource path="res://addons/Vehicular/configs/afbn_config.gd" type="Script" id=1]
 [ext_resource path="res://addons/Vehicular/configs/stdafbn_accel.tres" type="AdvancedCurve" id=2]
 [ext_resource path="res://addons/Vehicular/configs/stdafbn_deccel.tres" type="AdvancedCurve" id=3]
+[ext_resource path="res://addons/Vehicular/configs/stdafbn_turn.tres" type="AdvancedCurve" id=4]
 
 [resource]
 script = ExtResource( 1 )
 accel_graph = ExtResource( 2 )
 deccel_graph = ExtResource( 3 )
+turn_graph = ExtResource( 4 )
+turn_rate_amplification = 4.0
+turn_rate_accu_distipation = 5.0
+accel_accumulation_lost_rate = 0.86
+turn_to_roll_rate = 100.0

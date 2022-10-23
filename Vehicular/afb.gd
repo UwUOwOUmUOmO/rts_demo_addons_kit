@@ -176,9 +176,6 @@ class AFBSM_Throttle extends StateSingular:
 	var allowed_speed := 0.0
 	var theoretical_speed := 0.0
 	var accel_timer := 0.0
-	# 0: Accel
-	# 1: Deaccel
-	var last_accel_mode := 1
 
 	func _init():
 		name = "AFBSM_Throttle"
@@ -193,7 +190,7 @@ class AFBSM_Throttle extends StateSingular:
 		update()
 
 	func measurement_setup():
-		allowed_speed = afb.throttle * afb_cfg.maxSpeed
+		allowed_speed = afb.throttle * afb_cfg.max_speed
 		if allowed_speed != 0.0:
 			afb.speedPercentage = afb.currentSpeed / allowed_speed
 		else:

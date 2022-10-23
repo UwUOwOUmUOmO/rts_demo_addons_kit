@@ -81,6 +81,9 @@ func _physics_process(delta):
 	_rollProcess()
 	_setRoll(lerp(currentRoll, 0.0, 0.9995))
 
+var allowedSpeed := 0.0
+var currentYaw := 0.0
+
 func _compute(delta):
 	# if useRudder:
 	# 	moveDistance = _rudderControl()
@@ -102,8 +105,6 @@ func _compute(delta):
 	# elif isMoving and not useRudder:
 	elif isMoving:
 		var loaded = _prepare()
-		var allowedSpeed = loaded["allowedSpeed"]
-		var currentYaw = loaded["currentYaw"]
 		# Calculate and enforce roll
 		_enforceRoll(currentYaw)
 		# Calculate speed
@@ -121,7 +122,7 @@ func rudderCheck():
 	set_tracking_target(rudder)
 
 func _rudderControl() -> Vector3:
-	var allowedSpeed: float =_vehicle_config.maxSpeed
+	var allowedSpeed: float =_vehicle_config.max_speed
 	if allowedSpeed == 0.0:
 		speedPercentage = 0.0
 	else:
@@ -136,14 +137,14 @@ func _rudderControl() -> Vector3:
 	return forward * currentSpeed
 
 func _prepare():
-	var currentYaw = global_transform.basis.get_euler().y
+	currentYaw = global_transform.basis.get_euler().y
 	# distance_squared = global_transform.origin.distance_squared_to(current_destination)
 	distance_squared = get_distance_squared()
 	var accel: float = _vehicle_config.decceleration
 	var slowingTime: float = _vehicle_config.slowingTime
 	slowingRange = (currentSpeed * slowingTime) + (0.5 * accel * slowingTime)
 	slowingRange_squared = slowingRange * slowingRange
-	var allowedSpeed: float = _vehicle_config.maxSpeed * throttle
+	allowedSpeed = _vehicle_config.max_speed * throttle
 	if allowedSpeed != 0.0:
 		speedPercentage = clamp(currentSpeed / allowedSpeed, 0.0, 1.0)
 	else:
@@ -154,8 +155,6 @@ func _prepare():
 		_turn(current_destination)
 	else:
 		_turn(global_transform.origin + (accbs.suggested_direction * 1.0))
-	return {"allowedSpeed": allowedSpeed,\
-			"currentYaw": currentYaw}
 
 func _enforceRoll(currentYaw: float):
 	var roll = (currentYaw - previousYaw)
@@ -173,13 +172,16 @@ func _calculateSpeed(allowedSpeed: float):
 		clampMin = allowedSpeed
 	realSpeedLoss = abs(_vehicle_config.decceleration * speedLoss)
 	currentSpeed = clamp(clamp(currentSpeed + speedMod,\
-		clampMin, _vehicle_config.maxSpeed) - realSpeedLoss, 0.0, _vehicle_config.maxSpeed)
+		clampMin, _vehicle_config.max_speed) - realSpeedLoss, 0.0, _vehicle_config.max_speed)
 
 func _calculateTurnRate():
 	var minTurnRate = _vehicle_config.turnRate
 	var maxTurnrate = _vehicle_config.maxTurnRate
 	allowedTurn = lerp(maxTurnrate, minTurnRate, clamp(speedPercentage, 0.0, 1.0))
 	#---------------------------------------------------------------------
+	if not (device & PROJECTILE_TYPE.AIRCRAFT):
+		speedLoss = 0.0
+		return
 	var fwd_vec := -global_transform.basis.z
 	var target_vec := global_transform.origin.direction_to(current_destination)
 	var angle := abs(fwd_vec.angle_to(target_vec))
@@ -192,12 +194,10 @@ func _calculateTurnRate():
 # TODO: clean up
 func _turn(to: Vector3, turningSpeed := allowedTurn):
 	var global_pos := global_transform.origin
-	var target_pos := to
-	var rotation_speed = turningSpeed
 	var wtransform := global_transform.\
-		looking_at(Vector3(target_pos.x,global_pos.y,target_pos.z),Vector3.UP)
+		looking_at(Vector3(to.x,global_pos.y,to.z),Vector3.UP)
 	var wrotation := Quat(global_transform.basis).slerp(Quat(wtransform.basis),\
-		rotation_speed)
+		turningSpeed)
 
 	global_transform = Transform(Basis(wrotation), global_transform.origin)
 
@@ -243,10 +243,12 @@ func _setRoll(r: float):
 
 func _rollProcess(weigh = 0.05):
 	currentRoll = lerp(currentRoll, targetRoll, weigh)
-	var ch = get_children()
-	for c in ch:
-		if c is Spatial:
-			c.rotation.z = currentRoll
+	var child_count := get_child_count()
+	var iter := 0
+	while iter < child_count:
+		var curr = get_child(iter)
+		if curr is Spatial: curr.rotation.z = currentRoll
+		iter += 1
 
 func _bakeDestination(d: Vector3):
 	useRudder = false
