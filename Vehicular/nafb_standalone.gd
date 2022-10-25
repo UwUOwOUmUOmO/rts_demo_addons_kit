@@ -21,11 +21,14 @@ var drag := 0.0
 var downward_speed := 0.0
 var roll_queue := 0.0
 
+var db_last_cs := -1.0
+
 # Next Advanced Fighter Brain Standalone State
 class NAFBSS_Planner extends State:
 
-	const ENGINE_CHECK_AT := 1.0
-	const ENGINE_SPEED_THRESHOLD := 0.001
+	const ENGINE_CHECK_AT := 1.5
+	const ENGINE_SPEED_THRESHOLD := 0.01
+	# const RANGE_THRESHOLD := 1.0
 
 	signal destination_arrived(brain)
 	
@@ -43,6 +46,8 @@ class NAFBSS_Planner extends State:
 	var ds_squared := 0.0
 	var control_locked := false
 
+	# var location_check := Vector3.ZERO
+
 	func _init():
 		state_name = "NAFBSS_Planner"
 
@@ -54,7 +59,8 @@ class NAFBSS_Planner extends State:
 
 	func set_moving_status(s: bool):
 		afb.isMoving = s
-		engine_check_timer = 0.0
+		# location_check = afb.global_transform.origin
+		# engine_check_timer = 0.0
 		if s == false: emit_signal("destination_arrived", afb)
 
 	func reset_status():
@@ -67,8 +73,9 @@ class NAFBSS_Planner extends State:
 		automaton.blackboard_set("skip_throttle", false)
 
 	func bake_next_des(with: StateAutomaton):
+		afb.db_last_cs = afb.currentSpeed
 		if afb.inheritedSpeed > 0.0:
-			afb.currentSpeed = afb.inheritedSpeed
+			afb.set_speed(afb.inheritedSpeed)
 			afb.inheritedSpeed = 0.0
 		var d_squared: float = afb.distance_squared
 		var sa_sq: float = afb_cfg.slowingAt
@@ -91,10 +98,14 @@ class NAFBSS_Planner extends State:
 	func _poll(with: StateAutomaton):
 		var delta := with.get_delta()
 		engine_check_timer += delta
-		if engine_check_timer > ENGINE_CHECK_AT and afb.currentSpeed < ENGINE_SPEED_THRESHOLD:
-			set_moving_status(false)
+		# if engine_check_timer > ENGINE_CHECK_AT:
+		# 	pass
+		# 	set_moving_status(false)
+		# 	return "__next"
+		if control_locked: 
+			if afb.currentSpeed < ENGINE_SPEED_THRESHOLD:
+				set_moving_status(false)
 			return "__next"
-		if control_locked: return "__next"
 		if not afb.isMoving: return "__stop"
 		var d_squared: float = afb.distance_squared
 		var cs_squared: float = afb.currentSpeed
@@ -116,7 +127,6 @@ class NAFBSS_Engine extends State:
 	var automaton: StateAutomaton = null
 	
 	var accel_timer := 0.0
-	var deccel_total := 0.0
 
 	func _init():
 		state_name = "NAFBSS_Engine"
@@ -130,8 +140,7 @@ class NAFBSS_Engine extends State:
 		automaton.blackboard_set("accel_update", false)
 
 	func _poll(with: StateAutomaton):
-		var curr := 0.0
-		curr = afb.currentSpeed
+		var curr: float = afb.currentSpeed
 		if curr == 0.0: return "__next"
 		var delta := with.get_delta()
 		var accel_update: bool = automaton.blackboard_get("accel_update")
@@ -140,13 +149,10 @@ class NAFBSS_Engine extends State:
 		else:
 			accel_timer += delta
 			speed_change = afb_cfg.get_area_deccel(accel_timer - delta, accel_timer)
-			curr = clamp(curr - speed_change, 0.0, INF)
-			# if curr <= 0.0:
-			# 	var planner := automaton.pda.get_state_by_name("NAFBSS_Planner")
-			# 	if planner:
-			# 		planner.emit_signal("destination_arrived", afb)
-			# 		afb.isMoving = false
-		afb.currentSpeed = curr
+			curr = clamp(curr - speed_change, 0.0, afb_cfg.max_speed * 1.5)
+			if curr == 0.0:
+				pass
+		afb.set_speed(curr)
 		return "__next"
 
 	func _finalize(with: StateAutomaton):
@@ -160,6 +166,8 @@ class NAFBSS_Throttle extends State:
 	var afb_cfg: AFBNewConfiguration = null
 	var automaton: StateAutomaton = null
 
+
+	var speed_change := 0.0
 	var accu_lost_rate := 0.4
 	var allowed_speed := 0.0
 	var theoretical_speed := 0.0
@@ -173,7 +181,7 @@ class NAFBSS_Throttle extends State:
 
 	func update(with: StateAutomaton):
 		afb = with.client; afb_cfg = afb._vehicle_config;
-		accu_lost_rate = afb_cfg.accel_accumulation_lost_rate
+		accu_lost_rate = afb_cfg.accel_accumulation_lost_rate * afb_cfg.accel_graph.range
 		automaton = with
 
 	func _start(with: StateAutomaton):
@@ -189,26 +197,29 @@ class NAFBSS_Throttle extends State:
 	func calculate_speed(delta: float):
 		var curr: float = afb.currentSpeed
 		if curr > allowed_speed:
-			accel_timer = clamp(accel_timer - (accel_timer * accu_lost_rate * delta), \
-				0.0, INF)
+			accel_timer = clamp(accel_timer - (accu_lost_rate * delta), \
+				0.0, afb_cfg.accel_graph.range * 1.5)
 #			accel_timer = 0.0
-			return
+			theoretical_speed = curr
 		accel_timer += delta
-		var speed_change: float = afb_cfg.get_area_accel(accel_timer - delta, accel_timer)
+		speed_change = afb_cfg.get_area_accel(accel_timer - delta, accel_timer)
 		var speed_delta: float = abs(curr - allowed_speed)
-		theoretical_speed = clamp(curr + min(speed_change, speed_delta), 0.0, INF)
+		theoretical_speed = clamp(curr + abs(min(speed_change, speed_delta)), 0.0, allowed_speed * 2.0)
 
 	func process_drag():
 		var drag_force := theoretical_speed
 		drag_force = 0.0
-		drag_force *= afb.drag * DRAG_CONSTANT
-		afb.currentSpeed = clamp(theoretical_speed - drag_force, 0.0, INF)
+		# drag_force *= afb.drag * DRAG_CONSTANT
+		if afb.currentSpeed > theoretical_speed:
+			Out.print_debug("Here", get_stack())
+#			afb.db_last_cs = -1.0
+		afb.set_speed(clamp(theoretical_speed - drag_force, 0.0, INF))
 
 	func _poll(with: StateAutomaton):
 		var delta := with.get_delta()
 		if with.blackboard_get("skip_throttle"):
-			accel_timer = clamp(accel_timer - (accel_timer * accu_lost_rate * delta), \
-				0.0, INF)
+			accel_timer = clamp(accel_timer - (accu_lost_rate * delta), \
+				0.0, afb_cfg.accel_graph.range * 1.5)
 #			accel_timer = 0.0
 			return
 		measurement_setup()
@@ -294,7 +305,7 @@ class NAFBSS_Steer extends State:
 		afb = with.client; afb_cfg = afb._vehicle_config;
 		ampli = afb_cfg.turn_rate_amplification
 		distipation = deg2rad(afb_cfg.turn_rate_accu_distipation)
-		lost_rate = afb_cfg.accel_accumulation_lost_rate
+		lost_rate = afb_cfg.turn_accumulation_lost_rate * afb_cfg.turn_graph.range
 		automaton = with
 
 	func _start(with: StateAutomaton):
@@ -330,9 +341,10 @@ class NAFBSS_Steer extends State:
 		var fwd: Vector3 = -afb.global_transform.basis.z
 		var des: Vector3 = afb.current_destination
 		var tar: Vector3 = pos.direction_to(des)
-		if pos == des or fwd.angle_to(tar) <= distipation or afb.currentSpeed <= 0.01:
-			var change := turn_timer * lost_rate * delta
-			turn_timer = clamp(turn_timer - change, 0.0, INF)
+		# if pos == des or fwd.angle_to(tar) <= distipation or afb.currentSpeed <= 0.01:
+		if pos == des or fwd.angle_to(tar) <= distipation or not afb.isMoving:
+			var change := lost_rate * delta
+			turn_timer = clamp(turn_timer - change, 0.0, afb_cfg.turn_graph.range * 1.5)
 
 	func _poll(with: StateAutomaton):
 		var delta := with.get_delta()
@@ -402,8 +414,13 @@ class NAFBSS_Roll extends State:
 		# var roll_justified: float = roll_rps * afb_cfg.rollAmplifier
 		var max_roll_angle: float = afb_cfg.maxRollAngle
 		roll_justified = clamp(roll_justified, -max_roll_angle, max_roll_angle)
-		children_roll(afb, roll_justified)
+		# children_roll(afb, roll_justified)
+		afb.roll_queue = roll_justified
 		last_yaw = current_yaw
+
+#		if afb.currentSpeed < afb.db_last_cs:
+#			Out.print_debug("Here", get_stack())
+#			afb.db_last_cs = -1.0
 
 		return "__next"
 
@@ -482,14 +499,35 @@ func _exit_tree():
 func compute(delta: float):
 	state_automaton.poll(delta)
 
-func _physics_process(delta):
-	if _use_physics_process:
-		compute(delta)
+func enforce_all():
+	# Enforce roll
+	var size := get_child_count()
+	if size > 0:
+		# var curr_z: float = target.rotation.z
+		# target.rotation.z = clamp(curr_z + amount, -PI, PI)
+		# var new_amount: float = target.get_child(0).rotation.z + amount
+		# new_amount = clamp(new_amount, -PI, PI)
+		var iter = 0
+		while iter < size:
+			var curr = get_child(iter)
+			if curr is Spatial: curr.rotation.z = roll_queue
+			iter += 1
+	# Enforce translation
 	if not isMoving: return
 	var dir: Vector3 = -global_transform.basis.z
 	dir *= currentSpeed
 	dir += Vector3.DOWN * downward_speed
 	move_and_slide(dir, Vector3.UP)
+
+func set_speed(new_speed: float):
+	if (currentSpeed / clamp(new_speed, 0.001, INF)) > 100.0 and new_speed != 0.0:
+		pass
+	currentSpeed = new_speed
+
+func _physics_process(delta):
+	if _use_physics_process:
+		compute(delta)
+	enforce_all()
 
 func _process(delta):
 	if not _use_physics_process:

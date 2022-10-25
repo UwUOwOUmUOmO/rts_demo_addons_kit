@@ -174,9 +174,9 @@ func fire_once(delta := 0.0):
 	elif current_fire_mode == WeaponConfiguration.FIRE_MODE.BARRAGE:
 		if is_out_of_ammo():
 			return
-		var current_hardpoint: int = last_hardpoint + 1
-		if current_hardpoint >= hardpoints.size():
-			current_hardpoint = 0
+		var current_hardpoint: int = wrapi(last_hardpoint + 1, 0, hardpoints.size())
+#		if current_hardpoint >= hardpoints.size():
+#			current_hardpoint = 0
 		if hardpoints_activation[current_hardpoint] != 1:
 			return
 		var time_elapsed := abs(last_fire -\
@@ -187,8 +187,8 @@ func fire_once(delta := 0.0):
 			last_hardpoint = current_hardpoint
 			reserve -= 1
 			is_fired = true
-		else:
-			current_hardpoint -= 1
+#		else:
+#			current_hardpoint -= 1
 	if is_fired:
 		emit_signal("__fired", self)
 

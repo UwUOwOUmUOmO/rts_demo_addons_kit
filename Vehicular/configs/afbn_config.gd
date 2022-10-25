@@ -13,8 +13,9 @@ export(AdvancedCurve) var deccel_graph	:= preload("res://addons/Vehicular/config
 export(AdvancedCurve) var turn_graph	:= preload("res://addons/Vehicular/configs/stdafbn_turn.tres") \
 	setget set_tg
 export(float, 0.1, 50.0, 0.1) var turn_rate_amplification := 5.0
-export(float, 1.0, 10.0, 0.1) var turn_rate_accu_distipation := 10.0
+export(float, 1.0, 60.0, 0.1) var turn_rate_accu_distipation := 10.0
 export(float, 0.01, 1.0, 0.001) var accel_accumulation_lost_rate := 0.4
+export(float, 0.01, 1.0, 0.001) var turn_accumulation_lost_rate := 0.4
 export(float, 0.1, 1000.0, 0.1) var turn_to_roll_rate := 20.0 * 5.0
 
 #Compatibility values
