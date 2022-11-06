@@ -5,7 +5,7 @@ class_name WeaponConfiguration
 enum PROXIMITY_MODE { SPATIAL, FORWARD, DELAYED }
 enum WEAPON_TYPE	{ UNKNOWN, KINETIC, ENERGY }
 enum FIRE_MODE		{ UNKNOWN, SALVO, BARRAGE, CONTINUOUS }
-enum GUIDANCE		{ NA, SEMI, FLG, ACTIVE, PRECISION }
+enum GUIDANCE		{ NA, SEMI, FLG, ACTIVE, PRECISION, IHG }
 
 var weapon_name 				:= ""
 var description 				:= ""

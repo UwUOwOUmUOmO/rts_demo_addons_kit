@@ -11,6 +11,8 @@ signal __armament_fired(guidance)
 signal __armmament_armed(guidance)
 signal __armament_detonated(guidance)
 
+var is_ready := false
+
 onready var processors_swarm = SingletonManager.fetch("ProcessorsSwarm")
 onready var  fixed_delta: float = SingletonManager.fetch("UtilsSettings")\
 			.fixed_delta
@@ -47,7 +49,7 @@ func _physics_process(delta):
 func _guide(delta: float):
 	pass
 
-func _start(move := true):
+func _guidance_init(move := true):
 	if move:
 		global_translate(_barrel - global_transform.origin)
 	look_at(_direction, Vector3.UP)
@@ -61,8 +63,13 @@ func _start(move := true):
 	_signals_init()
 	_initialize()
 	set_armed(true)
-	_green_light = true
 	_boot_subsys()
+	is_ready = true
+
+func switch_on():
+	while not is_ready:
+		yield(get_tree(), "idle_frame")
+	_green_light = true
 
 func _signals_init():
 	Utilities.SignalTools.connect_from(self, _projectile, \

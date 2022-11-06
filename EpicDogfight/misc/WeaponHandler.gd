@@ -124,6 +124,8 @@ func spawn_projectile(no: int):
 			guidance = HomingGuidance.new()
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.FLG:
 			guidance = ForwardLookingGuidance.new()
+		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.IHG:
+			guidance = IntegratedHomingGuidance.new()
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.PRECISION:
 			guidance = PrecisionGuidance.new()
 			guidance.site = pgm_target
@@ -136,15 +138,17 @@ func spawn_projectile(no: int):
 	# 	if not instancing_result:
 	# 		Out.print_error("Failed to instance guidance", get_stack())
 	# 		return
-	guidance._barrel = hardpoints[no].global_transform.origin
+	var curr_hardpoint: Spatial = hardpoints[no]
+	var hp_loc := curr_hardpoint.global_transform.origin
+	var fwd_vec := -curr_hardpoint.global_transform.basis.z
+	var euler := curr_hardpoint.global_transform.basis.get_euler()
+	guidance._barrel = hp_loc
 	guidance._weapon_base_config = profile
-	var h: Spatial = hardpoints[no]
-	var fwd_vec := -h.global_transform.basis.z
-	var euler := h.global_transform.basis.get_euler()
 	guidance._direction = fwd_vec
 	while not guidance.get_parent():
 		yield(get_tree(), "idle_frame")
-	guidance._start()
+	guidance._guidance_init()
+	guidance.switch_on()
 
 func is_out_of_ammo() -> bool:
 	if reserve <= 0:

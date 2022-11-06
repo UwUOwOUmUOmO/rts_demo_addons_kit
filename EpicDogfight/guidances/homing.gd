@@ -6,7 +6,6 @@ const CONTROLLER_DEFAULT_SIGNALS := {
 	"__lock_on":		"lock_on_handler",
 	"__loose_lock":		"loose_lock_handler",
 }
-
 signal __lock_on(source, tar)
 signal __loose_lock(source, tar)
 
@@ -26,7 +25,6 @@ var inherited_speed := 0.0
 var self_destruct_time := 5.0
 var self_destruct_clock := 0.0
 var guided := false setget _set_guided, _get_guided
-
 
 var manual_control := false
 
@@ -130,21 +128,13 @@ func self_setup():
 	proximity_mode = _weapon_base_config.weaponProximityMode
 	self_destruct_time = _weapon_base_config.travelTime
 
-func _start(move := true):
-	self_setup()
+func vtol_setup():
 	vtol = VTOLFighterBrain.new()
 	vtol._vehicle_config = vtol_profile
 	vtol.device = AirCombatant.PROJECTILE_TYPE.MISSILE + projectile_type
 	vtol._controller = self
-	# var scene := get_tree().get_current_scene()
-	# if scene:
-	# 	scene.call_deferred("add_child", vtol)
-	# else:
-	# 	Out.print_error("Scene not ready", get_stack())
-	# 	return
 	LevelManager.template.add_peripheral(vtol)
-	while vtol.get_parent() == null:
-		yield(get_tree(), "idle_frame")
+	while vtol.get_parent() == null: yield(get_tree(), "idle_frame")
 	vtol.global_translate(_barrel - vtol.global_transform.origin)
 	vtol.inheritedSpeed = inherited_speed
 	vtol.overdriveThrottle = 1.0
@@ -154,10 +144,21 @@ func _start(move := true):
 	_projectile.owner = vtol
 	_projectile.translation = Vector3.ZERO
 	vtol.connect("__combatant_out_of_hp", self, "no_hp_handler")
+
+func _guidance_init(move := true):
+	self_setup()
+	vtol_setup()
+	while vtol.get_parent() == null: yield(get_tree(), "idle_frame")
 	_signals_init()
 	_initialize()
-	_green_light = true
 	_boot_subsys()
+	is_ready = true
+	# _green_light = true
+
+func switch_on():
+	while not is_ready:
+		yield(get_tree(), "idle_frame")
+	_green_light = true
 
 func no_hp_handler(_com):
 	_projectile.premature_detonation_handler()

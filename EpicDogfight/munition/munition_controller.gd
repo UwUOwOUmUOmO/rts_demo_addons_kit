@@ -21,7 +21,7 @@ var detonated := false
 var is_ready := false
 var max_lifetime := 0.0
 var particles_list := []
-var deliver: VTOLFighterBrain = null
+var deliver = null
 var guidance: WeaponGuidance = null
 var _ref: InRef = null
 
@@ -92,6 +92,8 @@ func arm_launched(g: WeaponGuidance):
 	g._autofree_projectile = false
 	if g is HomingGuidance:
 		deliver = g.vtol
+	elif g is IntegratedHomingGuidance:
+		deliver = g.embedded_system
 	_start()
 
 func arm_arrived(_g: WeaponGuidance):
@@ -121,20 +123,19 @@ func _finalize():
 	if warhead_ref != null:
 		exp_lifetime = warhead_ref.explosion_lifetime
 		warhead_ref.play()
-	yield(Out.timer(exp_lifetime + 0.0), "timeout")
-	Utilities.TrialTools.try_call(ph_ref, "queue_free")
-	autofree_timer = Out.timer(AUTO_FREE_INTERVAL)
-	yield(autofree_timer, "timeout")
-	autofree_timer = null
+	else:
+		_clean()
+#	while is_instance_valid(warhead_ref):
+	yield(Out.timer(exp_lifetime), "timeout")
 	_clean()
-	# Utilities.TrialTools.try_call(deliver, "queue_free")
-	# queue_free()
 
 func _clean():
-	while not Utilities.TrialTools.try_call(ph_ref, "is_queued_for_deletion", \
-		[], true):
-			yield(get_tree(), "idle_frame")
-	if autofree_timer != null:
-		Utilities.SignalTools.disconnect_all(autofree_timer)
-	Utilities.TrialTools.try_call(deliver, "queue_free")
+#	while not Utilities.TrialTools.try_call(ph_ref, "is_queued_for_deletion", \
+#		[], true):
+#			yield(get_tree(), "idle_frame")
+#	if autofree_timer != null:
+#		Utilities.SignalTools.disconnect_all(autofree_timer)
+#	if deliver != null:
+#		if deliver is VTOLFighterBrain:
+#			Utilities.TrialTools.try_call(deliver, "queue_free")
 	queue_free()

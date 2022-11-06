@@ -6,12 +6,15 @@ sky_horizon_color = Color( 0.545098, 0.686275, 0.811765, 1 )
 sky_curve = 0.136415
 ground_bottom_color = Color( 0.172549, 0.219608, 0.258824, 1 )
 ground_horizon_color = Color( 0.545098, 0.686275, 0.811765, 1 )
+sun_latitude = 22.37
+sun_longitude = 36.04
 sun_angle_max = 30.0
-sun_energy = 30.0
+sun_energy = 0.0
 
 [resource]
 background_mode = 2
 background_sky = SubResource( 14 )
+background_energy = 0.11
 ambient_light_sky_contribution = 0.0
 fog_depth_enabled = false
 fog_transmit_curve = 1.68179

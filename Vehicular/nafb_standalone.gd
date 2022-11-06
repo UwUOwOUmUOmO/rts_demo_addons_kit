@@ -3,9 +3,13 @@ extends AirCombatant
 class_name NAFB_Standalone
 
 const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbncfg.tres")
+const USE_PHYSICS_SERVER_TRANSLATOR := true
+const USE_FUTURE := false
+const DISABLE_STATE_AUTOMATON := false
 
 # System settings
-# var STANDALONE_STATE_AUTOMATON: bool = ProjectSettings.get_setting("game/standalone_state_automaton")  setget set_forbidden
+#var USE_THREAD_DISPATCHER: bool = ProjectSettings.get_setting("game/use_threads_dispatcher")
+var COMPUTE_DELAY: int = clamp(ProjectSettings.get_setting("game/compute_delay"), 1, 5)
 
 # Configurations
 var is_halted := false
@@ -20,6 +24,8 @@ var states := {} setget , get_states
 var drag := 0.0
 var downward_speed := 0.0
 var roll_queue := 0.0
+var coroutine_future: Future = null
+var shutdown := false
 
 var db_last_cs := -1.0
 
@@ -482,53 +488,85 @@ func state_automaton_init():
 
 func _ready():
 	._ready()
-	# if USE_THREAD_DISPATCHER:
-	# 	NodeDispatcher.add_node(self)
+#	if USE_FUTURE:
+#		coroutine_future = InstancePool.queue_job(funcref(self, "central_coroutine"), [self])
+#	if USE_THREAD_DISPATCHER:
+#		NodeDispatcher.add_node(self)
 
 func _enter_tree():
 	state_automaton_init()
 
 func _exit_tree():
+	shutdown = true
 	state_automaton.finalize()
 	if pda != null:
 		pda.terminated = true
 	state_automaton.terminated = true
 	state_automaton = null
 	pda = null
+	if USE_FUTURE and coroutine_future:
+		while not coroutine_future.is_available():
+			yield(Engine.get_main_loop() as SceneTree, "idle_frame")
+		coroutine_future.get_value()
 
-func compute(delta: float):
-	state_automaton.poll(delta)
+#const COMPUTE_DELAY := 2
 
-func enforce_all():
+func compute(delta: float, frames: int):
+	if frames % COMPUTE_DELAY == 0:
+		state_automaton.poll(delta * COMPUTE_DELAY)
+
+var last_roll := 0.0
+
+func enforce_all(delta: float):
 	# Enforce roll
-	var size := get_child_count()
-	if size > 0:
-		# var curr_z: float = target.rotation.z
-		# target.rotation.z = clamp(curr_z + amount, -PI, PI)
-		# var new_amount: float = target.get_child(0).rotation.z + amount
-		# new_amount = clamp(new_amount, -PI, PI)
-		var iter = 0
-		while iter < size:
-			var curr = get_child(iter)
-			if curr is Spatial: curr.rotation.z = roll_queue
-			iter += 1
+	if last_roll != roll_queue:
+		last_roll = roll_queue
+		var size := get_child_count()
+		if size > 0:
+			# var curr_z: float = target.rotation.z
+			# target.rotation.z = clamp(curr_z + amount, -PI, PI)
+			# var new_amount: float = target.get_child(0).rotation.z + amount
+			# new_amount = clamp(new_amount, -PI, PI)
+			var iter = 0
+			while iter < size:
+				var curr = get_child(iter)
+				if curr is Spatial: curr.rotation.z = roll_queue
+				iter += 1
 	# Enforce translation
-	if not isMoving: return
-	var dir: Vector3 = -global_transform.basis.z
-	dir *= currentSpeed
-	dir += Vector3.DOWN * downward_speed
-	move_and_slide(dir, Vector3.UP)
+	if isMoving:
+		var dir: Vector3 = -global_transform.basis.z
+		dir *= currentSpeed
+		dir += Vector3.DOWN * downward_speed
+#		move_and_slide(dir, Vector3.UP)
+		if USE_PHYSICS_SERVER_TRANSLATOR:
+			move_and_slide(dir, Vector3.UP)
+		else:
+			global_translate(dir * delta)
+
+func central_coroutine(afb):
+	var last_usec := Time.get_ticks_usec()
+	while not afb.shutdown:
+		var curr_usec := Time.get_ticks_usec()
+		if curr_usec - last_usec < get_physics_process_delta_time(): continue
+		last_usec = curr_usec
+		state_automaton.poll(get_physics_process_delta_time())
 
 func set_speed(new_speed: float):
-	if (currentSpeed / clamp(new_speed, 0.001, INF)) > 100.0 and new_speed != 0.0:
-		pass
+	# if (currentSpeed / clamp(new_speed, 0.001, INF)) > 100.0 and new_speed != 0.0:
+	# 	pass
 	currentSpeed = new_speed
 
 func _physics_process(delta):
-	if _use_physics_process:
-		compute(delta)
-	enforce_all()
+	if _use_physics_process and not USE_FUTURE and not DISABLE_STATE_AUTOMATON:
+		compute(delta, Engine.get_physics_frames())
+#	if not USE_THREAD_DISPATCHER:
+	enforce_all(delta)
 
 func _process(delta):
-	if not _use_physics_process:
-		compute(delta)
+	if not _use_physics_process and not USE_FUTURE and not DISABLE_STATE_AUTOMATON:
+		compute(delta, Engine.get_idle_frames())
+
+#func dispatched_idle(): pass
+#
+#func dispatched_physics():
+#	if USE_THREAD_DISPATCHER: enforce_all(get_physics_process_delta_time())
