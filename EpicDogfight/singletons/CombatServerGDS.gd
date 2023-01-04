@@ -1,6 +1,6 @@
 extends Node
 
-class_name CombatServer
+class_name CombatServerGDS
 
 const TC_UID_START_NUM := 20000
 const MAX_TEAM_COUNT := 63

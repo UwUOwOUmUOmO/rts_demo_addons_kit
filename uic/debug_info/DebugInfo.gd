@@ -54,6 +54,7 @@ func make_text() -> String:
 	return re
 
 func update_output():
+	if not visible: return
 	output.text = make_text()
 
 func _process(_delta):

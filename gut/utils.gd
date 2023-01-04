@@ -133,7 +133,7 @@ func _http_request_latest_version() -> void:
 	add_child(http_request)
 	http_request.connect("request_completed", self, "_on_http_request_latest_version_completed")
 	# Perform a GET request. The URL below returns JSON as of writing.
-	var error = http_request.request("https://api.github.com/repos/bitwes/Gut/releases/latest")
+	# var error = http_request.request("https://api.github.com/repos/bitwes/Gut/releases/latest")
 
 func _on_http_request_latest_version_completed(result, response_code, headers, body):
 	if not result == HTTPRequest.RESULT_SUCCESS:
