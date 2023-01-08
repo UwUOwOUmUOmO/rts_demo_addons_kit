@@ -1,0 +1,29 @@
+[gd_resource type="Resource" load_steps=3 format=2]
+
+[ext_resource path="res://addons/EpicDogfight/configs/weapon_config.gd" type="Script" id=1]
+[ext_resource path="res://addons/EpicDogfight/profiles/default_weapon_dvc.tres" type="Resource" id=2]
+
+[resource]
+script = ExtResource( 1 )
+weapon_name = "Hawkeye"
+description = ""
+firable = true
+rounds = 100
+priority = 0
+loadingTime = 1.0
+baseDamage = 50.0
+weaponType = 1
+weaponFireMode = 2
+weaponGuidance = 5
+weaponProximityMode = 2
+weaponArmTime = 0.8
+weaponSignature = 0.9
+minLaunchRange = 10.0
+maxLaunchRange = 100.0
+travelTime = 5.0
+travelSpeed = 3000.0
+_seeking_angle = 40.0
+heatThreshold = 10.0
+proximity = 100.0
+homingRange = 2000.0
+dvConfig = ExtResource( 2 )

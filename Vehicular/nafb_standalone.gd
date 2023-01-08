@@ -2,6 +2,8 @@ extends AirCombatant
 
 class_name NAFB_Standalone
 
+const USE_SCHEDULER := false
+
 const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbncfg.tres")
 const USE_PHYSICS_SERVER_TRANSLATOR := true
 const USE_FUTURE := false
@@ -11,6 +13,14 @@ const DISABLE_STATE_AUTOMATON := false
 #var USE_THREAD_DISPATCHER: bool = ProjectSettings.get_setting("game/use_threads_dispatcher")
 var COMPUTE_DELAY: int = clamp(ProjectSettings.get_setting("game/compute_delay"), 1, 5)
 
+export(NodePath) var roll_point := NodePath()
+export(NodePath) var elevation_point := NodePath()
+export(NodePath) var translation_point := NodePath()
+
+onready var _roll_point:	Spatial = get_node_or_null(roll_point)
+onready var _elev_point:	Spatial = get_node_or_null(elevation_point)
+onready var _trans_point:	Spatial = get_node_or_null(translation_point)
+
 # Configurations
 var is_halted := false
 var allow_gravity := false setget set_gravity
@@ -19,11 +29,13 @@ var allow_gravity := false setget set_gravity
 var state_automaton: StateAutomaton = null
 var pda: PushdownAutomaton = null
 var states := {} setget , get_states
+var main_lock := Mutex.new()
 
 # Volatile
 var drag := 0.0
 var downward_speed := 0.0
 var roll_queue := 0.0
+var steer_queue := 0.0
 var coroutine_future: Future = null
 var shutdown := false
 
@@ -120,6 +132,7 @@ class NAFBSS_Planner extends State:
 			d_squared < min(ds_squared, cs_squared):
 			cut_throttle()
 		else:
+			# print("Moving...")
 			afb.throttle = 1.0
 		with.blackboard_set("accel_update", false)
 
@@ -205,20 +218,27 @@ class NAFBSS_Throttle extends State:
 		if curr > allowed_speed:
 			accel_timer = clamp(accel_timer - (accu_lost_rate * delta), \
 				0.0, afb_cfg.accel_graph.range * 1.5)
-#			accel_timer = 0.0
+			# accel_timer = 0.0
 			theoretical_speed = curr
 		accel_timer += delta
 		speed_change = afb_cfg.get_area_accel(accel_timer - delta, accel_timer)
-		var speed_delta: float = abs(curr - allowed_speed)
-		theoretical_speed = clamp(curr + abs(min(speed_change, speed_delta)), 0.0, allowed_speed * 2.0)
+		var speed_delta: float = (allowed_speed - curr)
+		var dir := speed_delta
+		speed_delta = abs(speed_delta)
+		if speed_delta == 0.0: dir = 1.0
+		else: dir /= speed_delta
+		# Why allowed_speed * 2.0 dear past me?
+		# A: inherited speed probably?
+		theoretical_speed = clamp(curr + (min(speed_change, speed_delta) * dir), 0.0, allowed_speed * 2.0)
 
 	func process_drag():
 		var drag_force := theoretical_speed
 		drag_force = 0.0
 		# drag_force *= afb.drag * DRAG_CONSTANT
 		if afb.currentSpeed > theoretical_speed:
-			Out.print_debug("Here", get_stack())
-#			afb.db_last_cs = -1.0
+			# Out.print_debug("Here", get_stack())
+			# afb.db_last_cs = -1.0
+			pass
 		afb.set_speed(clamp(theoretical_speed - drag_force, 0.0, INF))
 
 	func _poll(with: StateAutomaton):
@@ -226,7 +246,7 @@ class NAFBSS_Throttle extends State:
 		if with.blackboard_get("skip_throttle"):
 			accel_timer = clamp(accel_timer - (accu_lost_rate * delta), \
 				0.0, afb_cfg.accel_graph.range * 1.5)
-#			accel_timer = 0.0
+			# accel_timer = 0.0
 			return
 		measurement_setup()
 		calculate_speed(delta)
@@ -332,15 +352,15 @@ class NAFBSS_Steer extends State:
 		var steer_rps := turn_rate / delta
 		return steer_rps / STEER_SUPPOSED_THRESHOLD
 
-	func manual_lerp_steer(to: Vector3, amount: float):
-		var global_pos: Vector3 = afb.global_transform.origin
+	static func manual_lerp_steer(host: Spatial, to: Vector3, amount: float):
+		var global_pos: Vector3 = host.global_transform.origin
 		# var looking_at: Vector3 = -afb.global_transform.basis.z
 		if to == global_pos: return
-		var wtransform: Transform = afb.global_transform.\
+		var wtransform: Transform = host.global_transform.\
 			looking_at(Vector3(to.x,global_pos.y,to.z),Vector3.UP)
-		var wrotation: Quat = afb.global_transform.basis.get_rotation_quat().slerp(Quat(wtransform.basis),\
+		var wrotation: Quat = host.global_transform.basis.get_rotation_quat().slerp(Quat(wtransform.basis),\
 			amount)
-		afb.global_transform = Transform(Basis(wrotation), afb.global_transform.origin)
+		host.global_transform = Transform(Basis(wrotation), host.global_transform.origin)
 
 	func timer_distipate(delta: float):
 		var pos: Vector3 = afb.global_transform.origin
@@ -363,7 +383,8 @@ class NAFBSS_Steer extends State:
 			(AERODYNAMICS_PARTIAL_SUBSIDARY * (1.0 - afb_cfg.aerodynamic))
 		drag = clamp(drag, MINIMUM_DRAG, INF)
 		afb.drag = drag
-		manual_lerp_steer(afb.current_destination, max_amount)
+		# manual_lerp_steer(afb, afb.current_destination, max_amount)
+		afb.steer_queue = max_amount
 		return "__next"
 
 	func _finalize(with: StateAutomaton):
@@ -488,15 +509,28 @@ func state_automaton_init():
 
 func _ready():
 	._ready()
+	if USE_SCHEDULER:
+		_vehicle_config = _vehicle_config.duplicate(true)
+		BasicScheduler.add_task("NAFB_Standalone", "job", true, 4, true)
+		BasicScheduler.add_handle("NAFB_Standalone", self)
+	# set_physics_process(false)
+#	set_process(false)
 #	if USE_FUTURE:
 #		coroutine_future = InstancePool.queue_job(funcref(self, "central_coroutine"), [self])
 #	if USE_THREAD_DISPATCHER:
 #		NodeDispatcher.add_node(self)
 
+func job(delta: float):
+	lock()
+	state_automaton.poll(delta)
+	unlock()
+
 func _enter_tree():
 	state_automaton_init()
 
 func _exit_tree():
+	if USE_SCHEDULER:
+		BasicScheduler.remove_handle("NAFB_Standalone", self)
 	shutdown = true
 	state_automaton.finalize()
 	if pda != null:
@@ -517,21 +551,23 @@ func compute(delta: float, frames: int):
 
 var last_roll := 0.0
 
+func lock():
+	main_lock.lock()
+
+func unlock():
+	main_lock.unlock()
+
 func enforce_all(delta: float):
+	# Enforce steer
+	lock()
+	if steer_queue > 0.0:
+		NAFBSS_Steer.manual_lerp_steer(self, current_destination, steer_queue)
+	steer_queue = 0.0
 	# Enforce roll
 	if last_roll != roll_queue:
 		last_roll = roll_queue
-		var size := get_child_count()
-		if size > 0:
-			# var curr_z: float = target.rotation.z
-			# target.rotation.z = clamp(curr_z + amount, -PI, PI)
-			# var new_amount: float = target.get_child(0).rotation.z + amount
-			# new_amount = clamp(new_amount, -PI, PI)
-			var iter = 0
-			while iter < size:
-				var curr = get_child(iter)
-				if curr is Spatial: curr.rotation.z = roll_queue
-				iter += 1
+		if _roll_point:
+			_roll_point.rotation.z = roll_queue
 	# Enforce translation
 	if isMoving:
 		var dir: Vector3 = -global_transform.basis.z
@@ -542,14 +578,7 @@ func enforce_all(delta: float):
 			move_and_slide(dir, Vector3.UP)
 		else:
 			global_translate(dir * delta)
-
-func central_coroutine(afb):
-	var last_usec := Time.get_ticks_usec()
-	while not afb.shutdown:
-		var curr_usec := Time.get_ticks_usec()
-		if curr_usec - last_usec < get_physics_process_delta_time(): continue
-		last_usec = curr_usec
-		state_automaton.poll(get_physics_process_delta_time())
+	unlock()
 
 func set_speed(new_speed: float):
 	# if (currentSpeed / clamp(new_speed, 0.001, INF)) > 100.0 and new_speed != 0.0:
@@ -557,13 +586,15 @@ func set_speed(new_speed: float):
 	currentSpeed = new_speed
 
 func _physics_process(delta):
-	if _use_physics_process and not USE_FUTURE and not DISABLE_STATE_AUTOMATON:
+	if _use_physics_process and not USE_FUTURE \
+		and not DISABLE_STATE_AUTOMATON and not USE_SCHEDULER:
 		compute(delta, Engine.get_physics_frames())
 #	if not USE_THREAD_DISPATCHER:
 	enforce_all(delta)
 
 func _process(delta):
-	if not _use_physics_process and not USE_FUTURE and not DISABLE_STATE_AUTOMATON:
+	if not _use_physics_process and not USE_FUTURE \
+		and not DISABLE_STATE_AUTOMATON and not USE_SCHEDULER:
 		compute(delta, Engine.get_idle_frames())
 
 #func dispatched_idle(): pass

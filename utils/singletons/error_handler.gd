@@ -5,6 +5,9 @@ var allow_output := true
 var allow_debug  := true
 var trace_stack  := OS.is_debug_build()
 
+func _init():
+	randomize()
+
 func timer(time: float) -> SceneTreeTimer:
 	return get_tree().create_timer(time, false)
 
@@ -30,6 +33,9 @@ func print_fatal(err: String, stack := []):
 			err = "[Fatal] " + err
 		printerr(err)
 	push_stack(stack)
+	var a = 7
+	var b = 0
+	var c = a / b 
 
 func print_error(err: String, stack := []):
 	if allow_output:

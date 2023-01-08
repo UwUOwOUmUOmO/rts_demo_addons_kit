@@ -7,6 +7,9 @@ signal __fired(handler)
 
 const TIMER_ROLLBACK	:= 3600.0
 
+export(NodePath) var handling_fighter := NodePath()
+#onready var _fighter: AirCombatant = get_node_or_null(handling_fighter)
+
 var use_physics_process: bool = SingletonManager.fetch("UtilsSettings").use_physics_process
 var override_compensation := false
 var compensator_autosetup := false
@@ -15,7 +18,7 @@ var compensation := 0.0
 var weapon_name := ""
 var profile: WeaponConfiguration = null setget set_profile, get_profile
 var compensator: DistanceCompensatorV2 = null
-var carrier = null
+var carrier: Combatant = null
 var target: Spatial = null
 var hardpoints := []
 var hardpoints_last_fire: PoolRealArray = []
@@ -129,7 +132,7 @@ func spawn_projectile(no: int):
 		elif profile.weaponGuidance == WeaponConfiguration.GUIDANCE.PRECISION:
 			guidance = PrecisionGuidance.new()
 			guidance.site = pgm_target
-		if inherit_carrier_speed and "currentSpeed" in carrier:
+		if inherit_carrier_speed and carrier != null:
 			guidance.inherited_speed = carrier.currentSpeed
 		guidance.target = target
 		guidance.handler = self
@@ -142,6 +145,7 @@ func spawn_projectile(no: int):
 	var hp_loc := curr_hardpoint.global_transform.origin
 	var fwd_vec := -curr_hardpoint.global_transform.basis.z
 	var euler := curr_hardpoint.global_transform.basis.get_euler()
+	guidance._arm_time = profile.weaponArmTime
 	guidance._barrel = hp_loc
 	guidance._weapon_base_config = profile
 	guidance._direction = fwd_vec
@@ -215,7 +219,7 @@ func reset_hardpoints_info():
 
 func _ready():
 	reset_hardpoints_info()
-	carrier = get_parent()
+	carrier = get_node_or_null(handling_fighter)
 	if compensator_autosetup:
 		setup()
 

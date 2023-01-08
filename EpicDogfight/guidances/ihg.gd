@@ -126,7 +126,7 @@ func _guide(delta: float):
 	if not is_instance_valid(target):
 		embedded_system.allow_turn = false
 		# return
-	else:
+	else:\
 		angle_track(delta)
 	self_destruct_handler(delta)
 
@@ -135,6 +135,7 @@ func simp_profile_setup():
 	embedded_system.accel = projectile_profile.acceleration
 	embedded_system.fixed_turn_rate = projectile_profile.turnRate
 	embedded_system.inherited_speed = inherited_speed
+	embedded_system.max_climb = projectile_profile.climbRate
 
 func _signals_init():
 	Utilities.SignalTools.connect_from(self, _projectile, \

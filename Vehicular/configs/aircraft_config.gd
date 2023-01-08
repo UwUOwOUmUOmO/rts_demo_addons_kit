@@ -2,34 +2,50 @@ extends CombatantConfiguration
 
 class_name AircraftConfiguration
 
-var acceleration 				:= 1.0
-var decceleration				:= -2.0
-var speedSnapping				:= 1.0
-var climbRate					:= 1.2
-var minThrottle					:= 0.2
-var maxThrottle					:= 1.0
-var max_speed					:= 100.0
-var rollAmplifier				:= 10.0
-var pitchAmplifier				:= 0.07
-var maxRollAngle				:= PI / 4.0
-var maxPitchAngle				:= PI / 2.0
-var turnRate					:= 0.05
-var maxTurnRate					:= 0.05
-var slowingAt					:= 0.3
-var orbitError					:= 0.7
-var deadzone					:= 3.0
-var switchDesZonePerc			:= 0.1
-var rollNormalizationSpeed		:= deg2rad(40.0)
+export(float, 0.1, 50000.0, 0.1) var acceleration 					:= 1.0
+export(float, 0.1, 5000.0, 0.1) var decceleration					:= -2.0
+export(float, 0.0, 5.0, 0.1) var speedSnapping						:= 1.0
+export(float, 0.1, 1000.0, 0.1) var climbRate						:= 1.2
+export(float, 0.0, 1.0, 0.1) var minThrottle						:= 0.2
+export(float, 0.1, 1.0, 0.1) var maxThrottle						:= 1.0
+export(float, 1.0, 10000.0, 0.1) var max_speed						:= 100.0
+export(float, 0.1, 100.0, 0.1) var rollAmplifier					:= 10.0
+export(float, 0.1, 100.0, 0.1) var pitchAmplifier					:= 0.07
+export(float, 0.005, 1.0, 0.001) var turnRate						:= 0.05
+export(float, 0.005, 1.0, 0.001) var maxTurnRate					:= 0.05
+export(float, 0.01, 1.0, 0.01) var slowingAt						:= 0.3
+export(float, 0.1, 10.0, 0.1) var orbitError						:= 0.7
+export(float, 0.1, 10.0, 0.1) var deadzone							:= 3.0
+export(float, 0.01, 1.0, 0.01) var switchDesZonePerc				:= 0.1
+export(float, 0.1, 90.0, 0.1) var _max_roll_angle					:= 45.0
+export(float, 0.1, 90.0, 0.1) var _max_pitch_angle					:= 90.0
+export(float, 0.1, 90.0, 0.1) var _roll_normalization_speed			:= 40.0
 
 # Min/max switchDesZone squared
-var minSDZS						:= 625.0
-var maxSDZS						:= 10000.0
-var slowingTime					:= 0.07
-var aerodynamic					:= 0.8
-var radarSignature				:= 1.5
-var heatSignature				:= 10.0
-var weight						:= 10.0
-var speedLossMod				:= 15.0
+var minSDZS								:= 625.0
+var maxSDZS								:= 10000.0
+var slowingTime							:= 0.07
+var aerodynamic							:= 0.8
+var radarSignature						:= 1.5
+var heatSignature						:= 10.0
+var weight								:= 10.0
+var speedLossMod						:= 15.0
+
+var maxRollAngle						:= PI / 4.0
+var maxPitchAngle						:= PI / 2.0
+var rollNormalizationSpeed				:= deg2rad(40.0)
+
+func set_mra(mra: float):
+	_max_roll_angle = mra
+	maxRollAngle = deg2rad(mra)
+
+func set_mpa(mpa: float):
+	_max_pitch_angle = mpa
+	maxPitchAngle = deg2rad(mpa)
+
+func set_rns(rns: float):
+	_roll_normalization_speed = rns
+	rollNormalizationSpeed = deg2rad(rns)
 
 # func _get(property):
 # 	match property:

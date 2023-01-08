@@ -1,0 +1,24 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
+[ext_resource path="res://addons/Vehicular/configs/aircraft_config.gd" type="Script" id=1]
+
+[resource]
+script = ExtResource( 1 )
+acceleration = 6400.0
+decceleration = -2.0
+speedSnapping = 1.0
+climbRate = 300.0
+minThrottle = 0.2
+maxThrottle = 1.0
+max_speed = 1500.0
+rollAmplifier = 10.0
+pitchAmplifier = 0.07
+turnRate = 0.05
+maxTurnRate = 0.08
+slowingAt = 0.3
+orbitError = 0.7
+deadzone = 3.0
+switchDesZonePerc = 0.1
+_max_roll_angle = 45.0
+_max_pitch_angle = 90.0
+_roll_normalization_speed = 40.0
