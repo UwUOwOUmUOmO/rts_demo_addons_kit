@@ -188,7 +188,10 @@ class SignalTools extends Reference:
 			return
 		for sig in table:
 			var handler: String = table[sig]
-			from.disconnect(sig, to, handler)
+			var connection_list := from.get_signal_connection_list(sig)
+			for connection in connection_list:
+				if connection["target"] == to:
+					from.disconnect(sig, to, handler)
 
 	static func disconnect_all(from: Object, to: Object = null):
 		var all_signals := from.get_signal_list()

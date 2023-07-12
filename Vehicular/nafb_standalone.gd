@@ -2,16 +2,16 @@ extends AirCombatant
 
 class_name NAFB_Standalone
 
-const USE_SCHEDULER := false
-
-const DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbncfg.tres")
 const USE_PHYSICS_SERVER_TRANSLATOR := true
-const USE_FUTURE := false
 const DISABLE_STATE_AUTOMATON := false
+const USE_COMMAND_QUEUE := false
+const USE_SWARM_CONTROLLER := false
 
 # System settings
 #var USE_THREAD_DISPATCHER: bool = ProjectSettings.get_setting("game/use_threads_dispatcher")
+var DEFAULT_AFBCFG := preload("res://addons/Vehicular/configs/default_afbncfg.tres").duplicate()
 var COMPUTE_DELAY: int = clamp(ProjectSettings.get_setting("game/compute_delay"), 1, 5)
+# var COMPUTE_DELAY := 1
 
 export(NodePath) var roll_point := NodePath()
 export(NodePath) var elevation_point := NodePath()
@@ -30,13 +30,13 @@ var state_automaton: StateAutomaton = null
 var pda: PushdownAutomaton = null
 var states := {} setget , get_states
 var main_lock := Mutex.new()
+var nafb_command_queue := ExecutionLoop.new()
 
 # Volatile
 var drag := 0.0
 var downward_speed := 0.0
 var roll_queue := 0.0
 var steer_queue := 0.0
-var coroutine_future: Future = null
 var shutdown := false
 
 var db_last_cs := -1.0
@@ -151,7 +151,8 @@ class NAFBSS_Engine extends State:
 		state_name = "NAFBSS_Engine"
 
 	func update(with: StateAutomaton):
-		afb = with.client; afb_cfg = afb._vehicle_config;
+		afb = with.client;
+		afb_cfg = afb._vehicle_config;
 		automaton = with
 
 	func _start(with: StateAutomaton):
@@ -264,7 +265,7 @@ class NAFBSS_Gravity extends State:
 	const GRAVITATIONAL_CONSTANT = 9.8
 
 	var afb = null
-	var afb_cfg: AFBNewConfiguration = null
+	var afb_cfg = null
 	var automaton: StateAutomaton = null
 
 	func _init():
@@ -484,7 +485,10 @@ func set_course(des: Vector3) -> void:
 
 func _init():
 	._init()
-	set_config(DEFAULT_AFBCFG.config_duplicate())
+	DEFAULT_AFBCFG.accel_graph = DEFAULT_AFBCFG.accel_graph.duplicate()
+	DEFAULT_AFBCFG.deccel_graph = DEFAULT_AFBCFG.deccel_graph.duplicate()
+	DEFAULT_AFBCFG.turn_graph = DEFAULT_AFBCFG.turn_graph.duplicate()
+	set_config(DEFAULT_AFBCFG)
 
 func state_automaton_init():
 	state_automaton = StateAutomaton.new()
@@ -509,28 +513,27 @@ func state_automaton_init():
 
 func _ready():
 	._ready()
-	if USE_SCHEDULER:
-		_vehicle_config = _vehicle_config.duplicate(true)
-		BasicScheduler.add_task("NAFB_Standalone", "job", true, 4, true)
-		BasicScheduler.add_handle("NAFB_Standalone", self)
-	# set_physics_process(false)
-#	set_process(false)
-#	if USE_FUTURE:
-#		coroutine_future = InstancePool.queue_job(funcref(self, "central_coroutine"), [self])
-#	if USE_THREAD_DISPATCHER:
-#		NodeDispatcher.add_node(self)
+	if USE_SWARM_CONTROLLER:
+		set_physics_process(false)
+		set_process(false)
+
+func set_dispatched(what: String, value):
+	pass
 
 func job(delta: float):
-	lock()
 	state_automaton.poll(delta)
-	unlock()
 
 func _enter_tree():
 	state_automaton_init()
+	nafb_command_queue.assign_instance(self)
+	if USE_SWARM_CONTROLLER:
+		NafbSwarmController.add_nafb_instance(self)
 
 func _exit_tree():
-	if USE_SCHEDULER:
-		BasicScheduler.remove_handle("NAFB_Standalone", self)
+	if USE_SWARM_CONTROLLER:
+		NafbSwarmController.remove_nafb_instance(self)
+	if USE_COMMAND_QUEUE:
+		nafb_command_queue = null
 	shutdown = true
 	state_automaton.finalize()
 	if pda != null:
@@ -538,16 +541,16 @@ func _exit_tree():
 	state_automaton.terminated = true
 	state_automaton = null
 	pda = null
-	if USE_FUTURE and coroutine_future:
-		while not coroutine_future.is_available():
-			yield(Engine.get_main_loop() as SceneTree, "idle_frame")
-		coroutine_future.get_value()
 
 #const COMPUTE_DELAY := 2
 
 func compute(delta: float, frames: int):
 	if frames % COMPUTE_DELAY == 0:
-		state_automaton.poll(delta * COMPUTE_DELAY)
+		if USE_COMMAND_QUEUE:
+			nafb_command_queue.sync()
+			nafb_command_queue.call_dispatched("job", delta * COMPUTE_DELAY)
+		else:
+			state_automaton.poll(delta * COMPUTE_DELAY)
 
 var last_roll := 0.0
 
@@ -559,7 +562,7 @@ func unlock():
 
 func enforce_all(delta: float):
 	# Enforce steer
-	lock()
+#	lock()
 	if steer_queue > 0.0:
 		NAFBSS_Steer.manual_lerp_steer(self, current_destination, steer_queue)
 	steer_queue = 0.0
@@ -578,7 +581,7 @@ func enforce_all(delta: float):
 			move_and_slide(dir, Vector3.UP)
 		else:
 			global_translate(dir * delta)
-	unlock()
+#	unlock()
 
 func set_speed(new_speed: float):
 	# if (currentSpeed / clamp(new_speed, 0.001, INF)) > 100.0 and new_speed != 0.0:
@@ -586,15 +589,15 @@ func set_speed(new_speed: float):
 	currentSpeed = new_speed
 
 func _physics_process(delta):
-	if _use_physics_process and not USE_FUTURE \
-		and not DISABLE_STATE_AUTOMATON and not USE_SCHEDULER:
+	enforce_all(delta)
+	if _use_physics_process \
+		and not DISABLE_STATE_AUTOMATON:
 		compute(delta, Engine.get_physics_frames())
 #	if not USE_THREAD_DISPATCHER:
-	enforce_all(delta)
 
 func _process(delta):
-	if not _use_physics_process and not USE_FUTURE \
-		and not DISABLE_STATE_AUTOMATON and not USE_SCHEDULER:
+	if not _use_physics_process \
+		and not DISABLE_STATE_AUTOMATON:
 		compute(delta, Engine.get_idle_frames())
 
 #func dispatched_idle(): pass
